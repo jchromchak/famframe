@@ -10,47 +10,662 @@
 <script src="../dashboard-config.js"></script>
 <script src="./dashboard-config.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden;background:#050504;color:#efe7d7;cursor:none}body{font-family:'DM Mono',monospace}.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#050504}.stage{width:1920px;height:1080px;position:relative;overflow:hidden;background:#0b0b09;transform-origin:center center}.stage:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E")}.layout{display:none;grid-template-columns:1fr 430px;grid-template-rows:1fr auto;width:100%;height:100%}.layout.active{display:grid}.main-panel{position:relative;padding:86px 90px 42px 90px;border-right:1px solid rgba(239,231,215,.14);display:flex;flex-direction:column}.side-panel{display:flex;flex-direction:column}.date-line,.panel-label{font-size:18px;letter-spacing:.28em;text-transform:uppercase;color:rgba(239,231,215,.42)}.date-line{margin-bottom:56px}.panel-label{margin-bottom:34px}.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:300}.evening-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:148px;line-height:.86;letter-spacing:-.045em;color:#efe7d7}.hero-time{font-family:'Cormorant Garamond',Georgia,serif;font-size:112px;line-height:.9;letter-spacing:-.035em;color:#efe7d7;margin:8px 0 42px}.hero-time .ampm,.countdown .unit{font-family:'DM Mono',monospace;font-size:.26em;letter-spacing:.1em;color:rgba(239,231,215,.58);vertical-align:super;margin-left:12px}.timeline{max-width:560px}.tl-item{display:flex;gap:24px;min-height:76px}.tl-left{width:32px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}.tl-dot{width:14px;height:14px;border-radius:50%;border:1px solid rgba(239,231,215,.48);background:transparent;z-index:2}.tl-line{width:1px;flex:1;background:rgba(239,231,215,.2);margin-top:6px}.tl-item:last-child .tl-line{display:none}.tl-done .tl-dot{background:#8d879f;border-color:#8d879f;opacity:.78}.tl-done .tl-line{background:rgba(141,135,159,.32)}.tl-content{padding-top:-4px}.tl-label{font-family:'Cormorant Garamond',Georgia,serif;font-size:31px;line-height:1;color:rgba(239,231,215,.68)}.tl-time{font-size:16px;letter-spacing:.14em;color:rgba(239,231,215,.34);margin-top:6px}.tl-note{font-size:14px;letter-spacing:.12em;color:rgba(239,231,215,.26);margin-top:4px}.tl-now{display:flex;align-items:center;gap:18px;margin:-6px 0 12px 9px}.tl-now-dot{width:21px;height:21px;border-radius:50%;background:#d99a3d;border:3px solid #f0c06d;box-shadow:0 0 12px rgba(217,154,61,.9),0 0 34px rgba(217,154,61,.48);animation:pulse 1.8s ease-in-out infinite}.tl-now-label{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:26px;color:#d99a3d}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.64}}.weather-panel,.cal-panel,.traffic-panel{padding:58px 46px;border-bottom:1px solid rgba(239,231,215,.14)}.cal-panel{border-bottom:0;flex:1}.weather-top{display:flex;align-items:flex-start;gap:28px}.weather-temp{font-family:'Cormorant Garamond',Georgia,serif;font-size:118px;font-weight:300;line-height:.86}.weather-temp .deg{font-size:.38em;vertical-align:super;color:rgba(239,231,215,.58)}.weather-icon{font-size:54px;line-height:1;margin-top:10px;color:#efe7d7}.weather-desc{font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-style:italic;color:rgba(239,231,215,.68);margin:22px 0 34px}.details{display:grid;grid-template-columns:1fr 1fr;gap:22px 14px}.detail-label,.cal-time,.badge,.author{font-size:14px;letter-spacing:.22em;text-transform:uppercase;color:rgba(239,231,215,.34)}.detail-value{font-size:20px;color:rgba(239,231,215,.68);margin-top:8px}.cal-event{margin-bottom:24px}.cal-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;color:rgba(239,231,215,.7);line-height:1.06}.badge{display:inline-block;color:#d99a3d;border:1px solid rgba(217,154,61,.58);padding:6px 10px;margin-bottom:12px}.quote-bar{grid-column:1/3;border-top:1px solid rgba(239,231,215,.14);padding:20px 88px 24px;display:flex;align-items:center;gap:28px}.quote-text{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:29px;color:rgba(239,231,215,.54);text-align:center;flex:1}.author{white-space:nowrap}.progress-track{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(239,231,215,.08)}.progress-fill{height:100%;width:0;background:#d99a3d;box-shadow:0 0 18px rgba(217,154,61,.7)}.countdown{font-family:'Cormorant Garamond',Georgia,serif;font-size:230px;line-height:.86;letter-spacing:-.04em}.countdown-label{font-size:24px;letter-spacing:.24em;text-transform:uppercase;color:rgba(239,231,215,.68);margin-top:24px}.meta{margin-top:32px;font-size:18px;letter-spacing:.18em;color:rgba(239,231,215,.34);text-transform:uppercase}.bottom-bar{grid-column:1/3;border-top:1px solid rgba(239,231,215,.14);padding:24px 88px;display:flex;justify-content:space-between;align-items:center}.clock{font-family:'DM Mono',monospace;font-size:20px;letter-spacing:.14em;color:rgba(239,231,215,.46)}.message{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-style:italic;color:rgba(239,231,215,.5)}#artMode{display:none;width:100%;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:22px}#artMode.active{display:flex}.art-time{font-family:'Cormorant Garamond',Georgia,serif;font-size:172px;color:rgba(239,231,215,.2)}.art-date{font-size:18px;letter-spacing:.32em;text-transform:uppercase;color:rgba(239,231,215,.16)}.config-error{display:none;position:absolute;inset:0;padding:96px;background:#0b0b09;z-index:100;color:#efe7d7}.config-error.active{display:block}.config-error h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:82px;font-weight:300}.config-error p{font-size:22px;line-height:1.6;color:rgba(239,231,215,.65);max-width:980px;margin-top:24px}@media(max-aspect-ratio:16/9){.stage{transform:scale(calc(100vw / 1920))}}@media(min-aspect-ratio:16/9){.stage{transform:scale(calc(100vh / 1080))}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#050504;color:#efe7d7;cursor:none}
+body{font-family:'DM Mono',monospace}
+.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#050504}
+.stage{width:1920px;height:1080px;position:relative;overflow:hidden;background:#0b0b09;transform-origin:center center}
+.stage:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E")}
+.layout{display:none;grid-template-columns:1fr 430px;grid-template-rows:1fr auto;width:100%;height:100%}
+.layout.active{display:grid}
+.main-panel{position:relative;padding:86px 90px 42px 90px;border-right:1px solid rgba(239,231,215,.14);display:flex;flex-direction:column}
+.side-panel{display:flex;flex-direction:column}
+.date-line,.panel-label{font-size:18px;letter-spacing:.28em;text-transform:uppercase;color:rgba(239,231,215,.42)}
+.date-line{margin-bottom:56px}
+.panel-label{margin-bottom:34px}
+
+/* ── EVENING ── */
+.evening-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:148px;line-height:.86;letter-spacing:-.045em;color:#efe7d7}
+.hero-time{font-family:'Cormorant Garamond',Georgia,serif;font-size:112px;line-height:.9;letter-spacing:-.035em;color:#efe7d7;margin:8px 0 42px}
+.hero-time .ampm,.countdown .unit{font-family:'DM Mono',monospace;font-size:.26em;letter-spacing:.1em;color:rgba(239,231,215,.58);vertical-align:super;margin-left:12px}
+
+/* ── TIMELINE ── */
+.timeline{max-width:560px}
+.tl-item{display:flex;gap:24px;min-height:76px}
+.tl-left{width:32px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.tl-dot{width:14px;height:14px;border-radius:50%;border:1px solid rgba(239,231,215,.48);background:transparent;z-index:2}
+.tl-line{width:1px;flex:1;background:rgba(239,231,215,.2);margin-top:6px}
+.tl-item:last-child .tl-line{display:none}
+.tl-done .tl-dot{background:#8d879f;border-color:#8d879f;opacity:.78}
+.tl-done .tl-line{background:rgba(141,135,159,.32)}
+.tl-done .tl-label{color:rgba(239,231,215,.32)}
+.tl-content{padding-top:0}
+.tl-label{font-family:'Cormorant Garamond',Georgia,serif;font-size:31px;line-height:1;color:rgba(239,231,215,.68);transition:color .5s}
+.tl-time{font-size:16px;letter-spacing:.14em;color:rgba(239,231,215,.34);margin-top:6px}
+.tl-note{font-size:14px;letter-spacing:.12em;color:rgba(239,231,215,.26);margin-top:4px}
+.tl-now{display:flex;align-items:center;gap:18px;margin:-6px 0 12px 9px}
+.tl-now-dot{width:21px;height:21px;border-radius:50%;background:#d99a3d;border:3px solid #f0c06d;box-shadow:0 0 12px rgba(217,154,61,.9),0 0 34px rgba(217,154,61,.48);animation:glowpulse 1.8s ease-in-out infinite}
+.tl-now-label{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:26px;color:#d99a3d}
+@keyframes glowpulse{0%,100%{opacity:1}50%{opacity:.64}}
+
+/* ── WEATHER / SIDE PANELS ── */
+.weather-panel,.cal-panel,.traffic-panel{padding:58px 46px;border-bottom:1px solid rgba(239,231,215,.14)}
+.cal-panel{border-bottom:0;flex:1}
+.weather-top{display:flex;align-items:flex-start;gap:28px}
+.weather-temp{font-family:'Cormorant Garamond',Georgia,serif;font-size:118px;font-weight:300;line-height:.86}
+.weather-temp .deg{font-size:.38em;vertical-align:super;color:rgba(239,231,215,.58)}
+.weather-icon{font-size:54px;line-height:1;margin-top:10px}
+.weather-desc{font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-style:italic;color:rgba(239,231,215,.68);margin:22px 0 34px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:22px 14px}
+.detail-label,.cal-time,.badge,.author{font-size:14px;letter-spacing:.22em;text-transform:uppercase;color:rgba(239,231,215,.34)}
+.detail-value{font-size:20px;color:rgba(239,231,215,.68);margin-top:8px}
+
+/* ── CALENDAR ── */
+.cal-event{margin-bottom:24px}
+.cal-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;color:rgba(239,231,215,.7);line-height:1.06}
+.badge{display:inline-block;color:#d99a3d;border:1px solid rgba(217,154,61,.58);padding:6px 10px;margin-bottom:12px}
+
+/* ── TRAFFIC STATUS DOT ── */
+.traffic-header{display:flex;align-items:center;gap:16px;margin-bottom:34px}
+.status-dot{width:12px;height:12px;border-radius:50%;background:#7aaa8a;box-shadow:0 0 8px #7aaa8a;flex-shrink:0;transition:background .8s,box-shadow .8s}
+.status-dot.warn{background:#c8b88a;box-shadow:0 0 8px #c8b88a}
+.status-dot.crit{background:#c94f3a;box-shadow:0 0 8px #c94f3a}
+.status-dot.pulse{animation:dotpulse 1.2s ease-in-out infinite}
+@keyframes dotpulse{0%,100%{opacity:1}50%{opacity:.3}}
+.traffic-margin{display:inline-block;font-size:15px;letter-spacing:.15em;padding:6px 12px;border-radius:3px;margin-top:14px;border:1px solid rgba(239,231,215,.12);color:rgba(239,231,215,.38);transition:color .8s,border-color .8s}
+.traffic-margin.ok{color:#7aaa8a;border-color:rgba(122,170,138,.3)}
+.traffic-margin.warn{color:#c8b88a;border-color:rgba(200,184,138,.3)}
+.traffic-margin.crit{color:#c94f3a;border-color:rgba(201,79,58,.3)}
+
+/* ── MORNING CHECKLIST ── */
+.checklist{margin-top:36px;display:flex;flex-direction:column;gap:10px;max-width:620px}
+.cl-item{display:flex;align-items:center;gap:16px;padding:10px 18px;background:rgba(239,231,215,.04);border:1px solid rgba(239,231,215,.09);border-radius:4px;transition:opacity .5s,border-color .5s}
+.cl-item.done{opacity:.28;border-color:transparent}
+.cl-item.active{border-color:rgba(217,154,61,.35);background:rgba(217,154,61,.05)}
+.cl-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.cl-label{font-size:19px;letter-spacing:.1em;color:rgba(239,231,215,.72);flex:1}
+.cl-time{font-size:14px;letter-spacing:.12em;color:rgba(239,231,215,.3)}
+.cl-dot{width:7px;height:7px;border-radius:50%;background:rgba(239,231,215,.15);flex-shrink:0;transition:background .5s}
+.cl-item.active .cl-dot{background:#d99a3d}
+.cl-item.done   .cl-dot{background:#7aaa8a}
+
+/* ── QUOTE BAR ── */
+.quote-bar{grid-column:1/3;border-top:1px solid rgba(239,231,215,.14);padding:20px 88px 24px;display:flex;align-items:center;gap:28px}
+.quote-text{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:29px;color:rgba(239,231,215,.54);text-align:center;flex:1;transition:opacity .6s}
+.author{white-space:nowrap}
+
+/* ── PROGRESS / COUNTDOWN / BOTTOM ── */
+.progress-track{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(239,231,215,.08)}
+.progress-fill{height:100%;width:0;background:#d99a3d;box-shadow:0 0 18px rgba(217,154,61,.7);transition:width 1s linear}
+.countdown{font-family:'Cormorant Garamond',Georgia,serif;font-size:230px;line-height:.86;letter-spacing:-.04em}
+.countdown-label{font-size:24px;letter-spacing:.24em;text-transform:uppercase;color:rgba(239,231,215,.68);margin-top:24px}
+.meta{margin-top:32px;font-size:18px;letter-spacing:.18em;color:rgba(239,231,215,.34);text-transform:uppercase}
+.bottom-bar{grid-column:1/3;border-top:1px solid rgba(239,231,215,.14);padding:24px 88px;display:flex;justify-content:space-between;align-items:center}
+.clock{font-family:'DM Mono',monospace;font-size:20px;letter-spacing:.14em;color:rgba(239,231,215,.46)}
+.message{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-style:italic;color:rgba(239,231,215,.5)}
+
+/* ── ART MODE ── */
+#artMode{display:none;width:100%;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:22px}
+#artMode.active{display:flex}
+.art-time{font-family:'Cormorant Garamond',Georgia,serif;font-size:172px;color:rgba(239,231,215,.22)}
+.art-date{font-size:18px;letter-spacing:.32em;text-transform:uppercase;color:rgba(239,231,215,.14)}
+
+/* ── CONFIG ERROR ── */
+.config-error{display:none;position:absolute;inset:0;padding:96px;background:#0b0b09;z-index:100;color:#efe7d7}
+.config-error.active{display:block}
+.config-error h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:82px;font-weight:300}
+.config-error p{font-size:22px;line-height:1.6;color:rgba(239,231,215,.65);max-width:980px;margin-top:24px}
+
+/* ── SCALE TO ANY SCREEN ── */
+@media(max-aspect-ratio:16/9){.stage{transform:scale(calc(100vw / 1920))}}
+@media(min-aspect-ratio:16/9){.stage{transform:scale(calc(100vh / 1080))}}
 </style>
 </head>
 <body>
 <div class="viewport"><div class="stage" id="stage">
-  <div class="config-error" id="configError"><h1>Config missing.</h1><p>Fam Frame needs <strong>dashboard-config.js</strong> loaded before the dashboard can render. Put it beside this file or one folder above it, and define <strong>window.DASHBOARD_CONFIG</strong>.</p></div>
-  <div id="artMode"><div class="art-time" id="artClock">—</div><div class="art-date" id="artDate">—</div></div>
-  <div class="layout" id="morningLayout"><main class="main-panel"><div class="date-line" id="mDateLine">—</div><div class="countdown" id="mCountdown">—<span class="unit">min</span></div><div class="countdown-label" id="mCountdownLabel">until school — leave by —</div><div class="meta" id="mMeta">—</div><div class="progress-track"><div class="progress-fill" id="mProgress"></div></div></main><aside class="side-panel"><section class="weather-panel"><div class="panel-label" id="mWeatherLabel">Currently</div><div class="weather-top"><div class="weather-temp" id="mTemp">—</div><div class="weather-icon" id="mIcon">—</div></div><div class="weather-desc" id="mDesc">—</div><div class="details"><div><div class="detail-label">Humidity</div><div class="detail-value" id="mHumidity">—</div></div><div><div class="detail-label">Wind</div><div class="detail-value" id="mWind">—</div></div><div><div class="detail-label">Rain chance</div><div class="detail-value" id="mRain">—</div></div><div><div class="detail-label">Route</div><div class="detail-value" id="mRoute">—</div></div></div></section><section class="traffic-panel"><div class="panel-label">Commute</div><div class="weather-temp" id="mDrive">—<span class="deg">min</span></div><div class="weather-desc" id="mDriveTo">to School</div><div class="detail-value" id="mRouteInfo">—</div></section></aside><footer class="bottom-bar"><div class="clock" id="mClock">—</div><div class="message" id="mMessage">—</div></footer></div>
-  <div class="layout" id="eveningLayout"><main class="main-panel"><div class="date-line" id="eDateLine">—</div><div class="evening-title" id="eTitle">Evening</div><div class="hero-time" id="eClock">—</div><div class="timeline" id="eTimeline"></div><div class="progress-track"><div class="progress-fill" id="eProgress"></div></div></main><aside class="side-panel"><section class="weather-panel"><div class="panel-label">Tomorrow</div><div class="weather-top"><div class="weather-temp" id="eTemp">—</div><div class="weather-icon" id="eIcon">—</div></div><div class="weather-desc" id="eDesc">—</div><div class="details"><div><div class="detail-label">High</div><div class="detail-value" id="eHigh">—</div></div><div><div class="detail-label">Low</div><div class="detail-value" id="eLow">—</div></div><div><div class="detail-label">Rain chance</div><div class="detail-value" id="eRain">—</div></div><div><div class="detail-label">Wind</div><div class="detail-value" id="eWind">—</div></div></div></section><section class="cal-panel"><div class="panel-label">Tomorrow’s school</div><div id="eCalEvents"><div class="detail-value">Calendar not configured</div></div></section></aside><div class="quote-bar"><div class="quote-text" id="quoteText">Waste no more time arguing what a good man should be. Be one.</div><div class="author" id="quoteAuthor">— Marcus Aurelius</div></div></div>
-  <div class="layout" id="weekendLayout"><main class="main-panel"><div class="date-line" id="wDateLine">—</div><div class="evening-title" id="wTitle">No school</div><div class="weather-desc" id="wSub">Enjoy the morning.</div></main><aside class="side-panel"><section class="weather-panel"><div class="panel-label">Outside</div><div class="weather-top"><div class="weather-temp" id="wTemp">—</div><div class="weather-icon" id="wIcon">—</div></div><div class="weather-desc" id="wDesc">—</div><div class="details"><div><div class="detail-label">Humidity</div><div class="detail-value" id="wHumidity">—</div></div><div><div class="detail-label">Wind</div><div class="detail-value" id="wWind">—</div></div></div></section></aside><footer class="bottom-bar"><div class="clock" id="wClock">—</div><div class="message" id="wMessage">Take it easy.</div></footer></div>
+
+  <div class="config-error" id="configError">
+    <h1>Config missing.</h1>
+    <p>Fam Frame needs <strong>dashboard-config.js</strong> loaded before rendering. Place it one folder above <code>/dashboard/</code> and use <strong>var DASHBOARD_CONFIG = {…}</strong> (not const).</p>
+  </div>
+
+  <div id="artMode">
+    <div class="art-time" id="artClock">—</div>
+    <div class="art-date"  id="artDate">—</div>
+  </div>
+
+  <!-- ═══ MORNING ═══ -->
+  <div class="layout" id="morningLayout">
+    <main class="main-panel">
+      <div class="date-line" id="mDateLine">—</div>
+      <div class="countdown" id="mCountdown">—<span class="unit">min</span></div>
+      <div class="countdown-label" id="mCountdownLabel">until school</div>
+      <div class="meta" id="mMeta">—</div>
+      <div class="checklist" id="mChecklist"></div>
+      <div class="progress-track"><div class="progress-fill" id="mProgress"></div></div>
+    </main>
+    <aside class="side-panel">
+      <section class="weather-panel">
+        <div class="panel-label">Currently</div>
+        <div class="weather-top">
+          <div class="weather-temp" id="mTemp">—</div>
+          <div class="weather-icon" id="mIcon">—</div>
+        </div>
+        <div class="weather-desc" id="mDesc">—</div>
+        <div class="details">
+          <div><div class="detail-label">Humidity</div><div class="detail-value" id="mHumidity">—</div></div>
+          <div><div class="detail-label">Wind</div><div class="detail-value" id="mWind">—</div></div>
+          <div><div class="detail-label">Rain chance</div><div class="detail-value" id="mRain">—</div></div>
+          <div><div class="detail-label">UV index</div><div class="detail-value" id="mUV">—</div></div>
+        </div>
+      </section>
+      <section class="traffic-panel">
+        <div class="traffic-header">
+          <div class="status-dot" id="mStatusDot"></div>
+          <div class="panel-label" style="margin-bottom:0">Commute</div>
+        </div>
+        <div class="weather-temp" id="mDrive">—<span class="deg">min</span></div>
+        <div class="weather-desc" id="mDriveTo">to School</div>
+        <div class="detail-value" id="mRouteInfo" style="color:rgba(239,231,215,.38);font-size:16px">—</div>
+        <div class="traffic-margin" id="mMargin">—</div>
+      </section>
+      <section class="cal-panel">
+        <div class="panel-label">Today</div>
+        <div id="mCalEvents"><div class="detail-value" style="color:rgba(239,231,215,.3)">Calendar not configured</div></div>
+      </section>
+    </aside>
+    <footer class="bottom-bar">
+      <div class="clock" id="mClock">—</div>
+      <div class="message" id="mMessage">Good morning</div>
+    </footer>
+  </div>
+
+  <!-- ═══ EVENING ═══ -->
+  <div class="layout" id="eveningLayout">
+    <main class="main-panel">
+      <div class="date-line" id="eDateLine">—</div>
+      <div class="evening-title">Evening</div>
+      <div class="hero-time" id="eClock">—</div>
+      <div class="timeline" id="eTimeline"></div>
+      <div class="progress-track"><div class="progress-fill" id="eProgress"></div></div>
+    </main>
+    <aside class="side-panel">
+      <section class="weather-panel">
+        <div class="panel-label">Tomorrow</div>
+        <div class="weather-top">
+          <div class="weather-temp" id="eTemp">—</div>
+          <div class="weather-icon" id="eIcon">—</div>
+        </div>
+        <div class="weather-desc" id="eDesc">—</div>
+        <div class="details">
+          <div><div class="detail-label">High</div><div class="detail-value" id="eHigh">—</div></div>
+          <div><div class="detail-label">Low</div><div class="detail-value" id="eLow">—</div></div>
+          <div><div class="detail-label">Rain chance</div><div class="detail-value" id="eRain">—</div></div>
+          <div><div class="detail-label">Wind</div><div class="detail-value" id="eWind">—</div></div>
+        </div>
+      </section>
+      <section class="cal-panel">
+        <div class="panel-label">Tomorrow's school</div>
+        <div id="eCalEvents"><div class="detail-value" style="color:rgba(239,231,215,.3)">Calendar not configured</div></div>
+      </section>
+    </aside>
+    <div class="quote-bar">
+      <div class="quote-text" id="quoteText">—</div>
+      <div class="author"     id="quoteAuthor"></div>
+    </div>
+  </div>
+
+  <!-- ═══ WEEKEND ═══ -->
+  <div class="layout" id="weekendLayout">
+    <main class="main-panel">
+      <div class="date-line" id="wDateLine">—</div>
+      <div class="evening-title" id="wTitle">No school</div>
+      <div class="weather-desc"  id="wSub">Enjoy the morning.</div>
+    </main>
+    <aside class="side-panel">
+      <section class="weather-panel">
+        <div class="panel-label">Outside</div>
+        <div class="weather-top">
+          <div class="weather-temp" id="wTemp">—</div>
+          <div class="weather-icon" id="wIcon">—</div>
+        </div>
+        <div class="weather-desc" id="wDesc">—</div>
+        <div class="details">
+          <div><div class="detail-label">Humidity</div><div class="detail-value" id="wHumidity">—</div></div>
+          <div><div class="detail-label">Wind</div><div class="detail-value" id="wWind">—</div></div>
+          <div><div class="detail-label">Rain</div><div class="detail-value" id="wRain">—</div></div>
+          <div><div class="detail-label">UV</div><div class="detail-value" id="wUV">—</div></div>
+        </div>
+      </section>
+    </aside>
+    <footer class="bottom-bar">
+      <div class="clock"   id="wClock">—</div>
+      <div class="message" id="wMessage">Take it easy.</div>
+    </footer>
+  </div>
+
 </div></div>
 <script>
-(function(){
-  var cfg = window.DASHBOARD_CONFIG || (typeof DASHBOARD_CONFIG !== 'undefined' ? DASHBOARD_CONFIG : null);
-  var els = {}; function id(x){return els[x]||(els[x]=document.getElementById(x));}
-  function has(obj,key){return obj && Object.prototype.hasOwnProperty.call(obj,key);}
-  function val(path, fallback){var cur=cfg; for(var i=0;i<path.length;i++){if(!cur || !has(cur,path[i])) return fallback; cur=cur[path[i]];} return cur == null ? fallback : cur;}
-  function arr(path){var v=val(path,[]); return Object.prototype.toString.call(v)==='[object Array]'?v:[];}
-  function pad(n){return String(n).length<2?'0'+n:String(n)}
-  function fmt(h,m){var ap=h<12?'AM':'PM';return (h%12||12)+':'+pad(m)+' '+ap}
-  function dateLine(d){var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return days[d.getDay()]+'  ·  '+months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
-  function pick(a,f){return a && a.length ? a[Math.floor(Math.random()*a.length)] : f}
-  function minutes(h,m){return (Number(h)||0)*60+(Number(m)||0)}
-  function dayKey(d){return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][d.getDay()]}
-  var WMO={0:['Clear sky','☀︎'],1:['Mostly clear','🌤'],2:['Partly cloudy','⛅'],3:['Overcast','☁︎'],45:['Foggy','🌫'],51:['Light drizzle','🌦'],61:['Light rain','🌧'],63:['Rain','🌧'],65:['Heavy rain','🌧'],80:['Showers','🌦'],95:['Thunderstorm','⛈']};
-  function wmo(c){return WMO[c]||['Partly cloudy','⛅']}
-  function scenario(now){var s=val(['scenarios',dayKey(now)],null)||val(['scenarios','default'],null); if(!s){return null} return s;}
-  function routeText(){return val(['family','location','schoolRoute'], val(['family','location','school'],''));}
-  function schoolDays(){var d=arr(['schoolDays']); return d.length?d:[1,2,3,4,5]}
-  function isSchoolDay(now){var d=schoolDays(); for(var i=0;i<d.length;i++){if(Number(d[i])===now.getDay())return true} return false}
-  function inWindow(now,name,fbS,fbE){var s=val(['modes',name,'startHour'],fbS[0]),sm=val(['modes',name,'startMin'],fbS[1]),e=val(['modes',name,'endHour'],fbE[0]),em=val(['modes',name,'endMin'],fbE[1]);var n=minutes(now.getHours(),now.getMinutes());return n>=minutes(s,sm)&&n<minutes(e,em)}
-  function mode(now){var forced=null;try{forced=window.localStorage.getItem('fam_frame_force_scene')}catch(e){} if(forced)return forced; if(inWindow(now,'morning',[6,0],[10,30]))return isSchoolDay(now)?'morning':'weekend'; if(inWindow(now,'evening',[17,0],[21,0]))return 'evening'; return 'art'}
-  function show(m){var names=['artMode','morningLayout','eveningLayout','weekendLayout']; for(var i=0;i<names.length;i++){id(names[i]).className=id(names[i]).className.replace(/\s?active/g,'')} if(m==='art')id('artMode').className+=' active'; if(m==='morning')id('morningLayout').className+=' active'; if(m==='evening')id('eveningLayout').className+=' active'; if(m==='weekend')id('weekendLayout').className+=' active'}
-  function clocks(now){var h=now.getHours()%12||12, m=pad(now.getMinutes()), ap=now.getHours()<12?'AM':'PM', ds=dateLine(now), ts=fmt(now.getHours(),now.getMinutes());id('artClock').innerHTML=ts;id('artDate').innerHTML=ds;id('mDateLine').innerHTML=ds;id('eDateLine').innerHTML=ds;id('wDateLine').innerHTML=ds;id('mClock').innerHTML=ts;id('wClock').innerHTML=ts;id('eClock').innerHTML=h+':'+m+'<span class="ampm">'+ap+'</span>'}
-  function renderMorning(now){var s=scenario(now); if(!s)return; var leaveH=Number(s.leaveHour), leaveM=Number(s.leaveMin), dep=new Date(now);dep.setHours(leaveH,leaveM,0,0);var diff=Math.floor((dep-now)/60000);var label=val(['copy','morningCountdownLabel'],'UNTIL SCHOOL — LEAVE BY {leaveTime}').replace('{leaveTime}',fmt(leaveH,leaveM)); id('mCountdownLabel').innerHTML=label; id('mMeta').innerHTML='LATE BELL '+fmt(Number(s.lateBellHour),Number(s.lateBellMin))+' · SCHOOL AT '+fmt(Number(s.schoolHour),Number(s.schoolMin)); if(diff>0){id('mCountdown').innerHTML=diff+'<span class="unit">min</span>'}else{id('mCountdown').innerHTML=fmt(leaveH,leaveM)} var pct=Math.max(0,Math.min(100,((75-diff)/75)*100));id('mProgress').style.width=pct+'%'; var drive=Number(s.driveMinEst||s.driveMin||val(['family','location','driveMinEst'],0)); id('mDrive').innerHTML=(drive||'—')+'<span class="deg">min</span>'; id('mDriveTo').innerHTML=val(['copy','morningDriveTo'],'to School'); id('mRoute').innerHTML=routeText(); id('mRouteInfo').innerHTML=routeText()+' · '+val(['family','location','city'],''); id('mMessage').innerHTML=pick(arr(['messages','morning','calm']),'Good morning')}
-  function renderTimeline(now){var tl=arr(['eveningTimeline']);var n=minutes(now.getHours(),now.getMinutes()), html='', inserted=false; for(var i=0;i<tl.length;i++){var it=tl[i], st=minutes(it.startHour,it.startMin), en=st+Number(it.durationMin||0), done=n>en&&Number(it.durationMin||0)>0, future=n<st; if(future&&!inserted){inserted=true;html+='<div class="tl-now"><div class="tl-now-dot"></div><div class="tl-now-label">now</div></div>'} html+='<div class="tl-item '+(done?'tl-done':'')+'"><div class="tl-left"><div class="tl-dot"></div>'+(i<tl.length-1?'<div class="tl-line"></div>':'')+'</div><div class="tl-content"><div class="tl-label">'+(it.icon?it.icon+' ':'')+it.label+'</div><div class="tl-time">'+fmt(Number(it.startHour),Number(it.startMin))+'</div>'+(it.note?'<div class="tl-note">'+it.note+'</div>':'')+'</div></div>'} id('eTimeline').innerHTML=html; var start=minutes(val(['modes','evening','startHour'],17),val(['modes','evening','startMin'],0)), end=minutes(val(['modes','evening','endHour'],21),val(['modes','evening','endMin'],0)); id('eProgress').style.width=Math.max(0,Math.min(100,((n-start)/(end-start))*100))+'%'}
-  function renderWeekend(){id('wTitle').innerHTML=val(['weekend','message'],'No school today.');id('wSub').innerHTML=val(['weekend','subtext'],'Enjoy the morning.');id('wMessage').innerHTML=val(['weekend','footerMessage'],'Take it easy.')}
-  function tick(){if(!cfg){id('configError').className+=' active';return}var now=new Date();var m=mode(now);show(m);clocks(now);if(m==='morning')renderMorning(now);if(m==='evening')renderTimeline(now);if(m==='weekend')renderWeekend()}
-  async function weather(){if(!cfg || val(['modules','weather','enabled'],true)===false)return;var lat=val(['family','location','lat'],null), lon=val(['family','location','lon'],null); if(lat===null||lon===null)return;try{var url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=2';var data=await fetch(url).then(function(r){return r.json()});var c=data.current, wi=wmo(c.weather_code), temp=Math.round(c.temperature_2m)+'<span class="deg">°</span>';['m','w'].forEach(function(p){if(id(p+'Temp'))id(p+'Temp').innerHTML=temp;if(id(p+'Icon'))id(p+'Icon').innerHTML=wi[1];if(id(p+'Desc'))id(p+'Desc').innerHTML=wi[0];if(id(p+'Humidity'))id(p+'Humidity').innerHTML=c.relative_humidity_2m+'%';if(id(p+'Wind'))id(p+'Wind').innerHTML=Math.round(c.wind_speed_10m)+' mph'});var rain=0;if(data.hourly&&data.hourly.precipitation_probability){for(var i=0;i<Math.min(4,data.hourly.precipitation_probability.length);i++)rain=Math.max(rain,data.hourly.precipitation_probability[i]||0)} id('mRain').innerHTML=rain+'%'; if(data.daily&&data.daily.time&&data.daily.time.length>1){var d=data.daily, tw=wmo(d.weather_code[1]);id('eTemp').innerHTML=Math.round(d.temperature_2m_max[1])+'<span class="deg">°</span>';id('eIcon').innerHTML=tw[1];id('eDesc').innerHTML=tw[0];id('eHigh').innerHTML=Math.round(d.temperature_2m_max[1])+'°';id('eLow').innerHTML=Math.round(d.temperature_2m_min[1])+'°';id('eRain').innerHTML=(d.precipitation_probability_max[1]||0)+'%';id('eWind').innerHTML=Math.round(d.wind_speed_10m_max[1]||0)+' mph'}}catch(e){}}
-  async function calendar(){if(!cfg)return;var key=val(['api','googleCalendarKey'],''), ids=arr(['api','googleCalendarIds']); if(!key||!ids.length){id('eCalEvents').innerHTML='<div class="detail-value">Calendar not configured</div>';return}var target=new Date();target.setDate(target.getDate()+1);var start=new Date(target);start.setHours(0,0,0,0);var end=new Date(target);end.setHours(23,59,59,999);try{var all=[];for(var i=0;i<ids.length;i++){var url='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(ids[i])+'/events?key='+encodeURIComponent(key)+'&timeMin='+encodeURIComponent(start.toISOString())+'&timeMax='+encodeURIComponent(end.toISOString())+'&singleEvents=true&orderBy=startTime&maxResults=5';var data=await fetch(url).then(function(r){return r.json()});if(data.items)all=all.concat(data.items)}all.sort(function(a,b){return String((a.start&& (a.start.dateTime||a.start.date))||'').localeCompare(String((b.start&&(b.start.dateTime||b.start.date))||''))});var late=val(['calendarRules','lateStartPattern'],'late start|delay|2.hour'), re=new RegExp(late,'i');if(!all.length){id('eCalEvents').innerHTML='<div class="detail-value">No school events</div>';return}id('eCalEvents').innerHTML=all.slice(0,4).map(function(ev){var dt=ev.start&&ev.start.dateTime?new Date(ev.start.dateTime):null;var t=dt?fmt(dt.getHours(),dt.getMinutes()):'ALL DAY';var title=ev.summary||'Untitled';return '<div class="cal-event">'+(re.test(title)?'<div class="badge">LATE START</div>':'')+'<div class="cal-title">'+title+'</div><div class="cal-time">'+t+'</div></div>'}).join('')}catch(e){id('eCalEvents').innerHTML='<div class="detail-value">Calendar unavailable</div>'}}
-  tick();weather();calendar();setInterval(tick,1000);setInterval(weather,10*60*1000);setInterval(calendar,15*60*1000);
+(function () {
+  // ── CONFIG ────────────────────────────────────────────────────────
+  var cfg = window.DASHBOARD_CONFIG ||
+    (typeof DASHBOARD_CONFIG !== 'undefined' ? DASHBOARD_CONFIG : null);
+
+  // ── ELEMENT CACHE ─────────────────────────────────────────────────
+  var els = {};
+  function id(x) { return els[x] || (els[x] = document.getElementById(x)); }
+
+  // ── CONFIG HELPERS ────────────────────────────────────────────────
+  function has(o, k) { return o && Object.prototype.hasOwnProperty.call(o, k); }
+  function val(path, fb) {
+    var cur = cfg;
+    for (var i = 0; i < path.length; i++) {
+      if (!cur || !has(cur, path[i])) return fb;
+      cur = cur[path[i]];
+    }
+    return cur == null ? fb : cur;
+  }
+  function arr(path) {
+    var v = val(path, []);
+    return Object.prototype.toString.call(v) === '[object Array]' ? v : [];
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────────────
+  function pad(n) { return String(n).length < 2 ? '0' + n : String(n); }
+  function fmt(h, m) { var ap = h < 12 ? 'AM' : 'PM'; return (h % 12 || 12) + ':' + pad(m) + ' ' + ap; }
+  function mins(h, m) { return (Number(h) || 0) * 60 + (Number(m) || 0); }
+  function pick(a, fb) { return a && a.length ? a[Math.floor(Math.random() * a.length)] : fb; }
+  function dayKey(d) {
+    return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][d.getDay()];
+  }
+  function dateLine(d) {
+    var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return days[d.getDay()] + '  ·  ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+
+  var WMO = {
+    0:['Clear sky','☀︎'], 1:['Mostly clear','🌤'], 2:['Partly cloudy','⛅'],
+    3:['Overcast','☁︎'],  45:['Foggy','🌫'],        51:['Light drizzle','🌦'],
+    61:['Light rain','🌧'],63:['Rain','🌧'],          65:['Heavy rain','🌧'],
+    80:['Showers','🌦'],  95:['Thunderstorm','⛈']
+  };
+  function wmo(c) { return WMO[c] || ['Partly cloudy','⛅']; }
+
+  // ── SCENARIO / MODE ───────────────────────────────────────────────
+  function scenario(now) {
+    return val(['scenarios', dayKey(now)], null) || val(['scenarios', 'default'], null);
+  }
+  function isSchoolDay(now) {
+    var d = arr(['schoolDays']); if (!d.length) d = [1,2,3,4,5];
+    for (var i = 0; i < d.length; i++) { if (Number(d[i]) === now.getDay()) return true; }
+    return false;
+  }
+  function inWindow(now, name, fbS, fbE) {
+    var s  = val(['modes', name, 'startHour'], fbS[0]);
+    var sm = val(['modes', name, 'startMin'],  fbS[1]);
+    var e  = val(['modes', name, 'endHour'],   fbE[0]);
+    var em = val(['modes', name, 'endMin'],    fbE[1]);
+    var n  = mins(now.getHours(), now.getMinutes());
+    return n >= mins(s, sm) && n < mins(e, em);
+  }
+  function currentMode(now) {
+    var forced = null;
+    try { forced = window.localStorage.getItem('fam_frame_force_scene'); } catch (e) {}
+    if (forced) return forced;
+    if (inWindow(now, 'morning', [6,0], [10,30])) return isSchoolDay(now) ? 'morning' : 'weekend';
+    if (inWindow(now, 'evening', [17,0], [21,0])) return 'evening';
+    return 'art';
+  }
+
+  // ── MODE SWITCH ───────────────────────────────────────────────────
+  function show(m) {
+    ['artMode','morningLayout','eveningLayout','weekendLayout'].forEach(function (n) {
+      var el = id(n); el.className = el.className.replace(/\s?active/g, '');
+    });
+    var map = { art:'artMode', morning:'morningLayout', evening:'eveningLayout', weekend:'weekendLayout' };
+    if (map[m]) id(map[m]).className += ' active';
+  }
+
+  // ── CLOCKS ────────────────────────────────────────────────────────
+  function clocks(now) {
+    var h  = now.getHours() % 12 || 12;
+    var m  = pad(now.getMinutes());
+    var ap = now.getHours() < 12 ? 'AM' : 'PM';
+    var ts = now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true });
+    var ds = dateLine(now);
+    id('artClock').innerHTML  = fmt(now.getHours(), now.getMinutes());
+    id('artDate').innerHTML   = ds;
+    id('mDateLine').innerHTML = ds;
+    id('eDateLine').innerHTML = ds;
+    id('wDateLine').innerHTML = ds;
+    id('mClock').innerHTML    = ts;
+    id('wClock').innerHTML    = ts;
+    id('eClock').innerHTML    = h + ':' + m + '<span class="ampm">' + ap + '</span>';
+  }
+
+  // ── DRIVE ESTIMATE ────────────────────────────────────────────────
+  var driveMin = 22;
+  function updateDrive() {
+    var tod = new Date().getHours() + new Date().getMinutes() / 60;
+    if      (tod >= 6   && tod < 7)    driveMin = 14;
+    else if (tod >= 7   && tod < 7.5)  driveMin = 20;
+    else if (tod >= 7.5 && tod < 8.5)  driveMin = 26;
+    else if (tod >= 8.5 && tod < 9)    driveMin = 18;
+    else                                driveMin = 12;
+  }
+
+  // ── MORNING ───────────────────────────────────────────────────────
+  function renderMorning(now) {
+    var s = scenario(now);
+    if (!s) return;
+
+    var leaveH = Number(s.leaveHour), leaveM = Number(s.leaveMin);
+    var dep    = new Date(now); dep.setHours(leaveH, leaveM, 0, 0);
+    var diff   = Math.floor((dep - now) / 60000);
+    var diffS  = Math.floor(((dep - now) % 60000) / 1000);
+
+    // Countdown
+    if (diff > 4)       id('mCountdown').innerHTML = diff + '<span class="unit">min</span>';
+    else if (diff >= 0) id('mCountdown').innerHTML = pad(diff) + ':' + pad(diffS);
+    else                id('mCountdown').innerHTML = fmt(leaveH, leaveM);
+
+    id('mCountdownLabel').innerHTML = 'UNTIL SCHOOL — LEAVE BY ' + fmt(leaveH, leaveM);
+    id('mMeta').innerHTML =
+      'LATE BELL ' + fmt(Number(s.lateBellHour), Number(s.lateBellMin)) +
+      ' · SCHOOL AT ' + fmt(Number(s.schoolHour), Number(s.schoolMin));
+
+    // Progress
+    id('mProgress').style.width = Math.max(0, Math.min(100, ((75 - diff) / 75) * 100)) + '%';
+
+    // Message
+    var pool = diff <= 0  ? arr(['messages','morning','gone'])
+             : diff <= 5  ? arr(['messages','morning','crit'])
+             : diff <= 10 ? arr(['messages','morning','hot'])
+             : diff <= 20 ? arr(['messages','morning','warn'])
+             :               arr(['messages','morning','calm']);
+    id('mMessage').innerHTML = pick(pool, 'Good morning');
+
+    // Traffic status dot + margin
+    var schoolTot = Number(s.schoolHour) * 60 + Number(s.schoolMin);
+    var nowTot    = now.getHours() * 60 + now.getMinutes();
+    var margin    = schoolTot - nowTot - driveMin;
+    var dot       = id('mStatusDot');
+    var mEl       = id('mMargin');
+
+    if (margin >= 12) {
+      dot.className = 'status-dot';
+      mEl.className = 'traffic-margin ok';
+      mEl.innerHTML = '+' + margin + ' min margin';
+    } else if (margin >= 5) {
+      dot.className = 'status-dot warn pulse';
+      mEl.className = 'traffic-margin warn';
+      mEl.innerHTML = '+' + margin + ' min — getting tight';
+    } else if (margin >= 0) {
+      dot.className = 'status-dot crit pulse';
+      mEl.className = 'traffic-margin crit';
+      mEl.innerHTML = '+' + margin + ' min — cutting it close';
+    } else {
+      dot.className = 'status-dot crit pulse';
+      mEl.className = 'traffic-margin crit';
+      mEl.innerHTML = Math.abs(margin) + ' min late if you leave now';
+    }
+
+    id('mDrive').innerHTML   = driveMin + '<span class="deg">min</span>';
+    id('mDriveTo').innerHTML = 'to School';
+    id('mRouteInfo').innerHTML =
+      val(['family','location','schoolRoute'], val(['family','location','school'], ''));
+
+    // Checklist
+    renderChecklist(now, s);
+  }
+
+  // ── CHECKLIST ─────────────────────────────────────────────────────
+  function renderChecklist(now, s) {
+    var items      = arr(['morningChecklist']);
+    var leaveTotal = Number(s.leaveHour) * 60 + Number(s.leaveMin);
+    var nowTotal   = now.getHours() * 60 + now.getMinutes();
+
+    id('mChecklist').innerHTML = items.map(function (item) {
+      var absMin   = leaveTotal + (Number(item.targetMin) || 0);
+      var isDone   = nowTotal > absMin + 2;
+      var isActive = !isDone && nowTotal >= absMin - 8 && nowTotal <= absMin + 2;
+      var h = Math.floor(((absMin % 1440) + 1440) % 1440 / 60);
+      var m = ((absMin % 60) + 60) % 60;
+      return '<div class="cl-item' + (isDone ? ' done' : '') + (isActive ? ' active' : '') + '">' +
+        '<div class="cl-icon">' + (item.icon || '') + '</div>' +
+        '<div class="cl-label">' + item.label + '</div>' +
+        '<div class="cl-time">' + fmt(h, m) + '</div>' +
+        '<div class="cl-dot"></div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // ── EVENING TIMELINE ──────────────────────────────────────────────
+  function renderTimeline(now) {
+    var tl       = arr(['eveningTimeline']);
+    var n        = mins(now.getHours(), now.getMinutes());
+    var html     = '';
+    var inserted = false;
+
+    for (var i = 0; i < tl.length; i++) {
+      var it   = tl[i];
+      var st   = mins(it.startHour, it.startMin);
+      var en   = st + Number(it.durationMin || 0);
+      var done = n > en && Number(it.durationMin || 0) > 0;
+
+      if (n < st && !inserted) {
+        inserted = true;
+        html += '<div class="tl-now">' +
+          '<div class="tl-now-dot"></div>' +
+          '<div class="tl-now-label">now</div>' +
+          '</div>';
+      }
+
+      html += '<div class="tl-item ' + (done ? 'tl-done' : '') + '">' +
+        '<div class="tl-left">' +
+          '<div class="tl-dot"></div>' +
+          (i < tl.length - 1 ? '<div class="tl-line"></div>' : '') +
+        '</div>' +
+        '<div class="tl-content">' +
+          '<div class="tl-label">' + (it.icon ? it.icon + ' ' : '') + it.label + '</div>' +
+          '<div class="tl-time">' + fmt(Number(it.startHour), Number(it.startMin)) + '</div>' +
+          (it.note ? '<div class="tl-note">' + it.note + '</div>' : '') +
+        '</div>' +
+        '</div>';
+    }
+    id('eTimeline').innerHTML = html;
+
+    // Progress bar
+    var evS = mins(val(['modes','evening','startHour'],17), val(['modes','evening','startMin'],0));
+    var evE = mins(val(['modes','evening','endHour'],21),   val(['modes','evening','endMin'],0));
+    id('eProgress').style.width = Math.max(0, Math.min(100, ((n - evS) / (evE - evS)) * 100)) + '%';
+  }
+
+  // ── WEEKEND ───────────────────────────────────────────────────────
+  function renderWeekend() {
+    id('wTitle').innerHTML   = val(['weekend','message'],       'No school today.');
+    id('wSub').innerHTML     = val(['weekend','subtext'],       'Enjoy the morning.');
+    id('wMessage').innerHTML = val(['weekend','footerMessage'], 'Take it easy.');
+  }
+
+  // ── TICK ──────────────────────────────────────────────────────────
+  function tick() {
+    if (!cfg) { id('configError').className += ' active'; return; }
+    var now = new Date();
+    var m   = currentMode(now);
+    show(m);
+    clocks(now);
+    if (m === 'morning') renderMorning(now);
+    if (m === 'evening') renderTimeline(now);
+    if (m === 'weekend') renderWeekend();
+  }
+
+  // ── WEATHER ───────────────────────────────────────────────────────
+  async function fetchWeather() {
+    var lat = val(['family','location','lat'], null);
+    var lon = val(['family','location','lon'], null);
+    if (!cfg || lat === null || lon === null) return;
+    try {
+      var url = 'https://api.open-meteo.com/v1/forecast' +
+        '?latitude=' + lat + '&longitude=' + lon +
+        '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,uv_index' +
+        '&hourly=precipitation_probability' +
+        '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code' +
+        '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=2';
+      var data = await fetch(url).then(function (r) { return r.json(); });
+      var c    = data.current;
+      var wi   = wmo(c.weather_code);
+      var temp = Math.round(c.temperature_2m) + '<span class="deg">°</span>';
+
+      ['m','w'].forEach(function (p) {
+        if (id(p+'Temp'))     id(p+'Temp').innerHTML     = temp;
+        if (id(p+'Icon'))     id(p+'Icon').innerHTML     = wi[1];
+        if (id(p+'Desc'))     id(p+'Desc').innerHTML     = wi[0];
+        if (id(p+'Humidity')) id(p+'Humidity').innerHTML = c.relative_humidity_2m + '%';
+        if (id(p+'Wind'))     id(p+'Wind').innerHTML     = Math.round(c.wind_speed_10m) + ' mph';
+      });
+      if (id('mUV')) id('mUV').innerHTML = (c.uv_index || 0).toFixed(1);
+      if (id('wUV')) id('wUV').innerHTML = (c.uv_index || 0).toFixed(1);
+
+      var rain = 0;
+      if (data.hourly && data.hourly.precipitation_probability) {
+        for (var i = 0; i < Math.min(4, data.hourly.precipitation_probability.length); i++) {
+          rain = Math.max(rain, data.hourly.precipitation_probability[i] || 0);
+        }
+      }
+      if (id('mRain')) id('mRain').innerHTML = rain + '%';
+      if (id('wRain')) id('wRain').innerHTML = rain + '%';
+
+      if (data.daily && data.daily.time && data.daily.time.length > 1) {
+        var d  = data.daily;
+        var tw = wmo(d.weather_code[1]);
+        if (id('eTemp')) id('eTemp').innerHTML = Math.round(d.temperature_2m_max[1]) + '<span class="deg">°</span>';
+        if (id('eIcon')) id('eIcon').innerHTML = tw[1];
+        if (id('eDesc')) id('eDesc').innerHTML = tw[0];
+        if (id('eHigh')) id('eHigh').innerHTML = Math.round(d.temperature_2m_max[1]) + '°';
+        if (id('eLow'))  id('eLow').innerHTML  = Math.round(d.temperature_2m_min[1]) + '°';
+        if (id('eRain')) id('eRain').innerHTML = (d.precipitation_probability_max[1] || 0) + '%';
+        if (id('eWind')) id('eWind').innerHTML = Math.round(d.wind_speed_10m_max[1] || 0) + ' mph';
+      }
+    } catch (e) { console.warn('Weather error', e); }
+  }
+
+  // ── QUOTE (Quotable API — free, no key needed) ────────────────────
+  async function fetchQuote() {
+    var qEl = id('quoteText');
+    var aEl = id('quoteAuthor');
+    if (!qEl) return;
+
+    var source = val(['modules','quote','source'], 'stoic');
+    var tagMap  = { stoic:'stoicism', wisdom:'wisdom', family:'family', any:'' };
+    var tag     = tagMap[source] || 'stoicism';
+
+    qEl.style.opacity = '0';
+
+    try {
+      var url  = 'https://api.quotable.io/random?tags=' + tag + '&maxLength=180';
+      var data = await fetch(url).then(function (r) { return r.json(); });
+      if (data && data.content) {
+        setTimeout(function () {
+          qEl.innerHTML = data.content;
+          if (aEl) aEl.innerHTML = '— ' + (data.author || '').toUpperCase();
+          qEl.style.opacity = '1';
+        }, 500);
+        return;
+      }
+      throw new Error('empty');
+    } catch (e) {
+      var fallbacks = [
+        { q:'Waste no more time arguing what a good man should be. Be one.', a:'MARCUS AURELIUS' },
+        { q:'It is not what happens to you, but how you react to it that matters.', a:'EPICTETUS' },
+        { q:'The obstacle is the way.', a:'MARCUS AURELIUS' },
+        { q:'He who is brave is free.', a:'SENECA' },
+        { q:'Dwell on the beauty of life. Watch the stars, and see yourself running with them.', a:'MARCUS AURELIUS' },
+      ];
+      var fb = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+      setTimeout(function () {
+        qEl.innerHTML = fb.q;
+        if (aEl) aEl.innerHTML = '— ' + fb.a;
+        qEl.style.opacity = '1';
+      }, 500);
+    }
+  }
+
+  // ── CALENDAR ──────────────────────────────────────────────────────
+  async function fetchCalendar(targetDate, elId) {
+    var el  = id(elId);
+    if (!el || !cfg) return;
+    var key = val(['api','googleCalendarKey'], '');
+    var ids = arr(['api','googleCalendarIds']);
+
+    if (!key || !ids.length) {
+      el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">Calendar not configured</div>';
+      return;
+    }
+    var start = new Date(targetDate); start.setHours(0,0,0,0);
+    var end   = new Date(targetDate); end.setHours(23,59,59,999);
+    try {
+      var all = [];
+      for (var i = 0; i < ids.length; i++) {
+        var url = 'https://www.googleapis.com/calendar/v3/calendars/' +
+          encodeURIComponent(ids[i]) + '/events' +
+          '?key=' + encodeURIComponent(key) +
+          '&timeMin=' + encodeURIComponent(start.toISOString()) +
+          '&timeMax=' + encodeURIComponent(end.toISOString()) +
+          '&singleEvents=true&orderBy=startTime&maxResults=5';
+        var data = await fetch(url).then(function (r) { return r.json(); });
+        if (data.items) all = all.concat(data.items);
+      }
+      all.sort(function (a, b) {
+        return String((a.start && (a.start.dateTime || a.start.date)) || '')
+          .localeCompare(String((b.start && (b.start.dateTime || b.start.date)) || ''));
+      });
+
+      var LATE = new RegExp(val(['calendarRules','lateStartPattern'], 'late start|delay|2.hour'), 'i');
+      var HOL  = /no school|holiday|break|closed/i;
+
+      if (!all.length) {
+        el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">No events</div>';
+        return;
+      }
+      el.innerHTML = all.slice(0, 4).map(function (ev) {
+        var dt    = ev.start && ev.start.dateTime ? new Date(ev.start.dateTime) : null;
+        var t     = dt ? fmt(dt.getHours(), dt.getMinutes()) : 'ALL DAY';
+        var title = ev.summary || 'Untitled';
+        return '<div class="cal-event">' +
+          (LATE.test(title) ? '<div class="badge">LATE START</div>' : '') +
+          (HOL.test(title)  ? '<div class="badge" style="color:#7aaa8a;border-color:rgba(122,170,138,.5)">NO SCHOOL</div>' : '') +
+          '<div class="cal-title">' + title + '</div>' +
+          '<div class="cal-time">' + t + '</div>' +
+          '</div>';
+      }).join('');
+    } catch (e) {
+      el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">Calendar unavailable</div>';
+    }
+  }
+
+  // ── INIT ──────────────────────────────────────────────────────────
+  updateDrive();
+  tick();
+  fetchWeather();
+  fetchQuote();
+
+  var now  = new Date();
+  var tmrw = new Date(now); tmrw.setDate(tmrw.getDate() + 1);
+  fetchCalendar(now,  'mCalEvents');
+  fetchCalendar(tmrw, 'eCalEvents');
+
+  setInterval(tick,         1000);
+  setInterval(updateDrive,  60 * 1000);
+  setInterval(fetchWeather, 10 * 60 * 1000);
+  setInterval(fetchQuote,   60 * 60 * 1000);
+  setInterval(function () {
+    var n = new Date(), t = new Date(n); t.setDate(t.getDate() + 1);
+    fetchCalendar(n, 'mCalEvents');
+    fetchCalendar(t, 'eCalEvents');
+  }, 15 * 60 * 1000);
+
 })();
 </script>
 </body>
