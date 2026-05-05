@@ -5,6 +5,34 @@
  
 var DASHBOARD_CONFIG = {
  
+  // ── TIME ──────────────────────────────────────────────────────────
+  // All schedule times below are local wall-clock times in this IANA time zone.
+  // Use "HH:MM" in 24-hour time, e.g. "06:00", "17:30", "20:15".
+  time: {
+    timeZone: "America/New_York",
+    locale:   "en-US",
+    hour12:   true,
+
+    morningProgressWindowMin: 75,
+    countdownClockAtMin: 4,
+
+    morningMessageThresholds: {
+      critMin: 5,
+      hotMin:  10,
+      warnMin: 20,
+    },
+
+    departureUrgency: {
+      critMin: 10,
+      warnMin: 20,
+    },
+
+    checklistTiming: {
+      activeBeforeMin: 8,
+      doneAfterMin:    2,
+    },
+  },
+
   // ── FAMILY ────────────────────────────────────────────────────────
   family: {
     kids: [
@@ -29,22 +57,10 @@ var DASHBOARD_CONFIG = {
   },
  
   // ── DISPLAY MODES & SCHEDULE ──────────────────────────────────────
-  // The dashboard auto-switches mode based on time of day + day of week
+  // The dashboard auto-switches mode based on local time in time.timeZone.
   modes: {
-    // MORNING: active window
-    morning: {
-      startHour: 6,    // 6:00 AM
-      startMin:  0,
-      endHour:   10,    // 8:00 AM (after kids leave)
-      endMin:    30,
-    },
-    // EVENING: active window
-    evening: {
-      startHour: 17,   // 5:00 PM
-      startMin:  0,
-      endHour:   21,   // 9:00 PM
-      endMin:    0,
-    },
+    morning: { start: "06:00", end: "12:30" },
+    evening: { start: "17:00", end: "21:00" },
     // Outside these windows → blank/art mode
   },
  
@@ -56,35 +72,26 @@ var DASHBOARD_CONFIG = {
   // Each school day can have a different departure time + note
   scenarios: {
     default: {
-      leaveHour:    10,
-      leaveMin:     45,
-      schoolHour:   11,
-      schoolMin:    20,
-      lateBellHour: 11,
-      lateBellMin:  25,
+      leave:       "12:45",
+      school:      "13:20",
+      lateBell:    "13:25",
       driveMinEst:  22,
       carBufferMin: 5,
       note:         "",
     },
     // Override specific days as needed:
     // wednesday: {
-    //   leaveHour: 8,
-    //   leaveMin:  15,
-    //   schoolHour: 9,
-    //   schoolMin:  0,
-    //   lateBellHour: 9,
-    //   lateBellMin: 10,
+    //   leave:       "08:15",
+    //   school:      "09:00",
+    //   lateBell:    "09:10",
     //   driveMinEst: 22,
     //   carBufferMin: 5,
     //   note: "Late start Wednesdays",
     // },
     // friday: {
-    //   leaveHour: 6,
-    //   leaveMin:  45,
-    //   schoolHour: 7,
-    //   schoolMin:  20,
-    //   lateBellHour: 7,
-    //   lateBellMin:  25,
+    //   leave:       "06:45",
+    //   school:      "07:20",
+    //   lateBell:    "07:25",
     //   driveMinEst:  22,
     //   carBufferMin: 5,
     //   note: "Spirit day 🎉",
@@ -93,7 +100,7 @@ var DASHBOARD_CONFIG = {
  
   // ── MORNING CHECKLIST (reminders shown on screen) ─────────────────
   // These appear in morning mode as a live checklist.
-  // completedByMin: auto-marks done this many minutes before departure
+  // targetMin is relative to leave time. Example: -15 means 15 min before leave.
   morningChecklist: [
     { id: "breakfast",  label: "Breakfast",        targetMin: -40, icon: "🥣" },
     { id: "dressed",    label: "Get dressed",       targetMin: -30, icon: "👕" },
@@ -104,7 +111,7 @@ var DASHBOARD_CONFIG = {
   ],
  
   // ── EVENING TIMELINE ──────────────────────────────────────────────
-  // startHour/startMin = when this block should begin
+  // start = when this block should begin, local wall-clock time in time.timeZone
   // durationMin        = how long the block lasts
   // icon, label, note  = display text
   eveningTimeline: [
@@ -112,7 +119,7 @@ var DASHBOARD_CONFIG = {
       id:          "home",
       label:       "Home & decompress",
       icon:        "🏠",
-      startHour:   17, startMin: 30,
+      start:       "17:30",
       durationMin: 30,
       note:        "Snack, unwind",
     },
@@ -120,7 +127,7 @@ var DASHBOARD_CONFIG = {
       id:          "homework",
       label:       "Homework",
       icon:        "📚",
-      startHour:   18, startMin: 0,
+      start:       "18:00",
       durationMin: 30,
       note:        "Both kids",
     },
@@ -128,7 +135,7 @@ var DASHBOARD_CONFIG = {
       id:          "dinner",
       label:       "Dinner",
       icon:        "🍽",
-      startHour:   18, startMin: 30,
+      start:       "18:30",
       durationMin: 30,
       note:        "Together",
     },
@@ -136,7 +143,7 @@ var DASHBOARD_CONFIG = {
       id:          "baths",
       label:       "Baths",
       icon:        "🛁",
-      startHour:   19, startMin: 15,
+      start:       "19:15",
       durationMin: 30,
       note:        "",
     },
@@ -144,7 +151,7 @@ var DASHBOARD_CONFIG = {
       id:          "reading",
       label:       "Reading",
       icon:        "📖",
-      startHour:   19, startMin: 45,
+      start:       "19:45",
       durationMin: 30,
       note:        "30 min each",
     },
@@ -152,7 +159,7 @@ var DASHBOARD_CONFIG = {
       id:          "winddown",
       label:       "Wind down",
       icon:        "🌙",
-      startHour:   20, startMin: 15,
+      start:       "20:15",
       durationMin: 15,
       note:        "No screens",
     },
@@ -160,7 +167,7 @@ var DASHBOARD_CONFIG = {
       id:          "bed",
       label:       "Lights out",
       icon:        "💤",
-      startHour:   20, startMin: 30,
+      start:       "20:30",
       durationMin: 0,
       note:        "8:30 PM",
     },
@@ -190,6 +197,18 @@ var DASHBOARD_CONFIG = {
     message:  "No school today.",
     subtext:  "Enjoy the morning.",
     showWeather: true,
+  },
+
+  // ── COMMUTE ESTIMATES ─────────────────────────────────────────────
+  // Optional time-of-day drive estimates, also in time.timeZone.
+  commute: {
+    defaultDriveMin: 12,
+    driveEstimates: [
+      { start: "06:00", end: "07:00", driveMin: 14 },
+      { start: "07:00", end: "07:30", driveMin: 20 },
+      { start: "07:30", end: "08:30", driveMin: 26 },
+      { start: "08:30", end: "09:00", driveMin: 18 },
+    ],
   },
 };
  

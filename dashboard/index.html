@@ -286,13 +286,100 @@ body{font-family:'DM Mono',monospace}
   function fmt(h, m) { var ap = h < 12 ? 'AM' : 'PM'; return (h % 12 || 12) + ':' + pad(m) + ' ' + ap; }
   function mins(h, m) { return (Number(h) || 0) * 60 + (Number(m) || 0); }
   function pick(a, fb) { return a && a.length ? a[Math.floor(Math.random() * a.length)] : fb; }
-  function dayKey(d) {
-    return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][d.getDay()];
+  function timeZone() {
+    return val(['time','timeZone'], 'America/New_York');
   }
-  function dateLine(d) {
+  function timeLocale() {
+    return val(['time','locale'], 'en-US');
+  }
+  function clockOpts(extra) {
+    var o = { timeZone: timeZone(), hour12: val(['time','hour12'], true) !== false };
+    for (var k in extra) if (has(extra, k)) o[k] = extra[k];
+    return o;
+  }
+  function zonedParts(date) {
+    var parts = {};
+    try {
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone(),
+        weekday: 'long',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false
+      }).formatToParts(date).forEach(function (p) {
+        if (p.type !== 'literal') parts[p.type] = p.value;
+      });
+      var days = { sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6 };
+      var key = String(parts.weekday || '').toLowerCase();
+      var hour = Number(parts.hour);
+      if (hour === 24) hour = 0;
+      return {
+        date: date,
+        weekday: key,
+        dayIndex: has(days, key) ? days[key] : date.getDay(),
+        year: Number(parts.year),
+        monthIndex: Number(parts.month) - 1,
+        day: Number(parts.day),
+        hour: hour,
+        minute: Number(parts.minute),
+        second: Number(parts.second)
+      };
+    } catch (e) {
+      return {
+        date: date,
+        weekday: ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][date.getDay()],
+        dayIndex: date.getDay(),
+        year: date.getFullYear(),
+        monthIndex: date.getMonth(),
+        day: date.getDate(),
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        second: date.getSeconds()
+      };
+    }
+  }
+  function zonedNow() {
+    return zonedParts(new Date());
+  }
+  function zonedDate(year, monthIndex, day, hour, minute, second, ms) {
+    var desired = Date.UTC(year, monthIndex, day, hour || 0, minute || 0, second || 0, ms || 0);
+    var guess = desired;
+    for (var i = 0; i < 3; i++) {
+      var p = zonedParts(new Date(guess));
+      var actual = Date.UTC(p.year, p.monthIndex, p.day, p.hour, p.minute, p.second, ms || 0);
+      guess += desired - actual;
+    }
+    return new Date(guess);
+  }
+  function zonedDay(offset) {
+    var t = zonedNow();
+    return zonedParts(zonedDate(t.year, t.monthIndex, t.day + (offset || 0), 12, 0, 0, 0));
+  }
+  function dayKey(t) {
+    return t.weekday || ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][t.dayIndex];
+  }
+  function dateLine(t) {
     var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return days[d.getDay()] + '  ·  ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    return days[t.dayIndex] + '  ·  ' + months[t.monthIndex] + ' ' + t.day + ', ' + t.year;
+  }
+  function timeToMin(v, h, m) {
+    if (typeof v === 'string') {
+      var match = v.match(/^(\d{1,2}):(\d{2})$/);
+      if (match) return mins(Number(match[1]), Number(match[2]));
+    }
+    return mins(h, m);
+  }
+  function cfgTime(obj, key, hourKey, minKey) {
+    return timeToMin(obj && obj[key], obj && obj[hourKey], obj && obj[minKey]);
+  }
+  function fmtMin(total) {
+    total = ((Number(total) % 1440) + 1440) % 1440;
+    return fmt(Math.floor(total / 60), total % 60);
   }
 
   var WMO = {
@@ -304,28 +391,29 @@ body{font-family:'DM Mono',monospace}
   function wmo(c) { return WMO[c] || ['Partly cloudy','⛅']; }
 
   // ── SCENARIO / MODE ───────────────────────────────────────────────
-  function scenario(now) {
-    return val(['scenarios', dayKey(now)], null) || val(['scenarios', 'default'], null);
+  function scenario(t) {
+    return val(['scenarios', dayKey(t)], null) || val(['scenarios', 'default'], null);
   }
-  function isSchoolDay(now) {
+  function isSchoolDay(t) {
     var d = arr(['schoolDays']); if (!d.length) d = [1,2,3,4,5];
-    for (var i = 0; i < d.length; i++) { if (Number(d[i]) === now.getDay()) return true; }
+    for (var i = 0; i < d.length; i++) { if (Number(d[i]) === t.dayIndex) return true; }
     return false;
   }
-  function inWindow(now, name, fbS, fbE) {
-    var s  = val(['modes', name, 'startHour'], fbS[0]);
-    var sm = val(['modes', name, 'startMin'],  fbS[1]);
-    var e  = val(['modes', name, 'endHour'],   fbE[0]);
-    var em = val(['modes', name, 'endMin'],    fbE[1]);
-    var n  = mins(now.getHours(), now.getMinutes());
-    return n >= mins(s, sm) && n < mins(e, em);
+  function inWindow(t, name) {
+    var mode = val(['modes', name], null);
+    if (!mode) return false;
+    var s = cfgTime(mode, 'start', 'startHour', 'startMin');
+    var e = cfgTime(mode, 'end', 'endHour', 'endMin');
+    var n = mins(t.hour, t.minute);
+    if (s <= e) return n >= s && n < e;
+    return n >= s || n < e;
   }
-  function currentMode(now) {
+  function currentMode(t) {
     var forced = null;
     try { forced = window.localStorage.getItem('fam_frame_force_scene'); } catch (e) {}
     if (forced) return forced;
-    if (inWindow(now, 'morning', [6,0], [10,30])) return isSchoolDay(now) ? 'morning' : 'weekend';
-    if (inWindow(now, 'evening', [17,0], [21,0])) return 'evening';
+    if (inWindow(t, 'morning')) return isSchoolDay(t) ? 'morning' : 'weekend';
+    if (inWindow(t, 'evening')) return 'evening';
     return 'art';
   }
 
@@ -339,13 +427,13 @@ body{font-family:'DM Mono',monospace}
   }
 
   // ── CLOCKS ────────────────────────────────────────────────────────
-  function clocks(now) {
-    var h  = now.getHours() % 12 || 12;
-    var m  = pad(now.getMinutes());
-    var ap = now.getHours() < 12 ? 'AM' : 'PM';
-    var ts = now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true });
-    var ds = dateLine(now);
-    id('artClock').innerHTML  = fmt(now.getHours(), now.getMinutes());
+  function clocks(t) {
+    var h  = t.hour % 12 || 12;
+    var m  = pad(t.minute);
+    var ap = t.hour < 12 ? 'AM' : 'PM';
+    var ts = t.date.toLocaleTimeString(timeLocale(), clockOpts({ hour:'numeric', minute:'2-digit', second:'2-digit' }));
+    var ds = dateLine(t);
+    id('artClock').innerHTML  = fmt(t.hour, t.minute);
     id('artDate').innerHTML   = ds;
     id('mDateLine').innerHTML = ds;
     id('eDateLine').innerHTML = ds;
@@ -356,68 +444,81 @@ body{font-family:'DM Mono',monospace}
   }
 
   // ── DRIVE ESTIMATE ────────────────────────────────────────────────
-  var driveMin = 22;
-  function updateDrive() {
-    var tod = new Date().getHours() + new Date().getMinutes() / 60;
-    if      (tod >= 6   && tod < 7)    driveMin = 14;
-    else if (tod >= 7   && tod < 7.5)  driveMin = 20;
-    else if (tod >= 7.5 && tod < 8.5)  driveMin = 26;
-    else if (tod >= 8.5 && tod < 9)    driveMin = 18;
-    else                                driveMin = 12;
+  var driveMin = 0;
+  function updateDrive(t) {
+    t = t || zonedNow();
+    var estimates = arr(['commute','driveEstimates']);
+    var nowTotal = mins(t.hour, t.minute);
+    driveMin = Number(val(['commute','defaultDriveMin'], val(['scenarios','default','driveMinEst'], 0)));
+    for (var i = 0; i < estimates.length; i++) {
+      var est = estimates[i];
+      var s = cfgTime(est, 'start', 'startHour', 'startMin');
+      var e = cfgTime(est, 'end', 'endHour', 'endMin');
+      if ((s <= e && nowTotal >= s && nowTotal < e) || (s > e && (nowTotal >= s || nowTotal < e))) {
+        driveMin = Number(est.driveMin);
+        return;
+      }
+    }
   }
 
   // ── MORNING ───────────────────────────────────────────────────────
-  function renderMorning(now) {
-    var s = scenario(now);
+  function renderMorning(t) {
+    var s = scenario(t);
     if (!s) return;
 
-    var leaveH = Number(s.leaveHour), leaveM = Number(s.leaveMin);
-    var dep    = new Date(now); dep.setHours(leaveH, leaveM, 0, 0);
-    var diff   = Math.floor((dep - now) / 60000);
-    var diffS  = Math.floor(((dep - now) % 60000) / 1000);
+    var leaveTotal = cfgTime(s, 'leave', 'leaveHour', 'leaveMin');
+    var schoolTotal = cfgTime(s, 'school', 'schoolHour', 'schoolMin');
+    var lateBellTotal = cfgTime(s, 'lateBell', 'lateBellHour', 'lateBellMin');
+    var nowTotal = mins(t.hour, t.minute);
+    var diff = leaveTotal - nowTotal;
+    var diffS = diff >= 0 ? (60 - t.second) % 60 : 0;
+    var progressWindow = Number(val(['time','morningProgressWindowMin'], 75));
+    var countdownClockAt = Number(val(['time','countdownClockAtMin'], 4));
+    var msgCrit = Number(val(['time','morningMessageThresholds','critMin'], 5));
+    var msgHot = Number(val(['time','morningMessageThresholds','hotMin'], 10));
+    var msgWarn = Number(val(['time','morningMessageThresholds','warnMin'], 20));
 
     // Countdown
-    if (diff > 4)       id('mCountdown').innerHTML = diff + '<span class="unit">min</span>';
+    if (diff > countdownClockAt) id('mCountdown').innerHTML = diff + '<span class="unit">min</span>';
     else if (diff >= 0) id('mCountdown').innerHTML = pad(diff) + ':' + pad(diffS);
-    else                id('mCountdown').innerHTML = fmt(leaveH, leaveM);
+    else                id('mCountdown').innerHTML = fmtMin(leaveTotal);
 
-    id('mCountdownLabel').innerHTML = 'UNTIL SCHOOL — LEAVE BY ' + fmt(leaveH, leaveM);
+    id('mCountdownLabel').innerHTML = 'UNTIL SCHOOL — LEAVE BY ' + fmtMin(leaveTotal);
     id('mMeta').innerHTML =
-      'LATE BELL ' + fmt(Number(s.lateBellHour), Number(s.lateBellMin)) +
-      ' · SCHOOL AT ' + fmt(Number(s.schoolHour), Number(s.schoolMin));
+      'LATE BELL ' + fmtMin(lateBellTotal) +
+      ' · SCHOOL AT ' + fmtMin(schoolTotal);
 
     // Progress
-    id('mProgress').style.width = Math.max(0, Math.min(100, ((75 - diff) / 75) * 100)) + '%';
+    id('mProgress').style.width = Math.max(0, Math.min(100, ((progressWindow - diff) / progressWindow) * 100)) + '%';
 
     // Message
     var pool = diff <= 0  ? arr(['messages','morning','gone'])
-             : diff <= 5  ? arr(['messages','morning','crit'])
-             : diff <= 10 ? arr(['messages','morning','hot'])
-             : diff <= 20 ? arr(['messages','morning','warn'])
+             : diff <= msgCrit ? arr(['messages','morning','crit'])
+             : diff <= msgHot  ? arr(['messages','morning','hot'])
+             : diff <= msgWarn ? arr(['messages','morning','warn'])
              :               arr(['messages','morning','calm']);
     id('mMessage').innerHTML = pick(pool, 'Good morning');
 
     // Departure urgency bar
-    var leaveTotal = leaveH * 60 + leaveM;
-    var nowTotal   = now.getHours() * 60 + now.getMinutes();
     var minsLeft   = leaveTotal - nowTotal;
-    var schoolTot  = Number(s.schoolHour) * 60 + Number(s.schoolMin);
-    var margin     = schoolTot - nowTotal - driveMin;
-    var pct        = Math.max(0, Math.min(100, (minsLeft / 75) * 100));
+    var margin     = schoolTotal - nowTotal - driveMin;
+    var pct        = Math.max(0, Math.min(100, (minsLeft / progressWindow) * 100));
     var fill       = id('depFill');
     var lbl        = id('depLabel');
     var sub        = id('depSub');
     var route      = val(['family','location','schoolRoute'], val(['family','location','school'], 'to School'));
+    var depCrit    = Number(val(['time','departureUrgency','critMin'], 10));
+    var depWarn    = Number(val(['time','departureUrgency','warnMin'], 20));
 
     if (fill) {
       fill.style.width = pct + '%';
       if (minsLeft <= 0) {
         fill.className = 'dep-bar-fill crit';
         if (lbl) { lbl.className = 'dep-bar-left crit'; lbl.innerHTML = 'LEAVE NOW'; }
-      } else if (minsLeft <= 10) {
+      } else if (minsLeft <= depCrit) {
         fill.className = 'dep-bar-fill crit';
         if (lbl) { lbl.className = 'dep-bar-left crit'; lbl.innerHTML = minsLeft + ' MIN TO LEAVE'; }
-      } else if (minsLeft <= 20) {
+      } else if (minsLeft <= depWarn) {
         fill.className = 'dep-bar-fill warn';
         if (lbl) { lbl.className = 'dep-bar-left warn'; lbl.innerHTML = minsLeft + ' MIN TO LEAVE'; }
       } else {
@@ -425,26 +526,28 @@ body{font-family:'DM Mono',monospace}
         if (lbl) { lbl.className = 'dep-bar-left'; lbl.innerHTML = minsLeft + ' MIN TO LEAVE'; }
       }
     }
-    if (id('depTime')) id('depTime').innerHTML = 'LEAVE BY ' + fmt(leaveH, leaveM);
+    if (id('depTime')) id('depTime').innerHTML = 'LEAVE BY ' + fmtMin(leaveTotal);
     if (sub) {
       var marginText = margin >= 0 ? '+' + margin + ' MIN ARRIVAL MARGIN' : Math.abs(margin) + ' MIN LATE IF YOU LEAVE NOW';
       sub.innerHTML = driveMin + ' MIN DRIVE · ' + marginText + '<br>' + route;
     }
 
     // Checklist
-    renderChecklist(now, s);
+    renderChecklist(t, s);
   }
 
   // ── CHECKLIST ─────────────────────────────────────────────────────
-  function renderChecklist(now, s) {
+  function renderChecklist(t, s) {
     var items      = arr(['morningChecklist']);
-    var leaveTotal = Number(s.leaveHour) * 60 + Number(s.leaveMin);
-    var nowTotal   = now.getHours() * 60 + now.getMinutes();
+    var leaveTotal = cfgTime(s, 'leave', 'leaveHour', 'leaveMin');
+    var nowTotal   = mins(t.hour, t.minute);
+    var activeBefore = Number(val(['time','checklistTiming','activeBeforeMin'], 8));
+    var doneAfter = Number(val(['time','checklistTiming','doneAfterMin'], 2));
 
     id('mChecklist').innerHTML = items.map(function (item) {
       var absMin   = leaveTotal + (Number(item.targetMin) || 0);
-      var isDone   = nowTotal > absMin + 2;
-      var isActive = !isDone && nowTotal >= absMin - 8 && nowTotal <= absMin + 2;
+      var isDone   = nowTotal > absMin + doneAfter;
+      var isActive = !isDone && nowTotal >= absMin - activeBefore && nowTotal <= absMin + doneAfter;
       var h = Math.floor(((absMin % 1440) + 1440) % 1440 / 60);
       var m = ((absMin % 60) + 60) % 60;
       return '<div class="cl-item' + (isDone ? ' done' : '') + (isActive ? ' active' : '') + '">' +
@@ -457,15 +560,15 @@ body{font-family:'DM Mono',monospace}
   }
 
   // ── EVENING TIMELINE ──────────────────────────────────────────────
-  function renderTimeline(now) {
+  function renderTimeline(t) {
     var tl       = arr(['eveningTimeline']);
-    var n        = mins(now.getHours(), now.getMinutes());
+    var n        = mins(t.hour, t.minute);
     var html     = '';
     var inserted = false;
 
     for (var i = 0; i < tl.length; i++) {
       var it   = tl[i];
-      var st   = mins(it.startHour, it.startMin);
+      var st   = cfgTime(it, 'start', 'startHour', 'startMin');
       var en   = st + Number(it.durationMin || 0);
       var done = n > en && Number(it.durationMin || 0) > 0;
 
@@ -484,7 +587,7 @@ body{font-family:'DM Mono',monospace}
         '</div>' +
         '<div class="tl-content">' +
           '<div class="tl-label">' + (it.icon ? it.icon + ' ' : '') + it.label + '</div>' +
-          '<div class="tl-time">' + fmt(Number(it.startHour), Number(it.startMin)) + '</div>' +
+          '<div class="tl-time">' + fmtMin(st) + '</div>' +
           (it.note ? '<div class="tl-note">' + it.note + '</div>' : '') +
         '</div>' +
         '</div>';
@@ -492,9 +595,12 @@ body{font-family:'DM Mono',monospace}
     id('eTimeline').innerHTML = html;
 
     // Progress bar
-    var evS = mins(val(['modes','evening','startHour'],17), val(['modes','evening','startMin'],0));
-    var evE = mins(val(['modes','evening','endHour'],21),   val(['modes','evening','endMin'],0));
-    id('eProgress').style.width = Math.max(0, Math.min(100, ((n - evS) / (evE - evS)) * 100)) + '%';
+    var evening = val(['modes','evening'], {});
+    var evS = cfgTime(evening, 'start', 'startHour', 'startMin');
+    var evE = cfgTime(evening, 'end', 'endHour', 'endMin');
+    var evSpan = evE >= evS ? evE - evS : evE + 1440 - evS;
+    var evElapsed = n >= evS ? n - evS : n + 1440 - evS;
+    id('eProgress').style.width = Math.max(0, Math.min(100, (evElapsed / evSpan) * 100)) + '%';
   }
 
   // ── WEEKEND ───────────────────────────────────────────────────────
@@ -507,7 +613,8 @@ body{font-family:'DM Mono',monospace}
   // ── TICK ──────────────────────────────────────────────────────────
   function tick() {
     if (!cfg) { id('configError').className += ' active'; return; }
-    var now = new Date();
+    var now = zonedNow();
+    updateDrive(now);
     var m   = currentMode(now);
     show(m);
     clocks(now);
@@ -527,7 +634,7 @@ body{font-family:'DM Mono',monospace}
         '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,uv_index' +
         '&hourly=precipitation_probability' +
         '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code' +
-        '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=2';
+        '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=' + encodeURIComponent(timeZone()) + '&forecast_days=2';
       var data = await fetch(url).then(function (r) { return r.json(); });
       var c    = data.current;
       var wi   = wmo(c.weather_code);
@@ -618,8 +725,9 @@ body{font-family:'DM Mono',monospace}
       el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">Calendar not configured</div>';
       return;
     }
-    var start = new Date(targetDate); start.setHours(0,0,0,0);
-    var end   = new Date(targetDate); end.setHours(23,59,59,999);
+    var target = targetDate && has(targetDate, 'year') ? targetDate : zonedParts(targetDate || new Date());
+    var start = zonedDate(target.year, target.monthIndex, target.day, 0, 0, 0, 0);
+    var end   = zonedDate(target.year, target.monthIndex, target.day, 23, 59, 59, 999);
     try {
       var all = [];
       for (var i = 0; i < ids.length; i++) {
@@ -661,24 +769,19 @@ body{font-family:'DM Mono',monospace}
   }
 
   // ── INIT ──────────────────────────────────────────────────────────
-  updateDrive();
   tick();
   fetchWeather();
   fetchQuote();
 
-  var now  = new Date();
-  var tmrw = new Date(now); tmrw.setDate(tmrw.getDate() + 1);
-  fetchCalendar(now,  'mCalEvents');
-  fetchCalendar(tmrw, 'eCalEvents');
+  fetchCalendar(zonedDay(0), 'mCalEvents');
+  fetchCalendar(zonedDay(1), 'eCalEvents');
 
   setInterval(tick,         1000);
-  setInterval(updateDrive,  60 * 1000);
   setInterval(fetchWeather, 10 * 60 * 1000);
   setInterval(fetchQuote,   60 * 60 * 1000);
   setInterval(function () {
-    var n = new Date(), t = new Date(n); t.setDate(t.getDate() + 1);
-    fetchCalendar(n, 'mCalEvents');
-    fetchCalendar(t, 'eCalEvents');
+    fetchCalendar(zonedDay(0), 'mCalEvents');
+    fetchCalendar(zonedDay(1), 'eCalEvents');
   }, 15 * 60 * 1000);
 
 })();
