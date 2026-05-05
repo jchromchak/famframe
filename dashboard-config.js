@@ -35,7 +35,7 @@ var DASHBOARD_CONFIG = {
     morning: {
       startHour: 6,    // 6:00 AM
       startMin:  0,
-      endHour:   8,    // 8:00 AM (after kids leave)
+      endHour:   10,    // 8:00 AM (after kids leave)
       endMin:    30,
     },
     // EVENING: active window
