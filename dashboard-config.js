@@ -56,11 +56,11 @@ var DASHBOARD_CONFIG = {
   // Each school day can have a different departure time + note
   scenarios: {
     default: {
-      leaveHour:    6,
+      leaveHour:    10,
       leaveMin:     45,
-      schoolHour:   7,
+      schoolHour:   11,
       schoolMin:    20,
-      lateBellHour: 7,
+      lateBellHour: 11,
       lateBellMin:  25,
       driveMinEst:  22,
       carBufferMin: 5,

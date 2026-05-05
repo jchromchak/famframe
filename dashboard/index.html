@@ -73,19 +73,19 @@ body::before {
 /* ── SHARED ── */
 .panel-label {
   font-size: 10px; letter-spacing: 0.3em; color: var(--text-dim);
-  text-transform: uppercase; margin-bottom: 18px;
+  text-transform: uppercase; margin-bottom: 24px;
 }
  
 .main-panel {
   display: flex; flex-direction: column; justify-content: center;
-  padding: 60px 68px; border-right: 1px solid var(--border); position: relative;
+  padding: 72px 96px; border-right: 1px solid var(--border); position: relative;
 }
  
 .side-panel { display: flex; flex-direction: column; }
  
 .date-line {
   font-size: 11px; letter-spacing: 0.25em; color: var(--text-secondary);
-  text-transform: uppercase; margin-bottom: 36px;
+  text-transform: uppercase; margin-bottom: 52px;
 }
  
 .progress-track {
@@ -98,7 +98,7 @@ body::before {
 }
  
 .bottom-bar {
-  grid-column: 1 / 2; padding: 20px 68px; border-top: 1px solid var(--border);
+  grid-column: 1 / 2; padding: 28px 96px; border-top: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
 }
 .clock {
@@ -117,10 +117,10 @@ body::before {
  
 /* ── WEATHER ── */
 .weather-panel {
-  padding: 36px 28px 24px; border-bottom: 1px solid var(--border);
+  padding: 48px 40px 32px; border-bottom: 1px solid var(--border);
   display: flex; flex-direction: column; justify-content: space-between;
 }
-.weather-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 6px; }
+.weather-top { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 10px; }
 .weather-temp {
   font-family: var(--font-serif); font-size: 68px; font-weight: 300; line-height: 1;
 }
@@ -128,7 +128,7 @@ body::before {
 .weather-icon { padding-top: 8px; font-size: 32px; }
 .weather-desc {
   font-family: var(--font-serif); font-style: italic; font-size: 16px;
-  font-weight: 300; color: var(--text-secondary); margin-bottom: 16px;
+  font-weight: 300; color: var(--text-secondary); margin-bottom: 22px;
 }
 .weather-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; }
 .detail-label {
@@ -146,7 +146,7 @@ body::before {
 .fc-temp { font-size: 11px; color: var(--text-secondary); }
  
 /* ── CALENDAR ── */
-.cal-panel { padding: 22px 28px; flex: 1; overflow: hidden; }
+.cal-panel { padding: 32px 40px; flex: 1; overflow: hidden; }
 .cal-event {
   margin-bottom: 8px; padding: 8px 10px;
   background: var(--surface); border: 1px solid var(--border); border-radius: 3px;
@@ -173,7 +173,7 @@ body::before {
 ══════════════════════════════════════ */
 .countdown-label {
   font-family: var(--font-serif); font-style: italic; font-size: 17px;
-  font-weight: 300; color: var(--text-secondary); margin-bottom: 8px;
+  font-weight: 300; color: var(--text-secondary); margin-bottom: 14px;
 }
 .countdown-display {
   font-family: var(--font-serif);
@@ -186,13 +186,13 @@ body::before {
   color: var(--text-secondary); letter-spacing: 0.1em;
   vertical-align: super; margin-left: 5px;
 }
-.departure-meta { margin-top: 20px; display: flex; flex-direction: column; gap: 4px; }
+.departure-meta { margin-top: 32px; display: flex; flex-direction: column; gap: 4px; }
 .departure-line { font-size: 11px; letter-spacing: 0.2em; color: var(--text-dim); }
 .late-bell-line { font-size: 10px; letter-spacing: 0.18em; color: var(--text-dim); opacity: 0.7; }
 .scenario-note  { font-size: 10px; letter-spacing: 0.18em; color: var(--gold); margin-top: 4px; }
  
 /* Morning checklist */
-.checklist { margin-top: 28px; display: flex; flex-direction: column; gap: 7px; }
+.checklist { margin-top: 36px; display: flex; flex-direction: column; gap: 7px; }
 .checklist-item {
   display: flex; align-items: center; gap: 10px;
   padding: 7px 12px; background: var(--surface);
@@ -212,7 +212,7 @@ body::before {
 .checklist-item.done   .check-dot { background: var(--ok); }
  
 /* Traffic */
-.traffic-panel { padding: 22px 28px; border-bottom: 1px solid var(--border); }
+.traffic-panel { padding: 32px 40px; border-bottom: 1px solid var(--border); }
 .traffic-row   { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .status-dot {
   width: 9px; height: 9px; border-radius: 50%; background: var(--ok);
@@ -260,7 +260,7 @@ body::before {
  
 /* Weekend */
 .weekend-main {
-  display: flex; flex-direction: column; justify-content: center; padding: 60px 68px;
+  display: flex; flex-direction: column; justify-content: center; padding: 72px 96px;
 }
 .weekend-label {
   font-family: var(--font-serif); font-size: 72px; font-weight: 300;
@@ -1060,3 +1060,5 @@ setInterval(()=>{
 </body>
 </html>
  
+
+
