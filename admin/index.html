@@ -780,6 +780,12 @@ select {
       <span class="action-label">Save config to GitHub</span>
     </button>
     <div class="action-result" id="pushResult"></div>
+
+    <button class="action-btn" onclick="checkGitHubAccess()" style="margin-top:8px">
+      <span class="action-icon">?</span>
+      <span class="action-label">Check GitHub access</span>
+    </button>
+    <div class="action-result" id="githubDiagResult"></div>
  
     <div class="section-label" style="margin-top:16px">Raw config</div>
     <textarea id="rawConfig" class="code-panel" spellcheck="false"></textarea>
@@ -965,6 +971,8 @@ const DEFAULT_CONFIG = {
 
 let config = clone(DEFAULT_CONFIG);
 let lastRemoteSha = localStorage.getItem(KEYS.sha) || null;
+let mapsAdminPromise = null;
+let placesAttached = false;
 
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
 function deepMerge(base, override) {
@@ -1033,6 +1041,7 @@ window.addEventListener('load', () => {
   prefillConnectionFields();
   if (localStorage.getItem(KEYS.onboarded)) showApp();
   updateSyncStatus();
+  setupPlacesAutocomplete();
 });
 
 function prefillConnectionFields() {
@@ -1111,6 +1120,7 @@ function nav(page) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const map = { home:'navHome', scenes:'navScenes', modules:'navModules', actions:'navActions', family:'navHome' };
   if (map[page]) document.getElementById(map[page]).classList.add('active');
+  if (page === 'family') setupPlacesAutocomplete();
 }
 function renderAll() {
   ensureModel();
@@ -1154,6 +1164,8 @@ function populateFamilyForm() {
   setVal('gcalAppInput', localStorage.getItem(KEYS.gcal) || config.api.googleCalendarKey || '');
   setVal('gmapsAppInput', localStorage.getItem(KEYS.gmaps) || config.api.googleMapsKey || '');
   setVal('patAppInput', localStorage.getItem(KEYS.pat) || '');
+  placesAttached = false;
+  setupPlacesAutocomplete();
 }
 function saveFamily() {
   config.family.location.city = getVal('homeCityApp');
@@ -1170,6 +1182,61 @@ function saveFamily() {
   if (gmaps) { localStorage.setItem(KEYS.gmaps, gmaps); config.api.googleMapsKey = gmaps; }
   if (pat) localStorage.setItem(KEYS.pat, pat);
   saveConfig(); saveAndSync('Family settings saved');
+  setupPlacesAutocomplete();
+}
+
+function mapsKey() {
+  return getVal('gmapsAppInput') || localStorage.getItem(KEYS.gmaps) || config.api.googleMapsKey || '';
+}
+function loadAdminMaps() {
+  const key = mapsKey();
+  if (!key) return Promise.reject(new Error('Google Maps key not set'));
+  if (window.google && window.google.maps && window.google.maps.places) return Promise.resolve(window.google.maps);
+  if (mapsAdminPromise) return mapsAdminPromise;
+  mapsAdminPromise = new Promise((resolve, reject) => {
+    const cb = '__famFrameAdminMapsReady';
+    window[cb] = function () { resolve(window.google.maps); delete window[cb]; };
+    const s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&libraries=places&v=weekly&callback=' + cb;
+    s.async = true;
+    s.onerror = function () { reject(new Error('Google Maps Places failed to load')); };
+    document.head.appendChild(s);
+  });
+  return mapsAdminPromise;
+}
+async function setupPlacesAutocomplete() {
+  if (placesAttached) return;
+  const originEl = document.getElementById('commuteOrigin');
+  const destEl = document.getElementById('commuteDestination');
+  if (!originEl || !destEl || !mapsKey()) return;
+  try {
+    const maps = await loadAdminMaps();
+    if (!maps.places || !maps.places.Autocomplete) return;
+    attachPlaceAutocomplete(maps, originEl, 'origin');
+    attachPlaceAutocomplete(maps, destEl, 'destination');
+    placesAttached = true;
+  } catch(e) {
+    console.warn('Places autocomplete unavailable', e);
+  }
+}
+function attachPlaceAutocomplete(maps, el, key) {
+  const ac = new maps.places.Autocomplete(el, {
+    fields: ['formatted_address', 'geometry', 'name'],
+    types: ['geocode'],
+  });
+  ac.addListener('place_changed', () => {
+    const place = ac.getPlace();
+    const value = place.formatted_address || place.name || el.value;
+    el.value = value;
+    config.commute[key] = value;
+    if (key === 'origin' && place.geometry && place.geometry.location) {
+      config.family.location.lat = place.geometry.location.lat();
+      config.family.location.lon = place.geometry.location.lng();
+      setVal('homeLat', config.family.location.lat);
+      setVal('homeLon', config.family.location.lon);
+    }
+    saveConfig();
+  });
 }
 
 function renderSchedule() {
@@ -1370,6 +1437,46 @@ async function pushToGitHub(options) {
     return false;
   }
 }
+async function checkGitHubAccess() {
+  const el = document.getElementById('githubDiagResult');
+  const c = connection();
+  if (!c.pat || !c.repo) {
+    showResult(el, false, 'Missing PAT or repo. Add both, then check again.');
+    return;
+  }
+  showResult(el, true, 'Checking GitHub access...');
+  try {
+    const profile = await fetch('https://api.github.com/user', { headers: githubHeaders(c.pat) });
+    if (!profile.ok) throw new Error(await githubError(profile, 'User check failed.'));
+    const user = await profile.json();
+
+    const repoRes = await fetch(`https://api.github.com/repos/${c.repo}`, { headers: githubHeaders(c.pat) });
+    if (!repoRes.ok) throw new Error(await githubError(repoRes, 'Repo check failed.'));
+    const repo = await repoRes.json();
+
+    const fileRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
+    if (!fileRes.ok) throw new Error(await githubError(fileRes, 'Config file check failed.'));
+    const file = await fileRes.json();
+    lastRemoteSha = file.sha;
+    localStorage.setItem(KEYS.sha, file.sha);
+
+    const permission = repo.permissions
+      ? 'permissions: admin=' + !!repo.permissions.admin + ', push=' + !!repo.permissions.push + ', pull=' + !!repo.permissions.pull
+      : 'permissions not returned';
+    showResult(el, true,
+      '✓ GitHub access looks good. User: ' + (user.login || 'unknown') +
+      ' · repo: ' + c.repo +
+      ' · branch: ' + c.branch +
+      ' · file sha saved · ' + permission +
+      '. If saving still fails, the PAT needs Contents read/write.'
+    );
+    toast('GitHub access looks good ✓');
+  } catch(e) {
+    setSyncStatus('error', 'ERROR');
+    showResult(el, false, '✕ ' + e.message);
+    toast('GitHub check failed: ' + shortError(e.message), 'fail');
+  }
+}
 async function saveAndSync(localMessage) {
   const c = connection();
   if (!c.pat || !c.repo) {
@@ -1382,15 +1489,17 @@ async function saveAndSync(localMessage) {
 async function githubError(res, fallback) {
   const status = res.status;
   let detail = '';
+  let docs = '';
   try {
     const body = await res.json();
     detail = body && body.message ? body.message : '';
+    docs = body && body.documentation_url ? body.documentation_url : '';
   } catch(e) {}
   if (status === 401) return 'GitHub rejected the token. Re-enter the PAT.';
-  if (status === 403) return 'GitHub denied the save. The PAT likely needs Contents: read/write permission.';
+  if (status === 403) return 'GitHub denied the request. The PAT likely needs Contents: read/write permission, or SSO approval if this is an org repo.' + (detail ? ' GitHub says: ' + detail : '');
   if (status === 404) return 'GitHub could not find the repo, branch, or config path.';
   if (status === 409) return 'GitHub reported a conflict. Pull latest config, then save again.';
-  return (fallback || 'GitHub error') + (detail ? ' ' + detail : ' GitHub returned ' + status + '.');
+  return (fallback || 'GitHub error') + (detail ? ' GitHub says: ' + detail : ' GitHub returned ' + status + '.') + (docs ? ' Docs: ' + docs : '');
 }
 function shortError(msg) {
   msg = String(msg || '');

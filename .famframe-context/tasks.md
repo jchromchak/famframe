@@ -38,6 +38,66 @@
 [Append new tasks below. Newest at bottom.]
 [When a task is completed, move the full entry to completed-tasks.md.]
 
+- [ ] Re-envision admin navigation around iPhone-first setup flows
+  id: task-1ec8cfcb
+  priority: now
+  status: open
+  revisionId: rev-8df34268
+
+  owner: john
+  decision: decision-b0982db9
+
+  notes:
+    Replace the current clunky Scenes / Modules / Actions organization with shorter drill-in screens. Primary use case is iPhone; iPad and desktop are secondary. Proposed top-level areas: Today, Daily Rhythm, School Schedule, Commute, Routines, Integrations, Advanced.
+
+  blocked-by:
+    - none
+
+- [ ] Redesign schedule model so routines can have different destinations by day/time
+  id: task-fb53f89c
+  priority: now
+  status: open
+  revisionId: rev-8df34268
+
+  owner: john
+  rule: rule-29881d80
+
+  notes:
+    Family should have a home location, but each routine may have a different end location. Morning routines may route to school, while Monday and Wednesday PM routines may route somewhere else. Model this without exposing contradictory scenes/modes/scenarios language in admin.
+
+  blocked-by:
+    - task-1ec8cfcb
+
+- [ ] Add robust location autocomplete and place capture in admin
+  id: task-6e4af661
+  priority: now
+  status: open
+  revisionId: rev-8df34268
+
+  owner: john
+  risk: risk-f3bc945f
+
+  notes:
+    Add Google Places autocomplete for home/origin and routine destination fields. Store stable display address and, where useful, lat/lng/place metadata. Keep manual entry fallback.
+
+  blocked-by:
+    - Google Maps browser key must have Places API enabled and be referrer-restricted.
+
+- [ ] Improve GitHub PAT recovery and diagnostics in admin
+  id: task-9f48ead6
+  priority: now
+  status: open
+  revisionId: rev-8df34268
+
+  owner: john
+  risk: risk-f73f540f
+
+  notes:
+    Make token failure states understandable on phone. Include a GitHub access check, clearer permission messages, and a recovery flow for re-entering PAT, repo, branch, and config path.
+
+  blocked-by:
+    - none
+
 ---
 
 *tasks.md — Fam Frame — v0.1*

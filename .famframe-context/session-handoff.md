@@ -7,20 +7,21 @@
 
 ## Current Handoff
 
-session: codex-ce7b730d
-date: 2026-05-05T19:30Z
-scope: Added Google Maps live commute support while preserving configured fallback commute estimates.
+session: codex-ddfb3082
+date: 2026-05-05T19:50Z
+scope: Queued admin flow redesign work, added GitHub PAT diagnostics, and added Google Places autocomplete starter for commute locations.
 
 ### Files Touched
-- dashboard-config.js: Added api.googleMapsKey plus commute origin, destination, and trafficModel fields.
-- dashboard/index.html: Dynamically loads Google Maps JavaScript API and uses DistanceMatrixService for live traffic commute duration when configured; falls back to configured estimates.
-- admin/index.html: Added Google Maps key, commute origin, commute destination, and traffic model controls.
-- .famframe-context/changelog.md: Logged this Maps commute update.
-- .famframe-context/risks.md: Added risk for browser-visible Google Maps key restrictions.
+- admin/index.html: Added "Check GitHub access" diagnostics and Places autocomplete loading/attachment for commute origin/destination fields when a Maps key is present.
+- .famframe-context/tasks.md: Added queued tasks for admin flow redesign, routine destination model, location autocomplete, and PAT diagnostics.
+- .famframe-context/changelog.md: Logged this queue and diagnostics update.
 - .famframe-context/session-handoff.md: Replaced handoff with current state.
 
 ### Decisions Made
-- none
+- task-1ec8cfcb: Re-envision admin navigation around iPhone-first setup flows.
+- task-fb53f89c: Redesign schedule model so routines can have different destinations by day/time.
+- task-6e4af661: Add robust location autocomplete and place capture in admin.
+- task-9f48ead6: Improve GitHub PAT recovery and diagnostics in admin.
 
 ### Tasks Added
 - none
@@ -39,12 +40,13 @@ scope: Added Google Maps live commute support while preserving configured fallba
 
 ### Pending
 - Decide how to handle non-16:9 visible browser viewports: keep letterboxing, crop slightly, or introduce adaptive artboard width.
+- Use the new Actions → Check GitHub access button to diagnose PAT failure and capture exact output if saving still fails.
 - Add the actual Google Maps browser key through admin, plus commute origin and destination, then save to GitHub.
 - Restrict the Google Maps key in Google Cloud to the Fam Frame GitHub Pages domain and required Maps APIs.
 - Verify the commute panel shows "LIVE TRAFFIC" rather than "ESTIMATE" after deployment.
 
 ### Next Session Start Here
-Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The commute panel now supports Google Maps live traffic through dashboard-config.js, but no actual key was committed. Next testing should enter the Maps key/origin/destination in admin, save to GitHub, then refresh the dashboard and confirm the commute line says LIVE TRAFFIC.
+Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The immediate issue is PAT save failure on phone; use the new GitHub diagnostic action to identify token/repo/path/permission state. The larger next product step is task-1ec8cfcb plus task-fb53f89c: redesign admin flow and data model around home location plus routine-specific destinations.
 
 ---
 

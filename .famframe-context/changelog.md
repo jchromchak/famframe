@@ -80,6 +80,21 @@
   action: updated
   summary: Added Google Maps live commute support with fallback estimates and admin fields for Maps key/origin/destination.
 
+- rev-8df34268
+  date: 2026-05-05T19:50Z
+  user: john
+  origin: codex
+  codex-session: codex-ddfb3082
+  objects:
+    - task-1ec8cfcb: created
+    - task-fb53f89c: created
+    - task-6e4af661: created
+    - task-9f48ead6: created
+    - admin/index.html: updated
+    - .famframe-context/session-handoff.md: updated
+  action: updated
+  summary: Queued admin flow redesign and routine destination model work; added GitHub diagnostics and Places autocomplete starter.
+
 ---
 
 *changelog.md — Fam Frame — v0.1*
