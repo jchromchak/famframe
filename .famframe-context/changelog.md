@@ -54,6 +54,18 @@
   action: created
   summary: Initialized Fam Frame context with core dashboard, config, typography, overflow, and admin-token decisions.
 
+- rev-15aa568c
+  date: 2026-05-05T17:02Z
+  user: john
+  origin: codex
+  codex-session: codex-f2af64c9
+  objects:
+    - admin/index.html: updated
+    - dashboard/index.html: referenced
+    - .famframe-context/session-handoff.md: updated
+  action: updated
+  summary: Updated admin saves to auto-sync to GitHub with clearer error toasts and aligned admin typography with dashboard.
+
 ---
 
 *changelog.md — Fam Frame — v0.1*

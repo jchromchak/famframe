@@ -7,21 +7,17 @@
 
 ## Current Handoff
 
-session: codex-7fe52444
-date: 2026-05-05T16:33Z
-scope: Installed Dovetell context scaffolding, seeded current Fam Frame decisions, and changed dashboard display typography to sans serif.
+session: codex-f2af64c9
+date: 2026-05-05T17:02Z
+scope: Fixed admin phone save flow so page-level saves attempt GitHub sync and show useful error toasts; aligned admin font stack with dashboard.
 
 ### Files Touched
-- launcher.md: Added project-specific Dovetell launcher for Fam Frame.
-- _prompt-shaper.md: Added project-specific prompt shaper.
-- .famframe-context/: Loaded project context scaffolding and seeded decisions, rules, risk, seed, profile, changelog, and this handoff.
-- dashboard/index.html: Replaced serif display typography with Inter-based sans serif display styling.
+- admin/index.html: Page-level saves now save locally and attempt GitHub sync; GitHub errors show clearer result text and toasts; validation checks config readability; font stack now uses Inter plus DM Mono.
+- .famframe-context/changelog.md: Logged this admin sync update.
+- .famframe-context/session-handoff.md: Replaced handoff with current state.
 
 ### Decisions Made
-- decision-3cdfc810: Dashboard configuration remains JavaScript-backed for now.
-- decision-12713b03: Dashboard uses a fixed artboard scaled to visible viewport.
-- decision-b0982db9: Visual direction is framed editorial display.
-- decision-dcf75b3f: Dashboard typography should use sans serif display type.
+- none
 
 ### Tasks Added
 - none
@@ -30,21 +26,21 @@ scope: Installed Dovetell context scaffolding, seeded current Fam Frame decision
 - none
 
 ### Rules Added
-- rule-29881d80: Configured times are local wall-clock times.
-- rule-fc4bf2d4: Overflowing calendar content must summarize.
+- none
 
 ### Risks Added
-- risk-f73f540f: Static admin stores GitHub token in browser localStorage.
+- none
 
 ### Boundary Conditions Triggered
 - none
 
 ### Pending
 - Decide how to handle non-16:9 visible browser viewports: keep letterboxing, crop slightly, or introduce adaptive artboard width.
-- Validate the sans serif dashboard render on the frame TV and iPad after deployment.
+- Test admin from phone again: edit schedule time, tap Save schedule, confirm toast says "Saved to GitHub", wait for Pages, refresh dashboard.
+- If phone still cannot push, inspect the exact toast text; most likely cause is PAT lacking Contents read/write.
 
 ### Next Session Start Here
-Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The immediate unresolved product/design choice is whether to preserve no-clipping letterbox scaling or eliminate black bars with crop/adaptive layout. Dashboard typography has just moved from serif to sans serif and needs real-device feedback.
+Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The admin save flow should now push to GitHub directly from page-level save buttons when a PAT/repo are configured. Next testing should verify the phone save path and capture any GitHub error toast verbatim if it still fails.
 
 ---
 

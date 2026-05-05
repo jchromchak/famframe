@@ -12,7 +12,7 @@
 <title>Fam Frame</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
  
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -29,7 +29,7 @@
   --gold-dim: rgba(200,169,110,0.15);
   --ok:       #7aaa8a;
   --crit:     #c94f3a;
-  --serif:    'Cormorant Garamond', Georgia, serif;
+  --serif:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono:     'DM Mono', monospace;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bot: env(safe-area-inset-bottom, 0px);
@@ -65,12 +65,12 @@ html, body {
 }
  
 .app-title {
-  font-family: var(--serif); font-size: 42px; font-weight: 400;
-  text-align: center; margin-top: 12px; letter-spacing: 0.01em;
+  font-family: var(--serif); font-size: 38px; font-weight: 300;
+  text-align: center; margin-top: 12px; letter-spacing: 0;
 }
  
 .app-sub {
-  font-family: var(--serif); font-style: italic; font-size: 16px;
+  font-family: var(--serif); font-size: 15px;
   font-weight: 300; color: var(--sub); text-align: center; margin-top: 6px;
 }
  
@@ -408,9 +408,11 @@ input[type="time"], input[type="number"] {
   border-radius: 8px; padding: 10px 20px;
   font-size: 11px; letter-spacing: 0.15em; color: var(--sub);
   opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none;
-  white-space: nowrap; z-index: 200;
+  width: min(360px, calc(100vw - 32px)); text-align:center; line-height:1.45; z-index: 200;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok { border-color: rgba(122,170,138,.35); color: var(--ok); }
+.toast.fail { border-color: rgba(201,79,58,.35); color: var(--crit); }
  
 /* Inline input (full width) */
 .full-input {
@@ -1041,20 +1043,26 @@ function onRepoInput(val) { localStorage.setItem(KEYS.repo, val.trim()); }
 async function validateGitHub() {
   const pat = getVal('patInput');
   const repo = getVal('repoInput');
+  const path = getVal('pathInput') || 'dashboard-config.js';
+  const branch = getVal('branchSelect') || 'main';
   const result = document.getElementById('patResult');
   if (!pat || !repo) { result.className='validate-result fail'; result.textContent='Enter your token and repo first.'; return; }
   result.className='validate-result'; result.style.display='block'; result.textContent='Checking…';
   try {
     const res = await fetch(`https://api.github.com/repos/${repo}`, { headers: githubHeaders(pat) });
     if (!res.ok) throw new Error('GitHub returned ' + res.status);
+    const cfgRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, { headers: githubHeaders(pat) });
+    if (!cfgRes.ok) throw new Error('Repo connected, but config file was not readable. GitHub returned ' + cfgRes.status + '.');
     localStorage.setItem(KEYS.pat, pat);
     localStorage.setItem(KEYS.repo, repo);
-    result.className='validate-result ok'; result.textContent='✓ Connected. Repo found.';
+    localStorage.setItem(KEYS.path, path);
+    localStorage.setItem(KEYS.branch, branch);
+    result.className='validate-result ok'; result.textContent='✓ Connected. Config file readable. Saving requires Contents read/write permission.';
     document.getElementById('step1').classList.remove('active');
     document.getElementById('step1').classList.add('done');
     document.getElementById('step2').classList.add('active');
   } catch(e) {
-    result.className='validate-result fail'; result.textContent='✕ Could not connect. Check token, repo, and Contents permission.';
+    result.className='validate-result fail'; result.textContent='✕ ' + e.message;
   }
 }
 function completeOnboarding() {
@@ -1141,7 +1149,7 @@ function saveFamily() {
   const pat = getVal('patAppInput');
   if (gcal) { localStorage.setItem(KEYS.gcal, gcal); config.api.googleCalendarKey = gcal; }
   if (pat) localStorage.setItem(KEYS.pat, pat);
-  saveConfig(); toast('Family settings saved');
+  saveConfig(); saveAndSync('Family settings saved');
 }
 
 function renderSchedule() {
@@ -1172,7 +1180,7 @@ function saveSchedule() {
   config.scenarios.default.school = getVal('defaultSchool');
   config.scenarios.default.lateBell = getVal('defaultLateBell');
   config.scenarios.default.driveMinEst = getNum('defaultDrive', 0);
-  saveConfig(); toast('Schedule saved');
+  saveConfig(); saveAndSync('Schedule saved');
 }
 
 function renderChecklistEditor() {
@@ -1244,7 +1252,7 @@ function saveRoutines() {
   config.modules = config.modules || {};
   config.modules.quote = config.modules.quote || {};
   config.modules.quote.source = getVal('quoteSource') || 'stoic';
-  saveConfig(); toast('Routines saved');
+  saveConfig(); saveAndSync('Routines saved');
 }
 function renderRawConfig() { const el = document.getElementById('rawConfig'); if (el) el.value = JSON.stringify(config, null, 2); }
 function applyRawConfig() {
@@ -1264,7 +1272,7 @@ function clearAllData() {
   localStorage.removeItem('fam_frame_force_scene'); location.reload();
 }
 
-function githubHeaders(pat) { return { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }; }
+function githubHeaders(pat) { return { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }; }
 function connection() {
   return {
     pat: localStorage.getItem(KEYS.pat) || getVal('patAppInput'),
@@ -1284,39 +1292,82 @@ function parseConfigJS(source) {
 }
 async function pullFromGitHub() {
   const c = connection(); const el = document.getElementById('pullResult');
-  if (!c.pat || !c.repo) { showResult(el, false, 'GitHub token or repo not set.'); return; }
+  if (!c.pat || !c.repo) { showResult(el, false, 'GitHub token or repo not set.'); toast('GitHub token or repo not set', 'fail'); return; }
   setSyncStatus('syncing', 'PULLING');
   try {
     const res = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
-    if (!res.ok) throw new Error('GitHub returned ' + res.status);
+    if (!res.ok) throw new Error(await githubError(res, 'GitHub returned ' + res.status));
     const data = await res.json();
     const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
     config = parseConfigJS(decoded);
     lastRemoteSha = data.sha;
     localStorage.setItem(KEYS.sha, data.sha);
     saveConfig(); renderAll(); setSyncStatus('synced', 'PULLED'); showResult(el, true, '✓ Pulled latest config.'); toast('Config pulled ✓');
-  } catch(e) { setSyncStatus('error', 'ERROR'); showResult(el, false, '✕ Pull failed: ' + e.message); }
+  } catch(e) { setSyncStatus('error', 'ERROR'); showResult(el, false, '✕ Pull failed: ' + e.message); toast('Pull failed: ' + shortError(e.message), 'fail'); }
 }
-async function pushToGitHub() {
-  const c = connection(); const el = document.getElementById('pushResult');
-  if (!c.pat || !c.repo) { showResult(el, false, 'GitHub token or repo not set.'); return; }
+async function pushToGitHub(options) {
+  options = options || {};
+  const c = connection(); const el = options.resultEl || document.getElementById('pushResult');
+  if (!c.pat || !c.repo) {
+    const msg = 'GitHub token or repo not set.';
+    showResult(el, false, msg);
+    toast(msg + ' Saved locally only.', 'fail');
+    return false;
+  }
   setSyncStatus('syncing', 'SAVING');
   try {
     let sha = lastRemoteSha;
     const getRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
-    if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+    } else if (getRes.status !== 404) {
+      throw new Error(await githubError(getRes, 'Could not read current config before saving.'));
+    }
     const content = btoa(unescape(encodeURIComponent(configToJS())));
     const body = { message: `Update Fam Frame dashboard config`, content, branch: c.branch };
     if (sha) body.sha = sha;
     const putRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}`, {
       method:'PUT', headers:{ ...githubHeaders(c.pat), 'Content-Type':'application/json' }, body: JSON.stringify(body)
     });
-    if (!putRes.ok) { const err = await putRes.json().catch(() => ({})); throw new Error(err.message || ('GitHub returned ' + putRes.status)); }
+    if (!putRes.ok) throw new Error(await githubError(putRes, 'Save failed.'));
     const data = await putRes.json();
     lastRemoteSha = data.content && data.content.sha;
     if (lastRemoteSha) localStorage.setItem(KEYS.sha, lastRemoteSha);
     setSyncStatus('synced', 'SAVED'); showResult(el, true, '✓ Saved to GitHub. Refresh the dashboard after Pages updates.'); toast('Saved to GitHub ✓');
-  } catch(e) { setSyncStatus('error', 'ERROR'); showResult(el, false, '✕ Save failed: ' + e.message); }
+    return true;
+  } catch(e) {
+    setSyncStatus('error', 'ERROR');
+    showResult(el, false, '✕ Save failed: ' + e.message);
+    toast('GitHub save failed: ' + shortError(e.message), 'fail');
+    return false;
+  }
+}
+async function saveAndSync(localMessage) {
+  const c = connection();
+  if (!c.pat || !c.repo) {
+    toast(localMessage + ' locally. GitHub not connected.', 'fail');
+    return;
+  }
+  toast(localMessage + '. Saving to GitHub…');
+  await pushToGitHub();
+}
+async function githubError(res, fallback) {
+  const status = res.status;
+  let detail = '';
+  try {
+    const body = await res.json();
+    detail = body && body.message ? body.message : '';
+  } catch(e) {}
+  if (status === 401) return 'GitHub rejected the token. Re-enter the PAT.';
+  if (status === 403) return 'GitHub denied the save. The PAT likely needs Contents: read/write permission.';
+  if (status === 404) return 'GitHub could not find the repo, branch, or config path.';
+  if (status === 409) return 'GitHub reported a conflict. Pull latest config, then save again.';
+  return (fallback || 'GitHub error') + (detail ? ' ' + detail : ' GitHub returned ' + status + '.');
+}
+function shortError(msg) {
+  msg = String(msg || '');
+  return msg.length > 120 ? msg.slice(0, 117) + '…' : msg;
 }
 function updateSyncStatus() {
   const pat = localStorage.getItem(KEYS.pat); const repo = localStorage.getItem(KEYS.repo);
@@ -1337,7 +1388,13 @@ async function submitFeedback() {
   setVal('feedbackBody', ''); setVal('feedbackName', ''); toast('Feedback logged ✓');
 }
 function showResult(el, ok, msg) { if (!el) return; el.className = 'action-result ' + (ok ? 'ok' : 'fail'); el.textContent = msg; }
-function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }
+function toast(msg, kind) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(toast._timer);
+  toast._timer=setTimeout(() => { el.className='toast'; }, kind === 'fail' ? 5200 : 2600);
+}
 </script>
 </body>
 </html>
