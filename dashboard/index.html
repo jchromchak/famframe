@@ -3,372 +3,400 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Family Dashboard</title>
+<title>Fam Frame</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-<!-- Load config first -->
+<!-- Config loaded from repo root — path goes up one level from /dashboard/ -->
 <script src="../dashboard-config.js"></script>
  
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
  
-  :root {
-    --bg:             #0f0f0d;
-    --surface:        #1a1a16;
-    --border:         rgba(255,255,255,0.07);
-    --text-primary:   #f0ede6;
-    --text-secondary: rgba(240,237,230,0.45);
-    --text-dim:       rgba(240,237,230,0.2);
-    --gold:           #c8b88a;
-    --warm:           #d4845a;
-    --crit:           #c94f3a;
-    --ok:             #7aaa8a;
-    --warn:           #c8b88a;
-    --font-serif:     'Cormorant Garamond', Georgia, serif;
-    --font-mono:      'DM Mono', monospace;
-  }
+:root {
+  --bg:             #0f0f0d;
+  --surface:        #1a1a16;
+  --border:         rgba(255,255,255,0.07);
+  --text-primary:   #f0ede6;
+  --text-secondary: rgba(240,237,230,0.45);
+  --text-dim:       rgba(240,237,230,0.2);
+  --gold:           #c8b88a;
+  --warm:           #d4845a;
+  --crit:           #c94f3a;
+  --ok:             #7aaa8a;
+  --warn:           #c8b88a;
+  --purple:         #8b85a8;
+  --font-serif:     'Cormorant Garamond', Georgia, serif;
+  --font-mono:      'DM Mono', monospace;
+}
  
-  html, body { width:100%; height:100%; overflow:hidden; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
  
-  body {
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    height: 100vh;
-  }
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  height: 100vh;
+}
  
-  /* noise */
-  body::before {
-    content:''; position:fixed; inset:0; pointer-events:none; z-index:100;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    opacity:0.55;
-  }
+/* noise overlay */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.55;
+}
  
-  /* ── LAYOUT SHELLS ── */
-  .layout {
-    display: none;
-    grid-template-columns: 1fr 340px;
-    grid-template-rows: 1fr auto;
-    height: 100vh;
-  }
-  .layout.active { display: grid; }
+/* ── LAYOUT SHELLS ── */
+.layout {
+  display: none;
+  grid-template-columns: 1fr 340px;
+  grid-template-rows: 1fr auto;
+  height: 100vh;
+}
+.layout.active { display: grid; }
  
-  /* ART MODE */
-  #artMode {
-    display: none;
-    align-items: center; justify-content: center;
-    height: 100vh; flex-direction: column; gap: 12px;
-  }
-  #artMode.active { display: flex; }
-  .art-time {
-    font-family: var(--font-serif); font-size: 120px; font-weight: 300;
-    color: rgba(240,237,230,0.08); letter-spacing: -0.02em; line-height: 1;
-  }
-  .art-date {
-    font-size: 11px; letter-spacing: 0.3em; color: rgba(240,237,230,0.06);
-    text-transform: uppercase;
-  }
+/* ── ART MODE ── */
+#artMode {
+  display: none; align-items: center; justify-content: center;
+  height: 100vh; flex-direction: column; gap: 16px;
+}
+#artMode.active { display: flex; }
+.art-time {
+  font-family: var(--font-serif); font-size: 128px; font-weight: 300;
+  color: rgba(240,237,230,0.07); letter-spacing: -0.02em; line-height: 1;
+}
+.art-date {
+  font-size: 11px; letter-spacing: 0.3em; color: rgba(240,237,230,0.05);
+  text-transform: uppercase;
+}
  
-  /* ── SHARED COMPONENTS ── */
-  .panel-label {
-    font-size: 10px; letter-spacing: 0.3em; color: var(--text-dim);
-    text-transform: uppercase; margin-bottom: 18px;
-  }
+/* ── SHARED ── */
+.panel-label {
+  font-size: 10px; letter-spacing: 0.3em; color: var(--text-dim);
+  text-transform: uppercase; margin-bottom: 18px;
+}
  
-  .main-panel {
-    display: flex; flex-direction: column; justify-content: center;
-    padding: 60px 68px; border-right: 1px solid var(--border); position: relative;
-  }
+.main-panel {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 60px 68px; border-right: 1px solid var(--border); position: relative;
+}
  
-  .side-panel { display: flex; flex-direction: column; }
+.side-panel { display: flex; flex-direction: column; }
  
-  .date-line {
-    font-size: 11px; letter-spacing: 0.25em; color: var(--text-secondary);
-    text-transform: uppercase; margin-bottom: 36px;
-  }
+.date-line {
+  font-size: 11px; letter-spacing: 0.25em; color: var(--text-secondary);
+  text-transform: uppercase; margin-bottom: 36px;
+}
  
-  .progress-track { position:absolute; bottom:0; left:0; width:100%; height:2px; background:var(--border); }
-  .progress-fill  { height:100%; background:var(--gold); transition:width 1s linear, background 2s; }
+.progress-track {
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
+  background: var(--border);
+}
+.progress-fill {
+  height: 100%; background: var(--gold);
+  transition: width 1s linear, background 2s;
+}
  
-  .bottom-bar {
-    grid-column: 1 / 2; padding: 20px 68px; border-top: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .clock {
-    font-family: var(--font-serif); font-size: 26px; font-weight: 300;
-    color: var(--text-secondary); letter-spacing: 0.05em;
-  }
-  .message {
-    font-family: var(--font-serif); font-style: italic; font-size: 15px;
-    font-weight: 300; color: var(--text-dim); transition: color 1s;
-  }
-  .refresh-badge {
-    font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim);
-    opacity: 0; transition: opacity 0.3s;
-  }
-  .refresh-badge.flash { opacity: 1; }
+.bottom-bar {
+  grid-column: 1 / 2; padding: 20px 68px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.clock {
+  font-family: var(--font-serif); font-size: 26px; font-weight: 300;
+  color: var(--text-secondary); letter-spacing: 0.05em;
+}
+.message {
+  font-family: var(--font-serif); font-style: italic; font-size: 15px;
+  font-weight: 300; color: var(--text-dim); transition: color 1s;
+}
+.refresh-badge {
+  font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim);
+  opacity: 0; transition: opacity 0.3s;
+}
+.refresh-badge.flash { opacity: 1; }
  
-  /* ── WEATHER PANEL (shared) ── */
-  .weather-panel {
-    padding: 36px 28px 24px; border-bottom: 1px solid var(--border);
-    display: flex; flex-direction: column; justify-content: space-between;
-  }
-  .weather-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 6px; }
-  .weather-temp {
-    font-family: var(--font-serif); font-size: 68px; font-weight: 300; line-height: 1;
-  }
-  .weather-temp .deg { font-size: 0.38em; vertical-align: super; color: var(--text-secondary); }
-  .weather-icon { padding-top: 8px; font-size: 32px; }
-  .weather-desc {
-    font-family: var(--font-serif); font-style: italic; font-size: 16px;
-    font-weight: 300; color: var(--text-secondary); margin-bottom: 16px;
-  }
-  .weather-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; }
-  .detail-label { font-size: 9px; letter-spacing: 0.22em; color: var(--text-dim); text-transform: uppercase; }
-  .detail-value { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
-  .forecast { display: flex; gap: 5px; margin-top: 14px; }
-  .fc-slot {
-    flex: 1; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 3px; padding: 7px 3px; text-align: center;
-  }
-  .fc-time { font-size: 8px; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 3px; }
-  .fc-icon { font-size: 14px; margin-bottom: 2px; }
-  .fc-temp { font-size: 11px; color: var(--text-secondary); }
+/* ── WEATHER ── */
+.weather-panel {
+  padding: 36px 28px 24px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.weather-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 6px; }
+.weather-temp {
+  font-family: var(--font-serif); font-size: 68px; font-weight: 300; line-height: 1;
+}
+.weather-temp .deg { font-size: 0.38em; vertical-align: super; color: var(--text-secondary); }
+.weather-icon { padding-top: 8px; font-size: 32px; }
+.weather-desc {
+  font-family: var(--font-serif); font-style: italic; font-size: 16px;
+  font-weight: 300; color: var(--text-secondary); margin-bottom: 16px;
+}
+.weather-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; }
+.detail-label {
+  font-size: 9px; letter-spacing: 0.22em; color: var(--text-dim);
+  text-transform: uppercase;
+}
+.detail-value { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.forecast { display: flex; gap: 5px; margin-top: 14px; }
+.fc-slot {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; padding: 7px 3px; text-align: center;
+}
+.fc-time { font-size: 8px; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 3px; }
+.fc-icon { font-size: 14px; margin-bottom: 2px; }
+.fc-temp { font-size: 11px; color: var(--text-secondary); }
  
-  /* ── CALENDAR PANEL ── */
-  .cal-panel { padding: 22px 28px; flex: 1; overflow: hidden; }
-  .cal-event {
-    margin-bottom: 8px; padding: 8px 10px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 3px;
-  }
-  .cal-event-time  { font-size: 9px; letter-spacing: 0.18em; color: var(--text-dim); margin-bottom: 2px; }
-  .cal-event-title { font-family: var(--font-serif); font-size: 14px; font-weight: 300; color: var(--text-secondary); }
-  .cal-badge {
-    display: inline-block; font-size: 8px; letter-spacing: 0.18em;
-    padding: 2px 5px; border-radius: 2px; margin-top: 3px;
-    background: rgba(201,79,58,0.15); color: var(--crit); border: 1px solid rgba(201,79,58,0.2);
-  }
-  .cal-badge.holiday { background: rgba(122,170,138,0.12); color: var(--ok); border-color: rgba(122,170,138,0.2); }
-  .cal-placeholder { font-size: 11px; letter-spacing: 0.15em; color: var(--text-dim); }
+/* ── CALENDAR ── */
+.cal-panel { padding: 22px 28px; flex: 1; overflow: hidden; }
+.cal-event {
+  margin-bottom: 8px; padding: 8px 10px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 3px;
+}
+.cal-event-time { font-size: 9px; letter-spacing: 0.18em; color: var(--text-dim); margin-bottom: 2px; }
+.cal-event-title {
+  font-family: var(--font-serif); font-size: 14px; font-weight: 300;
+  color: var(--text-secondary);
+}
+.cal-badge {
+  display: inline-block; font-size: 8px; letter-spacing: 0.18em;
+  padding: 2px 5px; border-radius: 2px; margin-top: 3px;
+  background: rgba(201,79,58,0.15); color: var(--crit);
+  border: 1px solid rgba(201,79,58,0.2);
+}
+.cal-badge.holiday {
+  background: rgba(122,170,138,0.12); color: var(--ok);
+  border-color: rgba(122,170,138,0.2);
+}
+.cal-placeholder { font-size: 11px; letter-spacing: 0.15em; color: var(--text-dim); }
  
-  /* ══════════════════════════════════════════════
-     MORNING MODE
-  ══════════════════════════════════════════════ */
-  .countdown-label {
-    font-family: var(--font-serif); font-style: italic; font-size: 17px;
-    font-weight: 300; color: var(--text-secondary); margin-bottom: 8px;
-  }
-  .countdown-display {
-    font-family: var(--font-serif);
-    font-size: clamp(80px, 12vw, 152px);
-    font-weight: 300; line-height: 0.88; letter-spacing: -0.02em;
-    color: var(--text-primary); transition: color 2s;
-  }
-  .countdown-display .unit {
-    font-size: 0.26em; font-family: var(--font-mono); font-weight: 300;
-    color: var(--text-secondary); letter-spacing: 0.1em;
-    vertical-align: super; margin-left: 5px;
-  }
-  .departure-meta { margin-top: 20px; display: flex; flex-direction: column; gap: 4px; }
-  .departure-line { font-size: 11px; letter-spacing: 0.2em; color: var(--text-dim); }
-  .late-bell-line { font-size: 10px; letter-spacing: 0.18em; color: var(--text-dim); opacity: 0.7; }
-  .scenario-note  { font-size: 10px; letter-spacing: 0.18em; color: var(--gold); margin-top: 4px; }
+/* ══════════════════════════════════════
+   MORNING MODE
+══════════════════════════════════════ */
+.countdown-label {
+  font-family: var(--font-serif); font-style: italic; font-size: 17px;
+  font-weight: 300; color: var(--text-secondary); margin-bottom: 8px;
+}
+.countdown-display {
+  font-family: var(--font-serif);
+  font-size: clamp(80px, 12vw, 152px);
+  font-weight: 300; line-height: 0.88; letter-spacing: -0.02em;
+  color: var(--text-primary); transition: color 2s;
+}
+.countdown-display .unit {
+  font-size: 0.26em; font-family: var(--font-mono); font-weight: 300;
+  color: var(--text-secondary); letter-spacing: 0.1em;
+  vertical-align: super; margin-left: 5px;
+}
+.departure-meta { margin-top: 20px; display: flex; flex-direction: column; gap: 4px; }
+.departure-line { font-size: 11px; letter-spacing: 0.2em; color: var(--text-dim); }
+.late-bell-line { font-size: 10px; letter-spacing: 0.18em; color: var(--text-dim); opacity: 0.7; }
+.scenario-note  { font-size: 10px; letter-spacing: 0.18em; color: var(--gold); margin-top: 4px; }
  
-  /* Checklist */
-  .checklist {
-    margin-top: 28px; display: flex; flex-direction: column; gap: 8px;
-  }
-  .checklist-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 12px; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 3px;
-    transition: opacity 0.5s, border-color 0.5s;
-  }
-  .checklist-item.done {
-    opacity: 0.35; border-color: transparent;
-  }
-  .checklist-item.active {
-    border-color: rgba(200,184,138,0.3);
-  }
-  .check-icon  { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
-  .check-label { font-size: 12px; letter-spacing: 0.12em; color: var(--text-secondary); flex: 1; }
-  .check-time  { font-size: 10px; letter-spacing: 0.1em; color: var(--text-dim); }
-  .check-dot   {
-    width: 6px; height: 6px; border-radius: 50%; background: var(--border);
-    flex-shrink: 0; transition: background 0.5s;
-  }
-  .checklist-item.active .check-dot   { background: var(--gold); }
-  .checklist-item.done   .check-dot   { background: var(--ok); }
+/* Morning checklist */
+.checklist { margin-top: 28px; display: flex; flex-direction: column; gap: 7px; }
+.checklist-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 3px;
+  transition: opacity 0.5s, border-color 0.5s;
+}
+.checklist-item.done   { opacity: 0.3; border-color: transparent; }
+.checklist-item.active { border-color: rgba(200,184,138,0.3); }
+.check-icon   { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+.check-label  { font-size: 11px; letter-spacing: 0.12em; color: var(--text-secondary); flex: 1; }
+.check-time   { font-size: 10px; letter-spacing: 0.1em; color: var(--text-dim); }
+.check-dot    {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--border);
+  flex-shrink: 0; transition: background 0.5s;
+}
+.checklist-item.active .check-dot { background: var(--gold); }
+.checklist-item.done   .check-dot { background: var(--ok); }
  
-  /* Traffic in morning */
-  .traffic-panel {
-    padding: 22px 28px; border-bottom: 1px solid var(--border);
-  }
-  .traffic-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .status-dot {
-    width: 9px; height: 9px; border-radius: 50%; background: var(--ok);
-    box-shadow: 0 0 7px var(--ok); flex-shrink: 0;
-    transition: background 1s, box-shadow 1s;
-  }
-  .status-dot.warn { background: var(--warn); box-shadow: 0 0 7px var(--warn); }
-  .status-dot.crit { background: var(--crit); box-shadow: 0 0 7px var(--crit); }
-  .status-dot.pulse { animation: sdpulse 1.2s ease-in-out infinite; }
-  @keyframes sdpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .traffic-condition { font-size: 10px; letter-spacing: 0.18em; color: var(--text-secondary); }
-  .traffic-time {
-    font-family: var(--font-serif); font-size: 38px; font-weight: 300; line-height: 1;
-  }
-  .traffic-unit {
-    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em;
-    color: var(--text-dim); margin-left: 5px; vertical-align: middle;
-  }
-  .traffic-sub    { font-size: 9px; letter-spacing: 0.12em; color: var(--text-dim); margin-top: 5px; }
-  .traffic-margin {
-    font-size: 9px; letter-spacing: 0.14em; margin-top: 7px;
-    padding: 4px 7px; border: 1px solid var(--border); border-radius: 2px;
-    display: inline-block; color: var(--text-dim); transition: color 1s, border-color 1s;
-  }
-  .traffic-margin.ok   { color: var(--ok);   border-color: rgba(122,170,138,0.3); }
-  .traffic-margin.warn { color: var(--warn);  border-color: rgba(200,184,138,0.3); }
-  .traffic-margin.crit { color: var(--crit);  border-color: rgba(201,79,58,0.3); }
+/* Traffic */
+.traffic-panel { padding: 22px 28px; border-bottom: 1px solid var(--border); }
+.traffic-row   { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.status-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--ok);
+  box-shadow: 0 0 7px var(--ok); flex-shrink: 0; transition: background 1s, box-shadow 1s;
+}
+.status-dot.warn  { background: var(--warn); box-shadow: 0 0 7px var(--warn); }
+.status-dot.crit  { background: var(--crit); box-shadow: 0 0 7px var(--crit); }
+.status-dot.pulse { animation: sdpulse 1.2s ease-in-out infinite; }
+@keyframes sdpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.traffic-condition { font-size: 10px; letter-spacing: 0.18em; color: var(--text-secondary); }
+.traffic-time {
+  font-family: var(--font-serif); font-size: 38px; font-weight: 300; line-height: 1;
+}
+.traffic-unit {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em;
+  color: var(--text-dim); margin-left: 5px; vertical-align: middle;
+}
+.traffic-sub    { font-size: 9px; letter-spacing: 0.12em; color: var(--text-dim); margin-top: 5px; }
+.traffic-margin {
+  font-size: 9px; letter-spacing: 0.14em; margin-top: 7px;
+  padding: 4px 7px; border: 1px solid var(--border); border-radius: 2px;
+  display: inline-block; color: var(--text-dim); transition: color 1s, border-color 1s;
+}
+.traffic-margin.ok   { color: var(--ok);   border-color: rgba(122,170,138,0.3); }
+.traffic-margin.warn { color: var(--warn);  border-color: rgba(200,184,138,0.3); }
+.traffic-margin.crit { color: var(--crit);  border-color: rgba(201,79,58,0.3); }
  
-  /* Urgency states */
-  .u-calm .countdown-display { color: var(--text-primary); }
-  .u-warn .countdown-display { color: var(--warn); }
-  .u-hot  .countdown-display { color: var(--warm); }
-  .u-crit .countdown-display { color: var(--crit); }
-  .u-gone .countdown-display { color: var(--crit); opacity: 0.7; }
-  .u-calm .progress-fill { background: var(--gold); }
-  .u-warn .progress-fill { background: var(--warn); }
-  .u-hot  .progress-fill { background: var(--warm); }
-  .u-crit .progress-fill { background: var(--crit); }
-  .gone-msg {
-    display: none; font-family: var(--font-serif); font-style: italic;
-    font-size: 24px; font-weight: 300; color: var(--text-secondary); margin-top: 12px;
-  }
-  .u-gone .gone-msg        { display: block; }
-  .u-gone .departure-meta  { display: none; }
-  .u-gone .checklist       { opacity: 0.3; pointer-events: none; }
+/* Urgency states */
+.u-calm .countdown-display { color: var(--text-primary); }
+.u-warn .countdown-display { color: var(--warn); }
+.u-hot  .countdown-display { color: var(--warm); }
+.u-crit .countdown-display { color: var(--crit); }
+.u-gone .countdown-display { color: var(--crit); opacity: 0.7; }
+.u-calm .progress-fill { background: var(--gold); }
+.u-warn .progress-fill { background: var(--warn); }
+.u-hot  .progress-fill { background: var(--warm); }
+.u-crit .progress-fill { background: var(--crit); }
+.gone-msg {
+  display: none; font-family: var(--font-serif); font-style: italic;
+  font-size: 24px; font-weight: 300; color: var(--text-secondary); margin-top: 12px;
+}
+.u-gone .gone-msg       { display: block; }
+.u-gone .departure-meta { display: none; }
+.u-gone .checklist      { opacity: 0.3; pointer-events: none; }
  
-  /* Weekend state */
-  .weekend-main {
-    display: flex; flex-direction: column; justify-content: center;
-    padding: 60px 68px;
-  }
-  .weekend-label {
-    font-family: var(--font-serif); font-size: 72px; font-weight: 300;
-    line-height: 0.9; color: var(--text-primary); margin-bottom: 16px;
-  }
-  .weekend-sub {
-    font-family: var(--font-serif); font-style: italic; font-size: 22px;
-    font-weight: 300; color: var(--text-secondary);
-  }
+/* Weekend */
+.weekend-main {
+  display: flex; flex-direction: column; justify-content: center; padding: 60px 68px;
+}
+.weekend-label {
+  font-family: var(--font-serif); font-size: 72px; font-weight: 300;
+  line-height: 0.9; color: var(--text-primary); margin-bottom: 16px;
+}
+.weekend-sub {
+  font-family: var(--font-serif); font-style: italic; font-size: 22px;
+  font-weight: 300; color: var(--text-secondary);
+}
  
-  /* ══════════════════════════════════════════════
-     EVENING MODE
-  ══════════════════════════════════════════════ */
-  .evening-header {
-    font-family: var(--font-serif); font-size: 22px; font-weight: 300;
-    color: var(--text-secondary); margin-bottom: 4px; letter-spacing: 0.02em;
-  }
-  .evening-subhead {
-    font-family: var(--font-serif); font-style: italic; font-size: 14px;
-    font-weight: 300; color: var(--text-dim); margin-bottom: 28px;
-  }
+/* ══════════════════════════════════════
+   EVENING MODE
+══════════════════════════════════════ */
+.evening-hero {
+  font-family: var(--font-serif); font-size: clamp(52px, 7vw, 88px);
+  font-weight: 300; line-height: 0.9; color: var(--text-primary); margin-bottom: 8px;
+}
+.evening-time {
+  font-family: var(--font-serif); font-size: clamp(52px, 7vw, 88px);
+  font-weight: 300; line-height: 0.9; color: var(--text-primary); margin-bottom: 28px;
+}
+.evening-time .ampm {
+  font-size: 0.35em; font-family: var(--font-mono); font-weight: 300;
+  color: var(--text-secondary); letter-spacing: 0.1em;
+  vertical-align: super; margin-left: 6px;
+}
  
-  /* Timeline */
-  .timeline { display: flex; flex-direction: column; gap: 0; position: relative; }
-  .timeline-item {
-    display: flex; align-items: flex-start; gap: 16px;
-    padding: 10px 0; position: relative;
-  }
-  .tl-left { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
-  .tl-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--border); border: 1px solid var(--border);
-    flex-shrink: 0; transition: background 0.5s, box-shadow 0.5s;
-    z-index: 1;
-  }
-  .tl-line {
-    width: 1px; flex: 1; min-height: 24px;
-    background: var(--border); margin-top: 2px;
-  }
-  .timeline-item:last-child .tl-line { display: none; }
+/* Timeline */
+.timeline { display: flex; flex-direction: column; position: relative; }
+.tl-item  { display: flex; align-items: flex-start; gap: 14px; padding: 8px 0; position: relative; }
  
-  /* states */
-  .tl-done .tl-dot  { background: var(--ok); border-color: var(--ok); }
-  .tl-active .tl-dot {
-    background: var(--gold); border-color: var(--gold);
-    box-shadow: 0 0 10px var(--gold);
-    animation: tlpulse 1.8s ease-in-out infinite;
-  }
-  .tl-active .tl-line { background: linear-gradient(var(--gold), var(--border)); }
-  @keyframes tlpulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.tl-left  { display: flex; flex-direction: column; align-items: center; width: 28px; flex-shrink: 0; }
+.tl-dot   {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border); border: 1px solid rgba(139,133,168,0.3);
+  flex-shrink: 0; transition: background 0.5s, box-shadow 0.5s; z-index: 1;
+}
+.tl-line  {
+  width: 1px; flex: 1; min-height: 20px;
+  background: var(--border); margin-top: 2px;
+}
+.tl-item:last-child .tl-line { display: none; }
  
-  .tl-content { flex: 1; padding-bottom: 4px; }
-  .tl-time {
-    font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); margin-bottom: 2px;
-  }
-  .tl-label {
-    font-family: var(--font-serif); font-size: 18px; font-weight: 300;
-    color: var(--text-secondary); line-height: 1.2; transition: color 0.5s;
-  }
-  .tl-active .tl-label { color: var(--text-primary); }
-  .tl-done   .tl-label { color: var(--text-dim); }
-  .tl-note {
-    font-size: 10px; letter-spacing: 0.12em; color: var(--text-dim); margin-top: 2px;
-  }
-  .tl-icon { font-size: 14px; margin-top: 3px; }
+/* done — muted purple */
+.tl-done .tl-dot {
+  background: var(--purple); border-color: var(--purple);
+  opacity: 0.7;
+}
+.tl-done .tl-line { background: rgba(139,133,168,0.2); }
  
-  /* Active block highlight */
-  .tl-active-bar {
-    display: none; position: absolute; left: -8px; top: 0; bottom: 0;
-    width: 2px; background: var(--gold); border-radius: 1px;
-  }
-  .tl-active .tl-active-bar { display: block; }
+/* now marker — floats between items */
+.tl-now-marker {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 0; position: relative;
+}
+.tl-now-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--gold); border: 2px solid var(--gold);
+  box-shadow: 0 0 12px var(--gold), 0 0 24px rgba(200,184,138,0.3);
+  flex-shrink: 0; margin-left: 8px;
+  animation: nowpulse 1.8s ease-in-out infinite;
+}
+@keyframes nowpulse { 0%,100%{opacity:1; box-shadow:0 0 12px var(--gold), 0 0 24px rgba(200,184,138,0.3);} 50%{opacity:0.6; box-shadow:0 0 6px var(--gold);} }
+.tl-now-label {
+  font-family: var(--font-serif); font-style: italic; font-size: 14px;
+  font-weight: 300; color: var(--gold); letter-spacing: 0.05em;
+}
+.tl-now-line {
+  width: 1px; min-height: 8px; background: linear-gradient(var(--gold), var(--border));
+  margin-left: 17px;
+}
  
-  /* time-until pill on active item */
-  .tl-until {
-    display: none; font-size: 9px; letter-spacing: 0.15em;
-    padding: 2px 7px; border-radius: 2px; margin-top: 5px;
-    background: rgba(200,184,138,0.1); color: var(--gold);
-    border: 1px solid rgba(200,184,138,0.2);
-  }
-  .tl-active .tl-until { display: inline-block; }
+/* active */
+.tl-active .tl-dot {
+  background: rgba(200,184,138,0.2); border-color: rgba(200,184,138,0.4);
+}
  
-  /* Evening progress bar (bottom of timeline area) */
-  .evening-progress {
-    margin-top: 20px; display: flex; align-items: center; gap: 10px;
-  }
-  .ev-track { flex: 1; height: 2px; background: var(--border); border-radius: 1px; }
-  .ev-fill  { height: 100%; background: var(--gold); border-radius: 1px; transition: width 30s linear; }
-  .ev-pct   { font-size: 9px; letter-spacing: 0.15em; color: var(--text-dim); }
+.tl-content { flex: 1; padding-bottom: 2px; }
+.tl-time    { font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); margin-bottom: 2px; }
+.tl-label   {
+  font-family: var(--font-serif); font-size: 17px; font-weight: 300;
+  color: var(--text-secondary); line-height: 1.2; transition: color 0.5s;
+}
+.tl-active .tl-label { color: var(--text-primary); }
+.tl-done   .tl-label { color: var(--text-dim); }
+.tl-note   { font-size: 10px; letter-spacing: 0.12em; color: var(--text-dim); margin-top: 1px; }
+.tl-until  {
+  display: none; font-size: 9px; letter-spacing: 0.15em;
+  padding: 2px 6px; border-radius: 2px; margin-top: 4px;
+  background: rgba(200,184,138,0.08); color: var(--gold);
+  border: 1px solid rgba(200,184,138,0.15);
+}
+.tl-active .tl-until { display: inline-block; }
  
-  /* Evening side: tomorrow weather + calendar */
-  .ev-weather-label {
-    font-size: 10px; letter-spacing: 0.3em; color: var(--text-dim);
-    text-transform: uppercase; margin-bottom: 6px;
-  }
-  .tomorrow-tag {
-    display: inline-block; font-size: 8px; letter-spacing: 0.2em;
-    padding: 1px 5px; border-radius: 2px; margin-left: 6px;
-    background: rgba(200,184,138,0.1); color: var(--gold);
-    border: 1px solid rgba(200,184,138,0.15); vertical-align: middle;
-  }
+/* Evening progress */
+.evening-progress {
+  margin-top: 18px; display: flex; align-items: center; gap: 10px;
+}
+.ev-track { flex: 1; height: 2px; background: var(--border); border-radius: 1px; }
+.ev-fill  { height: 100%; background: var(--gold); border-radius: 1px; transition: width 30s linear; }
+.ev-pct   { font-size: 9px; letter-spacing: 0.15em; color: var(--text-dim); }
+ 
+/* Quote bar */
+.quote-bar {
+  grid-column: 1 / 3; padding: 14px 68px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.quote-text {
+  font-family: var(--font-serif); font-style: italic; font-size: 15px;
+  font-weight: 300; color: var(--text-dim); line-height: 1.5; flex: 1;
+}
+.quote-author {
+  font-size: 9px; letter-spacing: 0.25em; color: var(--text-dim);
+  text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+}
+ 
+/* Tomorrow tag */
+.tomorrow-tag {
+  display: inline-block; font-size: 8px; letter-spacing: 0.2em;
+  padding: 1px 5px; border-radius: 2px; margin-left: 6px;
+  background: rgba(200,184,138,0.1); color: var(--gold);
+  border: 1px solid rgba(200,184,138,0.15); vertical-align: middle;
+}
 </style>
 </head>
 <body>
  
-<!-- ═══════════ ART MODE ═══════════ -->
+<!-- ═══ ART MODE ═══ -->
 <div id="artMode">
   <div class="art-time" id="artClock">—</div>
-  <div class="art-date" id="artDate">—</div>
+  <div class="art-date"  id="artDate">—</div>
 </div>
  
-<!-- ═══════════ MORNING MODE ═══════════ -->
+<!-- ═══ MORNING MODE ═══ -->
 <div class="layout" id="morningLayout">
- 
   <main class="main-panel u-calm" id="morningMain">
     <div class="date-line" id="mDateLine">—</div>
     <div class="countdown-label">time until departure</div>
@@ -377,16 +405,16 @@
     </div>
     <div class="gone-msg">Have a great day. ☀︎</div>
     <div class="departure-meta">
-      <div class="departure-line" id="mDepartureLine">LEAVE BY 6:45 AM · 5 MIN TO CAR</div>
-      <div class="late-bell-line" id="mLateBell">LATE BELL 7:25 AM · SCHOOL AT 7:20</div>
-      <div class="scenario-note" id="mScenarioNote"></div>
+      <div class="departure-line"  id="mDepartureLine">LEAVE BY 6:45 AM · 5 MIN TO CAR</div>
+      <div class="late-bell-line"  id="mLateBell">LATE BELL 7:25 AM · SCHOOL AT 7:20</div>
+      <div class="scenario-note"   id="mScenarioNote"></div>
     </div>
     <div class="checklist" id="mChecklist"></div>
     <div class="progress-track"><div class="progress-fill" id="mProgress"></div></div>
   </main>
  
   <aside class="side-panel">
-    <div class="weather-panel" id="mWeatherPanel" style="flex:1.2">
+    <div class="weather-panel" style="flex:1.2">
       <div class="panel-label">Outside</div>
       <div>
         <div class="weather-top">
@@ -402,10 +430,9 @@
           <div><div class="detail-label">Rain chance</div><div class="detail-value" id="mRain">—</div></div>
           <div><div class="detail-label">UV index</div><div class="detail-value" id="mUV">—</div></div>
         </div>
-        <div class="forecast" id="mForecast" style="opacity:0; margin-top:12px;"></div>
+        <div class="forecast" id="mForecast" style="opacity:0;margin-top:12px;"></div>
       </div>
     </div>
- 
     <div class="traffic-panel">
       <div class="panel-label">Commute</div>
       <div class="traffic-row">
@@ -416,7 +443,6 @@
       <div class="traffic-sub" id="mTrafficSub">US-17 N · Mount Pleasant → School</div>
       <div class="traffic-margin" id="mTrafficMargin">—</div>
     </div>
- 
     <div class="cal-panel">
       <div class="panel-label">Today</div>
       <div id="mCalEvents"><div class="cal-placeholder">connecting…</div></div>
@@ -430,27 +456,23 @@
   </footer>
 </div>
  
-<!-- ═══════════ EVENING MODE ═══════════ -->
+<!-- ═══ EVENING MODE ═══ -->
 <div class="layout" id="eveningLayout">
- 
   <main class="main-panel" id="eveningMain">
     <div class="date-line" id="eDateLine">—</div>
-    <div class="evening-header">Evening routine</div>
-    <div class="evening-subhead" id="eSubhead">Bed by 8:30 PM</div>
- 
+    <div class="evening-hero">Evening</div>
+    <div class="evening-time" id="eHeroClock">—</div>
     <div class="timeline" id="eTimeline"></div>
- 
     <div class="evening-progress">
       <div class="ev-track"><div class="ev-fill" id="eProgressFill" style="width:0%"></div></div>
       <div class="ev-pct" id="eProgressPct">0%</div>
     </div>
- 
     <div class="progress-track"><div class="progress-fill" id="eProgress" style="width:0%"></div></div>
   </main>
  
   <aside class="side-panel">
-    <div class="weather-panel" id="eWeatherPanel" style="flex:1.4">
-      <div class="ev-weather-label">Tomorrow <span class="tomorrow-tag">FORECAST</span></div>
+    <div class="weather-panel" style="flex:1.3">
+      <div class="panel-label">Tomorrow <span class="tomorrow-tag">FORECAST</span></div>
       <div>
         <div class="weather-top">
           <div class="weather-temp" id="eTempHigh">—</div>
@@ -465,32 +487,31 @@
           <div><div class="detail-label">Rain chance</div><div class="detail-value" id="eRain">—</div></div>
           <div><div class="detail-label">Wind</div><div class="detail-value" id="eWind">—</div></div>
         </div>
-        <div class="forecast" id="eForecast" style="opacity:0; margin-top:12px;"></div>
+        <div class="forecast" id="eForecast" style="opacity:0;margin-top:12px;"></div>
       </div>
     </div>
- 
     <div class="cal-panel">
       <div class="panel-label">Tomorrow <span class="tomorrow-tag">SCHOOL</span></div>
       <div id="eCalEvents"><div class="cal-placeholder">connecting…</div></div>
     </div>
   </aside>
  
-  <footer class="bottom-bar">
-    <div class="clock" id="eClock">—</div>
-    <div class="refresh-badge" id="eRefresh">↻ UPDATED</div>
-    <div class="message" id="eMessage">Good evening</div>
-  </footer>
+  <!-- Quote bar spans full width -->
+  <div class="quote-bar" id="quoteBar">
+    <div class="quote-text" id="quoteText">fetching quote…</div>
+    <div class="quote-author" id="quoteAuthor"></div>
+  </div>
 </div>
  
-<!-- ═══════════ WEEKEND MORNING MODE ═══════════ -->
+<!-- ═══ WEEKEND MODE ═══ -->
 <div class="layout" id="weekendLayout">
   <main class="main-panel weekend-main">
     <div class="date-line" id="wDateLine">—</div>
     <div class="weekend-label" id="wLabel">No school<br>today.</div>
-    <div class="weekend-sub" id="wSub">Enjoy the morning.</div>
+    <div class="weekend-sub"   id="wSub">Enjoy the morning.</div>
   </main>
   <aside class="side-panel">
-    <div class="weather-panel" id="wWeatherPanel" style="flex:1.4">
+    <div class="weather-panel" style="flex:1.4">
       <div class="panel-label">Outside</div>
       <div>
         <div class="weather-top">
@@ -521,307 +542,330 @@
 </div>
  
 <script>
-// ═══════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════
-const C = DASHBOARD_CONFIG;
+// ══════════════════════════════════════════════════════
+// CONFIG — falls back gracefully if file not loaded
+// ══════════════════════════════════════════════════════
+const C = (typeof DASHBOARD_CONFIG !== 'undefined') ? DASHBOARD_CONFIG : {
+  family: {
+    kids: [
+      { name:"Joe",  active:true,  note:"" },
+      { name:"Jack", active:true,  note:"" },
+      { name:"Sue",  active:false, note:"baby" },
+    ],
+    location: { city:"Mount Pleasant, SC", lat:32.83, lon:-79.83, schoolRoute:"US-17 N to School" },
+  },
+  modules: {
+    weather:{ enabled:true, when:"now" }, quote:{ enabled:true, source:"stoic" },
+  },
+  scenes: [
+    { id:"weekday_morning", name:"Weekday Morning",
+      trigger:{ days:[1,2,3,4,5], timeStart:"06:00", timeEnd:"08:30", priority:10 },
+      departure:{ leaveHour:6, leaveMin:45, schoolHour:7, schoolMin:20, lateBellHour:7, lateBellMin:25, driveMin:22, carBuffer:5 } },
+    { id:"weekday_evening", name:"Weekday Evening",
+      trigger:{ days:[1,2,3,4,5], timeStart:"17:00", timeEnd:"21:00", priority:10 } },
+    { id:"weekend_relaxed", name:"Weekend Relaxed",
+      trigger:{ days:[0,6], timeStart:"07:00", timeEnd:"10:00", priority:5 } },
+  ],
+  eveningTimeline: [
+    { id:"home",     label:"Home & decompress", icon:"🏠", startHour:17, startMin:30, durationMin:30, note:"Snack, unwind" },
+    { id:"homework", label:"Homework",           icon:"📚", startHour:18, startMin:0,  durationMin:30, note:"Both kids" },
+    { id:"dinner",   label:"Dinner",             icon:"🍽", startHour:18, startMin:30, durationMin:30, note:"Together" },
+    { id:"baths",    label:"Baths",              icon:"🛁", startHour:19, startMin:15, durationMin:30, note:"" },
+    { id:"reading",  label:"Reading",            icon:"📖", startHour:19, startMin:45, durationMin:30, note:"30 min each" },
+    { id:"winddown", label:"Wind down",          icon:"🌙", startHour:20, startMin:15, durationMin:15, note:"No screens" },
+    { id:"bed",      label:"Lights out",         icon:"💤", startHour:20, startMin:30, durationMin:0,  note:"8:30 PM" },
+  ],
+  morningChecklist: [
+    { id:"breakfast", label:"Breakfast",      icon:"🥣", targetMin:-40 },
+    { id:"dressed",   label:"Get dressed",    icon:"👕", targetMin:-30 },
+    { id:"backpack",  label:"Backpacks",      icon:"🎒", targetMin:-20 },
+    { id:"teeth",     label:"Brush teeth",    icon:"🪥", targetMin:-15 },
+    { id:"shoes",     label:"Shoes on",       icon:"👟", targetMin:-5  },
+    { id:"car",       label:"Get in the car", icon:"🚗", targetMin:0   },
+  ],
+  messages: {
+    morning: { calm:["Morning is easy."], warn:["Start getting ready."], hot:["Shoes on, please."], crit:["Move it!"], gone:["Have a great day. ☀︎"] },
+    evening: { onTrack:["On track. Nice work."], behind:["Running a little behind."], late:["Behind schedule."], done:["Rest up. See you in the morning. 💤"] },
+  },
+};
  
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
 const WMO = {
   0:["Clear sky","☀︎"],1:["Mostly clear","🌤"],2:["Partly cloudy","⛅"],
   3:["Overcast","☁︎"],45:["Foggy","🌫"],51:["Light drizzle","🌦"],
   61:["Light rain","🌧"],63:["Rain","🌧"],65:["Heavy rain","🌧"],
   71:["Light snow","🌨"],80:["Showers","🌦"],95:["Thunderstorm","⛈"],
 };
-function wmo(c){ return WMO[c]||["—","—"]; }
+const wmo = c => WMO[c] || ["—","—"];
  
-const DAY_NAMES = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
-const DAYS_DISP = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-const MONTHS    = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY_NAMES  = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+const DAYS_DISP  = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MONTHS     = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
  
-function fmtTime(h, m) {
-  const ampm = h < 12 ? "AM" : "PM";
-  const hh   = h % 12 || 12;
-  return `${hh}:${String(m).padStart(2,"0")} ${ampm}`;
-}
- 
-function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+const fmtTime = (h,m) => {
+  const ap = h < 12 ? "AM" : "PM";
+  return `${h%12||12}:${String(m).padStart(2,"0")} ${ap}`;
+};
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
  
 function getScenario(now) {
   const dayKey = DAY_NAMES[now.getDay()];
-  return C.scenarios[dayKey] || C.scenarios.default;
+  return (C.scenarios && C.scenarios[dayKey]) || (C.scenes && C.scenes[0]?.departure) || {
+    leaveHour:6, leaveMin:45, schoolHour:7, schoolMin:20,
+    lateBellHour:7, lateBellMin:25, driveMin:22, carBuffer:5, note:""
+  };
 }
  
 function isSchoolDay(now) {
-  return C.schoolDays.includes(now.getDay());
+  return (C.schoolDays || [1,2,3,4,5]).includes(now.getDay());
 }
  
 function getCurrentMode(now) {
-  const h = now.getHours(), m = now.getMinutes();
-  const tod = h * 60 + m;
-  const morningStart = C.modes.morning.startHour * 60 + C.modes.morning.startMin;
-  const morningEnd   = C.modes.morning.endHour   * 60 + C.modes.morning.endMin;
-  const eveningStart = C.modes.evening.startHour * 60 + C.modes.evening.startMin;
-  const eveningEnd   = C.modes.evening.endHour   * 60 + C.modes.evening.endMin;
+  const tod = now.getHours()*60 + now.getMinutes();
+  const ms  = C.modes?.morning || { startHour:6, startMin:0, endHour:8, endMin:30 };
+  const es  = C.modes?.evening || { startHour:17, startMin:0, endHour:21, endMin:0 };
+  const mS  = ms.startHour*60+ms.startMin, mE = ms.endHour*60+ms.endMin;
+  const eS  = es.startHour*60+es.startMin, eE = es.endHour*60+es.endMin;
  
-  if (tod >= morningStart && tod < morningEnd) {
-    return isSchoolDay(now) ? "morning" : "weekend";
-  }
-  if (tod >= eveningStart && tod < eveningEnd) return "evening";
+  // Check calendar-driven scene overrides
+  const forced = localStorage.getItem('fam_frame_force_scene');
+  if (forced) return forced;
+ 
+  if (tod >= mS && tod < mE) return isSchoolDay(now) ? "morning" : "weekend";
+  if (tod >= eS && tod < eE) return "evening";
   return "art";
 }
  
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // MODE SWITCHING
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 let currentMode = null;
- 
 function switchMode(mode) {
   if (mode === currentMode) return;
   currentMode = mode;
- 
-  document.getElementById("artMode").classList.toggle("active",      mode==="art");
-  document.getElementById("morningLayout").classList.toggle("active", mode==="morning");
-  document.getElementById("eveningLayout").classList.toggle("active", mode==="evening");
-  document.getElementById("weekendLayout").classList.toggle("active", mode==="weekend");
+  document.getElementById("artMode").classList.toggle("active",        mode==="art");
+  document.getElementById("morningLayout").classList.toggle("active",  mode==="morning");
+  document.getElementById("eveningLayout").classList.toggle("active",  mode==="evening");
+  document.getElementById("weekendLayout").classList.toggle("active",  mode==="weekend");
 }
  
-// ═══════════════════════════════════════════════════════
-// CLOCKS + DATE
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// CLOCKS
+// ══════════════════════════════════════════════════════
 function updateClocks() {
-  const now = new Date();
+  const now     = new Date();
   const timeStr = now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",second:"2-digit",hour12:true});
   const dateStr = `${DAYS_DISP[now.getDay()]}  ·  ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  const heroH   = now.getHours()%12||12;
+  const heroM   = String(now.getMinutes()).padStart(2,"0");
+  const heroAP  = now.getHours()<12?"AM":"PM";
  
-  document.getElementById("artClock").textContent = now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
-  document.getElementById("artDate").textContent  = dateStr;
-  document.getElementById("mClock").textContent   = timeStr;
-  document.getElementById("eClock").textContent   = timeStr;
-  document.getElementById("wClock").textContent   = timeStr;
-  document.getElementById("mDateLine").textContent= dateStr;
-  document.getElementById("eDateLine").textContent= dateStr;
-  document.getElementById("wDateLine").textContent= dateStr;
+  document.getElementById("artClock").textContent  = now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
+  document.getElementById("artDate").textContent   = dateStr;
+  document.getElementById("mClock").textContent    = timeStr;
+  document.getElementById("wClock").textContent    = timeStr;
+  document.getElementById("mDateLine").textContent = dateStr;
+  document.getElementById("eDateLine").textContent = dateStr;
+  document.getElementById("wDateLine").textContent = dateStr;
+  document.getElementById("eHeroClock").innerHTML  =
+    `${heroH}:${heroM}<span class="ampm">${heroAP}</span>`;
 }
  
-// ═══════════════════════════════════════════════════════
-// MORNING: COUNTDOWN + CHECKLIST + TRAFFIC
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// MORNING
+// ══════════════════════════════════════════════════════
 let driveMinCurrent = 22;
- 
-function buildChecklist() {
-  const now      = new Date();
-  const scenario = getScenario(now);
-  const depart   = new Date(now);
-  depart.setHours(scenario.leaveHour, scenario.leaveMin, 0, 0);
-  const diffMin  = (depart - now) / 60000;
- 
-  const el = document.getElementById("mChecklist");
-  el.innerHTML = C.morningChecklist.map(item => {
-    const itemMin   = scenario.leaveMin + item.targetMin; // offset from departure
-    const absMin    = scenario.leaveHour * 60 + itemMin;
-    const nowMin    = now.getHours() * 60 + now.getMinutes();
-    const isDone    = nowMin > absMin + 2;
-    const isActive  = !isDone && (diffMin + item.targetMin) <= 2 && (diffMin + item.targetMin) >= -8;
- 
-    const h  = Math.floor(absMin / 60) % 24;
-    const mm = ((absMin % 60) + 60) % 60;
-    const label = fmtTime(h, mm);
- 
-    return `<div class="checklist-item ${isDone?"done":""} ${isActive?"active":""}">
-      <div class="check-icon">${item.icon}</div>
-      <div class="check-label">${item.label}</div>
-      <div class="check-time">${label}</div>
-      <div class="check-dot"></div>
-    </div>`;
-  }).join("");
-}
  
 function updateMorning() {
   const now      = new Date();
-  const scenario = getScenario(now);
-  const depart   = new Date(now);
-  depart.setHours(scenario.leaveHour, scenario.leaveMin, 0, 0);
+  const sc       = getScenario(now);
+  const dep      = new Date(now);
+  dep.setHours(sc.leaveHour||6, sc.leaveMin||45, 0, 0);
  
-  const diffMs  = depart - now;
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffSec = Math.floor((diffMs % 60000) / 1000);
+  const diffMs  = dep - now;
+  const diffMin = Math.floor(diffMs/60000);
+  const diffSec = Math.floor((diffMs%60000)/1000);
  
   const main = document.getElementById("morningMain");
   const val  = document.getElementById("mCountdownVal");
   const unit = document.getElementById("mCountdownUnit");
   const fill = document.getElementById("mProgress");
   const msg  = document.getElementById("mMessage");
-  const msgs = C.messages.morning;
+  const msgs = C.messages?.morning || { calm:["Morning is easy."], warn:["Start getting ready."], hot:["Shoes on, please."], crit:["Move it!"], gone:["Have a great day. ☀︎"] };
  
-  // departure/bell lines
   document.getElementById("mDepartureLine").textContent =
-    `LEAVE BY ${fmtTime(scenario.leaveHour, scenario.leaveMin)} · ${scenario.carBufferMin} MIN TO CAR`;
+    `LEAVE BY ${fmtTime(sc.leaveHour||6,sc.leaveMin||45)} · ${sc.carBuffer||5} MIN TO CAR`;
   document.getElementById("mLateBell").textContent =
-    `LATE BELL ${fmtTime(scenario.lateBellHour, scenario.lateBellMin)} · SCHOOL AT ${fmtTime(scenario.schoolHour, scenario.schoolMin)}`;
-  document.getElementById("mScenarioNote").textContent = scenario.note || "";
+    `LATE BELL ${fmtTime(sc.lateBellHour||7,sc.lateBellMin||25)} · SCHOOL AT ${fmtTime(sc.schoolHour||7,sc.schoolMin||20)}`;
+  document.getElementById("mScenarioNote").textContent = sc.note || "";
+  document.getElementById("mTrafficSub").textContent   = C.family?.location?.schoolRoute || "Mount Pleasant → School";
  
   main.className = "main-panel";
  
   if (diffMs <= 0) {
     main.classList.add("u-gone");
-    val.textContent  = fmtTime(scenario.leaveHour, scenario.leaveMin);
+    val.textContent  = fmtTime(sc.leaveHour||6, sc.leaveMin||45);
     unit.textContent = "";
-    msg.textContent  = pickRandom(msgs.gone);
+    msg.textContent  = pick(msgs.gone);
     fill.style.width = "100%";
   } else {
-    const windowMs = 75 * 60000;
-    fill.style.width = Math.min(100, ((windowMs - diffMs) / windowMs) * 100) + "%";
- 
+    const pct = Math.min(100, Math.max(0, ((75*60000-diffMs)/(75*60000))*100));
+    fill.style.width = pct + "%";
     if (diffMin >= 60) {
-      main.classList.add("u-calm");
-      val.textContent  = fmtTime(scenario.leaveHour, scenario.leaveMin);
-      unit.textContent = "";
-      msg.textContent  = pickRandom(msgs.calm);
+      main.classList.add("u-calm"); val.textContent=fmtTime(sc.leaveHour||6,sc.leaveMin||45); unit.textContent=""; msg.textContent=pick(msgs.calm);
     } else if (diffMin >= 20) {
-      main.classList.add("u-calm");
-      val.textContent  = diffMin; unit.textContent = "min";
-      msg.textContent  = pickRandom(msgs.calm);
+      main.classList.add("u-calm"); val.textContent=diffMin; unit.textContent="min"; msg.textContent=pick(msgs.calm);
     } else if (diffMin >= 10) {
-      main.classList.add("u-warn");
-      val.textContent  = diffMin; unit.textContent = "min";
-      msg.textContent  = pickRandom(msgs.warn);
+      main.classList.add("u-warn"); val.textContent=diffMin; unit.textContent="min"; msg.textContent=pick(msgs.warn);
     } else if (diffMin >= 5) {
-      main.classList.add("u-hot");
-      val.textContent  = diffMin; unit.textContent = "min";
-      msg.textContent  = pickRandom(msgs.hot);
+      main.classList.add("u-hot");  val.textContent=diffMin; unit.textContent="min"; msg.textContent=pick(msgs.hot);
     } else {
       main.classList.add("u-crit");
-      val.textContent  = `${String(diffMin).padStart(2,"0")}:${String(diffSec).padStart(2,"0")}`;
-      unit.textContent = "";
-      msg.textContent  = pickRandom(msgs.crit);
+      val.textContent=`${String(diffMin).padStart(2,"0")}:${String(diffSec).padStart(2,"0")}`;
+      unit.textContent=""; msg.textContent=pick(msgs.crit);
     }
   }
  
   // Traffic margin
-  const nowTot    = now.getHours()*60 + now.getMinutes();
-  const schoolTot = scenario.schoolHour*60 + scenario.schoolMin;
+  const nowTot    = now.getHours()*60+now.getMinutes();
+  const schoolTot = (sc.schoolHour||7)*60+(sc.schoolMin||20);
   const margin    = schoolTot - nowTot - driveMinCurrent;
   const dot       = document.getElementById("mStatusDot");
   const mEl       = document.getElementById("mTrafficMargin");
-  const cond      = document.getElementById("mTrafficCond");
  
   dot.className = "status-dot";
   if (margin >= 12) {
-    mEl.className = "traffic-margin ok";
-    mEl.textContent = `+${margin} min margin`;
-    cond.textContent = "Light traffic";
+    mEl.className="traffic-margin ok"; mEl.textContent=`+${margin} min margin`;
   } else if (margin >= 5) {
-    mEl.className = "traffic-margin warn";
-    mEl.textContent = `+${margin} min margin`;
-    dot.classList.add("warn","pulse");
-    cond.textContent = "Moderate traffic";
+    mEl.className="traffic-margin warn"; mEl.textContent=`+${margin} min margin`; dot.classList.add("warn","pulse");
   } else if (margin >= 0) {
-    mEl.className = "traffic-margin crit";
-    mEl.textContent = `+${margin} min — cutting it close`;
-    dot.classList.add("crit","pulse");
-    cond.textContent = "Heavy traffic";
+    mEl.className="traffic-margin crit"; mEl.textContent=`+${margin} min — cutting it close`; dot.classList.add("crit","pulse");
   } else {
-    mEl.className = "traffic-margin crit";
-    mEl.textContent = `${Math.abs(margin)} min late if you leave now`;
-    dot.classList.add("crit","pulse");
-    cond.textContent = "Too late for on-time";
+    mEl.className="traffic-margin crit"; mEl.textContent=`${Math.abs(margin)} min late if you leave now`; dot.classList.add("crit","pulse");
   }
  
-  buildChecklist();
+  buildChecklist(now, sc);
 }
  
-function updateTrafficEstimate() {
-  const now = new Date();
-  const tod = now.getHours() + now.getMinutes()/60;
-  let mins, cond;
-  if      (tod>=6&&tod<7)   { mins=14; cond="Light traffic"; }
-  else if (tod>=7&&tod<7.5) { mins=20; cond="Moderate traffic"; }
-  else if (tod>=7.5&&tod<8.5){ mins=26; cond="Heavy traffic"; }
-  else if (tod>=8.5&&tod<9) { mins=18; cond="Easing"; }
-  else                       { mins=12; cond="Clear"; }
-  driveMinCurrent = mins;
-  document.getElementById("mTrafficTime").innerHTML =
-    `${mins}<span class="traffic-unit">min est.</span>`;
-  document.getElementById("mTrafficCond").textContent = cond;
-}
- 
-// ═══════════════════════════════════════════════════════
-// EVENING: TIMELINE
-// ═══════════════════════════════════════════════════════
-function updateEvening() {
-  const now   = new Date();
-  const nowM  = now.getHours()*60 + now.getMinutes();
-  const tl    = C.eveningTimeline;
-  const msgs  = C.messages.evening;
- 
-  // evening progress bar (5pm to 9pm = 240 min)
-  const evStart = 17*60, evEnd = 21*60;
-  const evPct   = Math.min(100, Math.max(0, ((nowM-evStart)/(evEnd-evStart))*100));
-  document.getElementById("eProgressFill").style.width = evPct + "%";
-  document.getElementById("eProgressPct").textContent  = Math.round(evPct) + "%";
-  document.getElementById("eProgress").style.width     = evPct + "%";
- 
-  // message
-  const bedM = 20*60+30;
-  const msg   = document.getElementById("eMessage");
-  if (nowM >= bedM) {
-    msg.textContent = pickRandom(msgs.done);
-  } else {
-    // find if any block is overdue
-    const overdue = tl.some(item => {
-      const startM = item.startHour*60+item.startMin;
-      const endM   = startM + (item.durationMin||0);
-      return nowM > endM + 5 && item.durationMin > 0;
-    });
-    const behind = tl.some(item => {
-      const startM = item.startHour*60+item.startMin;
-      return nowM > startM + 5 && item.id !== "bed";
-    });
-    if (overdue) msg.textContent = pickRandom(msgs.late);
-    else if (behind) msg.textContent = pickRandom(msgs.behind);
-    else msg.textContent = pickRandom(msgs.onTrack);
-  }
- 
-  // build timeline
-  const tlEl = document.getElementById("eTimeline");
-  tlEl.innerHTML = tl.map((item, i) => {
-    const startM = item.startHour*60+item.startMin;
-    const endM   = startM + (item.durationMin||0);
-    const isDone = nowM > endM && item.durationMin > 0;
-    const isActive = !isDone && nowM >= startM - 5 && nowM < (item.durationMin > 0 ? endM : startM + 30);
- 
-    let untilText = "";
-    if (isActive && item.durationMin > 0) {
-      const remaining = endM - nowM;
-      untilText = remaining > 0 ? `${remaining} min left` : "wrapping up";
-    } else if (!isDone && !isActive) {
-      const until = startM - nowM;
-      if (until > 0 && until <= 30) untilText = `in ${until} min`;
-    }
- 
-    return `<div class="timeline-item ${isDone?"tl-done":""} ${isActive?"tl-active":""}">
-      <div class="tl-active-bar"></div>
-      <div class="tl-left">
-        <div class="tl-dot"></div>
-        ${i < tl.length-1 ? '<div class="tl-line"></div>' : ''}
-      </div>
-      <div class="tl-content">
-        <div class="tl-time">${fmtTime(item.startHour,item.startMin)}${item.durationMin?` – ${fmtTime(Math.floor(endM/60),endM%60)}`:" "}</div>
-        <div class="tl-label">${item.icon} ${item.label}</div>
-        ${item.note ? `<div class="tl-note">${item.note}</div>` : ""}
-        ${untilText ? `<div class="tl-until">${untilText}</div>` : ""}
-      </div>
+function buildChecklist(now, sc) {
+  const el = document.getElementById("mChecklist");
+  el.innerHTML = (C.morningChecklist||[]).map(item => {
+    const absMin  = (sc.leaveHour||6)*60 + (sc.leaveMin||45) + (item.targetMin||0);
+    const nowMin  = now.getHours()*60 + now.getMinutes();
+    const isDone  = nowMin > absMin + 2;
+    const isActive= !isDone && nowMin >= absMin - 8 && nowMin <= absMin + 2;
+    const h = Math.floor(((absMin%1440)+1440)%1440/60);
+    const m = ((absMin%60)+60)%60;
+    return `<div class="checklist-item ${isDone?"done":""} ${isActive?"active":""}">
+      <div class="check-icon">${item.icon}</div>
+      <div class="check-label">${item.label}</div>
+      <div class="check-time">${fmtTime(h,m)}</div>
+      <div class="check-dot"></div>
     </div>`;
   }).join("");
 }
  
-// ═══════════════════════════════════════════════════════
-// WEATHER (Today + Tomorrow)
-// ═══════════════════════════════════════════════════════
+function updateTrafficEstimate() {
+  const tod = new Date().getHours() + new Date().getMinutes()/60;
+  let mins;
+  if      (tod>=6&&tod<7)    mins=14;
+  else if (tod>=7&&tod<7.5)  mins=20;
+  else if (tod>=7.5&&tod<8.5)mins=26;
+  else if (tod>=8.5&&tod<9)  mins=18;
+  else                        mins=12;
+  driveMinCurrent = mins;
+  document.getElementById("mTrafficTime").innerHTML =
+    `${mins}<span class="traffic-unit">min est.</span>`;
+}
+ 
+// ══════════════════════════════════════════════════════
+// EVENING TIMELINE
+// ══════════════════════════════════════════════════════
+function updateEvening() {
+  const now  = new Date();
+  const nowM = now.getHours()*60+now.getMinutes();
+  const tl   = C.eveningTimeline||[];
+  const msgs = C.messages?.evening || { onTrack:["On track."], behind:["Running behind."], late:["Behind schedule."], done:["Rest up. 💤"] };
+ 
+  // Evening progress (5pm–9pm)
+  const evPct = Math.min(100,Math.max(0,((nowM-17*60)/(4*60))*100));
+  document.getElementById("eProgressFill").style.width = evPct+"%";
+  document.getElementById("eProgressPct").textContent  = Math.round(evPct)+"%";
+  document.getElementById("eProgress").style.width     = evPct+"%";
+ 
+  // Message
+  const bedM  = 20*60+30;
+  const msgEl = document.getElementById("eMessage");
+  if (!msgEl) return;
+  if (nowM >= bedM) msgEl.textContent = pick(msgs.done);
+  else {
+    const anyBehind = tl.some(i => {
+      const sm = i.startHour*60+i.startMin;
+      return nowM > sm+8 && i.durationMin > 0;
+    });
+    msgEl.textContent = anyBehind ? pick(msgs.behind) : pick(msgs.onTrack);
+  }
+ 
+  // Build timeline with floating "now" dot between items
+  const tlEl = document.getElementById("eTimeline");
+  let html   = "";
+  let nowInserted = false;
+ 
+  tl.forEach((item, i) => {
+    const startM  = item.startHour*60+item.startMin;
+    const endM    = startM+(item.durationMin||0);
+    const isDone  = nowM > endM && item.durationMin > 0;
+    const isActive= !isDone && nowM >= startM-5 && nowM < (item.durationMin>0?endM:startM+30);
+    const isNext  = !isDone && !isActive && !nowInserted && nowM < startM;
+ 
+    // Insert "now" marker before the first future item
+    if (isNext && !nowInserted) {
+      nowInserted = true;
+      html += `<div class="tl-now-line"></div>
+        <div class="tl-now-marker">
+          <div class="tl-now-dot"></div>
+          <div class="tl-now-label">now</div>
+        </div>
+        <div class="tl-now-line" style="background:linear-gradient(var(--border),transparent)"></div>`;
+    }
+ 
+    let untilText = "";
+    if (isActive && item.durationMin > 0) {
+      const rem = endM-nowM; untilText = rem>0?`${rem} min left`:"wrapping up";
+    }
+ 
+    const endTimeStr = item.durationMin > 0
+      ? ` – ${fmtTime(Math.floor(endM/60),endM%60)}` : "";
+ 
+    html += `<div class="tl-item ${isDone?"tl-done":""} ${isActive?"tl-active":""}">
+      <div class="tl-left">
+        <div class="tl-dot"></div>
+        ${i<tl.length-1?'<div class="tl-line"></div>':''}
+      </div>
+      <div class="tl-content">
+        <div class="tl-time">${fmtTime(item.startHour,item.startMin)}${endTimeStr}</div>
+        <div class="tl-label">${item.icon} ${item.label}</div>
+        ${item.note?`<div class="tl-note">${item.note}</div>`:""}
+        ${untilText?`<div class="tl-until">${untilText}</div>`:""}
+      </div>
+    </div>`;
+  });
+ 
+  // If we're past everything, no "now" marker needed
+  tlEl.innerHTML = html;
+}
+ 
+// ══════════════════════════════════════════════════════
+// WEATHER
+// ══════════════════════════════════════════════════════
 async function fetchWeather() {
+  const lat = C.family?.location?.lat || 32.83;
+  const lon = C.family?.location?.lon || -79.83;
   try {
     const url = `https://api.open-meteo.com/v1/forecast`
-      +`?latitude=${C.family.location.lat}&longitude=${C.family.location.lon}`
+      +`?latitude=${lat}&longitude=${lon}`
       +`&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,uv_index`
       +`&hourly=temperature_2m,precipitation_probability,weather_code`
       +`&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code`
@@ -830,108 +874,121 @@ async function fetchWeather() {
  
     const data = await fetch(url).then(r=>r.json());
     const curr = data.current;
-    const [desc, icon] = wmo(curr.weather_code);
+    const [desc,icon] = wmo(curr.weather_code);
  
-    // Today (morning + weekend)
-    for (const prefix of ["m","w"]) {
-      document.getElementById(`${prefix}Temp`).innerHTML =
-        `${Math.round(curr.temperature_2m)}<span class="deg">°F</span>`;
-      document.getElementById(`${prefix}WeatherIcon`).textContent = icon;
-      document.getElementById(`${prefix}WeatherDesc`).textContent = desc;
-      if (prefix==="m") {
-        document.getElementById("mHumidity").textContent = curr.relative_humidity_2m + "%";
-        document.getElementById("mWind").textContent     = Math.round(curr.wind_speed_10m) + " mph";
-        document.getElementById("mUV").textContent       = (curr.uv_index||0).toFixed(1);
-      } else {
-        document.getElementById("wHumidity").textContent = curr.relative_humidity_2m + "%";
-        document.getElementById("wWind").textContent     = Math.round(curr.wind_speed_10m) + " mph";
-        document.getElementById("wUV").textContent       = (curr.uv_index||0).toFixed(1);
-      }
-      const nowH = new Date().getHours();
-      const hours = data.hourly.time.map((t,i)=>({
-        h: new Date(t).getHours(), prec: data.hourly.precipitation_probability[i],
-        temp: data.hourly.temperature_2m[i], code: data.hourly.weather_code[i],
-      }));
-      const rain = Math.max(...hours.filter(h=>h.h>=nowH&&h.h<nowH+4).map(h=>h.prec||0));
-      if (prefix==="m") document.getElementById("mRain").textContent = rain + "%";
-      else document.getElementById("wRain").textContent = rain + "%";
- 
-      document.getElementById(`${prefix}WeatherDetails`).style.opacity = "1";
- 
-      // Forecast (morning only)
-      if (prefix==="m") {
-        const slots = hours.filter(h=>h.h>nowH).slice(0,4);
-        document.getElementById("mForecast").innerHTML = slots.map(h=>{
-          const [,ic]=wmo(h.code);
-          const lbl=h.h===0?"12a":h.h<12?h.h+"a":h.h===12?"12p":(h.h-12)+"p";
-          return `<div class="fc-slot"><div class="fc-time">${lbl}</div><div class="fc-icon">${ic}</div><div class="fc-temp">${Math.round(h.temp)}°</div></div>`;
-        }).join("");
-        document.getElementById("mForecast").style.opacity = "1";
-      }
+    // Today
+    for (const p of ["m","w"]) {
+      document.getElementById(`${p}Temp`).innerHTML = `${Math.round(curr.temperature_2m)}<span class="deg">°F</span>`;
+      document.getElementById(`${p}WeatherIcon`).textContent = icon;
+      document.getElementById(`${p}WeatherDesc`).textContent = desc;
     }
+    document.getElementById("mHumidity").textContent = curr.relative_humidity_2m+"%";
+    document.getElementById("mWind").textContent     = Math.round(curr.wind_speed_10m)+" mph";
+    document.getElementById("mUV").textContent       = (curr.uv_index||0).toFixed(1);
+    document.getElementById("wHumidity").textContent = curr.relative_humidity_2m+"%";
+    document.getElementById("wWind").textContent     = Math.round(curr.wind_speed_10m)+" mph";
+    document.getElementById("wUV").textContent       = (curr.uv_index||0).toFixed(1);
  
-    // Tomorrow (evening)
-    if (data.daily && data.daily.time.length > 1) {
-      const [tDesc, tIcon] = wmo(data.daily.weather_code[1]);
-      document.getElementById("eTempHigh").innerHTML =
-        `${Math.round(data.daily.temperature_2m_max[1])}<span class="deg">°F</span>`;
-      document.getElementById("eWeatherIcon").textContent = tIcon;
-      document.getElementById("eWeatherDesc").textContent = tDesc;
-      document.getElementById("eTempHighVal").textContent = Math.round(data.daily.temperature_2m_max[1]) + "°F";
-      document.getElementById("eTempLow").textContent     = Math.round(data.daily.temperature_2m_min[1]) + "°F";
-      document.getElementById("eRain").textContent        = (data.daily.precipitation_probability_max[1]||0) + "%";
-      document.getElementById("eWind").textContent        = Math.round(data.daily.wind_speed_10m_max[1]||0) + " mph";
-      document.getElementById("eWeatherDetails").style.opacity = "1";
+    const nowH  = new Date().getHours();
+    const hours = data.hourly.time.map((t,i)=>({
+      h:new Date(t).getHours(), prec:data.hourly.precipitation_probability[i],
+      temp:data.hourly.temperature_2m[i], code:data.hourly.weather_code[i],
+    }));
+    const rain = Math.max(...hours.filter(h=>h.h>=nowH&&h.h<nowH+4).map(h=>h.prec||0));
+    document.getElementById("mRain").textContent = rain+"%";
+    document.getElementById("wRain").textContent = rain+"%";
+    document.getElementById("mWeatherDetails").style.opacity="1";
+    document.getElementById("wWeatherDetails").style.opacity="1";
  
-      // Tomorrow hourly forecast for morning hours (6–9am)
+    const slots = hours.filter(h=>h.h>nowH).slice(0,4);
+    document.getElementById("mForecast").innerHTML = slots.map(h=>{
+      const [,ic]=wmo(h.code);
+      const lbl=h.h===0?"12a":h.h<12?h.h+"a":h.h===12?"12p":(h.h-12)+"p";
+      return `<div class="fc-slot"><div class="fc-time">${lbl}</div><div class="fc-icon">${ic}</div><div class="fc-temp">${Math.round(h.temp)}°</div></div>`;
+    }).join("");
+    document.getElementById("mForecast").style.opacity="1";
+ 
+    // Tomorrow
+    if (data.daily?.time?.length > 1) {
+      const [td,ti] = wmo(data.daily.weather_code[1]);
+      document.getElementById("eTempHigh").innerHTML = `${Math.round(data.daily.temperature_2m_max[1])}<span class="deg">°F</span>`;
+      document.getElementById("eWeatherIcon").textContent = ti;
+      document.getElementById("eWeatherDesc").textContent = td;
+      document.getElementById("eTempHighVal").textContent = Math.round(data.daily.temperature_2m_max[1])+"°F";
+      document.getElementById("eTempLow").textContent     = Math.round(data.daily.temperature_2m_min[1])+"°F";
+      document.getElementById("eRain").textContent        = (data.daily.precipitation_probability_max[1]||0)+"%";
+      document.getElementById("eWind").textContent        = Math.round(data.daily.wind_speed_10m_max[1]||0)+" mph";
+      document.getElementById("eWeatherDetails").style.opacity="1";
+ 
+      // Tomorrow morning forecast slots
+      const tmrwDate = new Date(data.daily.time[1]);
       const tmrwHours = data.hourly.time.map((t,i)=>({
-        h: new Date(t), prec: data.hourly.precipitation_probability[i],
-        temp: data.hourly.temperature_2m[i], code: data.hourly.weather_code[i],
-      })).filter(h=>{
-        const d=h.h; return d.getDate()===new Date(data.daily.time[1]).getDate()
-          && d.getHours()>=6 && d.getHours()<=9;
-      });
+        dt:new Date(t), prec:data.hourly.precipitation_probability[i],
+        temp:data.hourly.temperature_2m[i], code:data.hourly.weather_code[i],
+      })).filter(h=>h.dt.getDate()===tmrwDate.getDate()&&h.dt.getHours()>=6&&h.dt.getHours()<=9);
       document.getElementById("eForecast").innerHTML = tmrwHours.slice(0,4).map(h=>{
         const [,ic]=wmo(h.code);
-        const lbl=(h.h.getHours()%12||12)+"a";
+        const lbl=(h.dt.getHours()%12||12)+"a";
         return `<div class="fc-slot"><div class="fc-time">${lbl}</div><div class="fc-icon">${ic}</div><div class="fc-temp">${Math.round(h.temp)}°</div></div>`;
       }).join("");
-      document.getElementById("eForecast").style.opacity = "1";
+      document.getElementById("eForecast").style.opacity="1";
     }
- 
   } catch(e) {
-    console.warn("Weather fetch failed", e);
+    console.warn("Weather fetch failed",e);
   }
 }
  
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// QUOTE (Quotable API)
+// ══════════════════════════════════════════════════════
+async function fetchQuote() {
+  const source = C.modules?.quote?.source || "stoic";
+  const tagMap = { stoic:"stoicism", wisdom:"wisdom", family:"family", any:"" };
+  const tag    = tagMap[source] || "stoicism";
+  try {
+    const url = tag
+      ? `https://api.quotable.io/random?tags=${tag}&maxLength=180`
+      : `https://api.quotable.io/random&maxLength=180`;
+    const data = await fetch(url).then(r=>r.json());
+    if (data.content) {
+      document.getElementById("quoteText").textContent   = data.content;
+      document.getElementById("quoteAuthor").textContent = `— ${(data.author||"").toUpperCase()}`;
+    }
+  } catch(e) {
+    document.getElementById("quoteText").textContent = "The obstacle is the way.";
+    document.getElementById("quoteAuthor").textContent = "— MARCUS AURELIUS";
+  }
+}
+ 
+// ══════════════════════════════════════════════════════
 // CALENDAR
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 async function fetchCalendar(targetDate, elId) {
-  const el = document.getElementById(elId);
-  if (!C.api.googleCalendarKey || !C.api.googleCalendarIds.length) {
-    el.innerHTML = `<div class="cal-placeholder">Add Google Calendar API key in dashboard-config.js</div>`;
+  const el  = document.getElementById(elId);
+  const key = C.api?.googleCalendarKey || localStorage.getItem('fam_frame_gcal_key') || "";
+  const ids = C.api?.googleCalendarIds || [];
+ 
+  if (!key || !ids.length) {
+    el.innerHTML=`<div class="cal-placeholder">Add Calendar API key in config</div>`;
     return;
   }
   try {
     const start = new Date(targetDate); start.setHours(0,0,0,0);
     const end   = new Date(targetDate); end.setHours(23,59,59,999);
-    const allEvents = [];
-    for (const id of C.api.googleCalendarIds) {
+    const all   = [];
+    for (const id of ids) {
       const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(id)}/events`
-        +`?key=${C.api.googleCalendarKey}`
-        +`&timeMin=${start.toISOString()}&timeMax=${end.toISOString()}`
+        +`?key=${key}&timeMin=${start.toISOString()}&timeMax=${end.toISOString()}`
         +`&singleEvents=true&orderBy=startTime&maxResults=5`;
       const data = await fetch(url).then(r=>r.json());
-      if (data.items) allEvents.push(...data.items);
+      if (data.items) all.push(...data.items);
     }
-    allEvents.sort((a,b)=>(a.start?.dateTime||a.start?.date||"").localeCompare(b.start?.dateTime||b.start?.date||""));
- 
-    const LATE  = /late start|delay|2.hour/i;
-    const HOL   = /no school|holiday|break|closed/i;
-    if (!allEvents.length) { el.innerHTML=`<div class="cal-placeholder">No events</div>`; return; }
-    el.innerHTML = allEvents.slice(0,3).map(ev=>{
-      const t   = ev.start?.dateTime ? new Date(ev.start.dateTime).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true}) : "ALL DAY";
+    all.sort((a,b)=>(a.start?.dateTime||a.start?.date||"").localeCompare(b.start?.dateTime||b.start?.date||""));
+    const LATE = /late start|delay|2.hour/i;
+    const HOL  = /no school|holiday|break|closed/i;
+    if (!all.length) { el.innerHTML=`<div class="cal-placeholder">No events</div>`; return; }
+    el.innerHTML = all.slice(0,3).map(ev=>{
+      const t   = ev.start?.dateTime?new Date(ev.start.dateTime).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true}):"ALL DAY";
       const ttl = ev.summary||"Untitled";
       return `<div class="cal-event">
         <div class="cal-event-time">${t}</div>
@@ -945,52 +1002,45 @@ async function fetchCalendar(targetDate, elId) {
   }
 }
  
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // MAIN TICK
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 function tick() {
   const now  = new Date();
   const mode = getCurrentMode(now);
   switchMode(mode);
   updateClocks();
-  if (mode === "morning") updateMorning();
-  if (mode === "evening") updateEvening();
+  if (mode==="morning") updateMorning();
+  if (mode==="evening") updateEvening();
 }
  
-function flashRefresh(prefix) {
-  const el = document.getElementById(`${prefix}Refresh`);
+function flashRefresh(id) {
+  const el = document.getElementById(id);
   if (!el) return;
   el.classList.add("flash");
-  setTimeout(()=>el.classList.remove("flash"), 900);
+  setTimeout(()=>el.classList.remove("flash"),900);
 }
  
-// ── INIT ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
 tick();
- 
-// 1s tick: clocks, countdown, timeline
 setInterval(tick, 1000);
  
-// 1 min: traffic + refresh indicator
 setInterval(()=>{
   updateTrafficEstimate();
-  if (currentMode==="morning") { updateMorning(); flashRefresh("m"); }
-  if (currentMode==="evening") { updateEvening(); flashRefresh("e"); }
+  if (currentMode==="morning") { updateMorning(); flashRefresh("mRefresh"); }
+  if (currentMode==="evening") { updateEvening(); flashRefresh("eRefresh"); }
 }, 60000);
  
-// 10 min: weather
 setInterval(fetchWeather, 10*60*1000);
+setInterval(fetchQuote,   60*60*1000); // new quote each hour
  
-// 15 min: calendar
-setInterval(()=>{
-  const now  = new Date();
-  const tmrw = new Date(now); tmrw.setDate(tmrw.getDate()+1);
-  fetchCalendar(now,  "mCalEvents");
-  fetchCalendar(now,  "wCalEvents");
-  fetchCalendar(tmrw, "eCalEvents");
-}, 15*60*1000);
- 
-// Initial data loads
+// Initial loads
 fetchWeather();
+fetchQuote();
+updateTrafficEstimate();
+ 
 (()=>{
   const now  = new Date();
   const tmrw = new Date(now); tmrw.setDate(tmrw.getDate()+1);
@@ -998,8 +1048,15 @@ fetchWeather();
   fetchCalendar(now,  "wCalEvents");
   fetchCalendar(tmrw, "eCalEvents");
 })();
+ 
+setInterval(()=>{
+  const now=new Date(), tmrw=new Date(now);
+  tmrw.setDate(tmrw.getDate()+1);
+  fetchCalendar(now,"mCalEvents");
+  fetchCalendar(now,"wCalEvents");
+  fetchCalendar(tmrw,"eCalEvents");
+}, 15*60*1000);
 </script>
 </body>
 </html>
  
-
