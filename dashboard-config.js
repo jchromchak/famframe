@@ -197,12 +197,14 @@ var DASHBOARD_CONFIG = {
   // ── COMMUTE ESTIMATES ─────────────────────────────────────────────
   // Derived route data is safe for the TV. It may be written by the admin app.
   // Fallback estimates are used when derived data is stale or missing.
+  // stopCount is intermediate stops before the final destination. Use 0 to hide.
   commute: {
     activeRouteId: "school-morning",
     routes: {
       "school-morning": {
         provider: "",
         routeLabel: "US-17 N to School",
+        stopCount: 0,
         durationMinutes: null,
         trafficStatus: "",
         updatedAt: "",

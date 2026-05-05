@@ -57,13 +57,13 @@
   id: task-fb53f89c
   priority: now
   status: in-progress
-  revisionId: rev-d7e359c1
+  revisionId: rev-68013094
 
   owner: john
   rule: rule-29881d80
 
   notes:
-    Family should have a home location, but each routine may have a different end location. Morning routines may route to school, while Monday and Wednesday PM routines may route somewhere else. First admin pass exposes Segments as itinerary blocks and keeps route addresses local; full day-specific JSON routine modeling remains next.
+    Family should have a home location, but each routine may have a different end location. Morning routines may route to school, while Monday and Wednesday PM routines may route somewhere else. First admin pass exposes Segments as itinerary blocks and keeps route addresses local; a safe stopCount now carries the number of intermediate stops to the TV. Full day-specific JSON routine modeling remains next.
 
   blocked-by:
     - task-1ec8cfcb

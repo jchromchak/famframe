@@ -124,6 +124,21 @@
   action: updated
   summary: Started the iPhone-first admin refactor around Family, Daily Routines, Segments, Lists, and Integrations.
 
+- rev-68013094
+  date: 2026-05-05T22:12Z
+  user: john
+  origin: codex
+  codex-session: codex-514d38cb
+  objects:
+    - task-fb53f89c: updated
+    - dashboard/index.html: updated
+    - dashboard-config.js: updated
+    - admin/index.html: updated
+    - README.md: updated
+    - .famframe-context/session-handoff.md: updated
+  action: updated
+  summary: Added the first route-segment design field, stopCount, and a subtle dashboard stops chip.
+
 ---
 
 *changelog.md — Fam Frame — v0.1*

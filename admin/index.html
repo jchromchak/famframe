@@ -741,6 +741,8 @@ select {
     <input type="text" id="commuteOrigin" class="full-input" placeholder="Home address or lat,lng">
     <div class="field-label">Destination</div>
     <input type="text" id="commuteDestination" class="full-input" placeholder="School address">
+    <div class="field-label">Stops before destination</div>
+    <input type="number" id="commuteStopCount" class="full-input" min="0" step="1" placeholder="0">
     <div class="field-hint">Segments are itinerary blocks behind a routine. Addresses stay local to this admin device; the repo only receives safe labels and derived commute timing. Future segments will support multiple stops, per-stop buffers, and day-specific destinations.</div>
 
     <div class="section-label" style="margin-top:16px">Evening display segments</div>
@@ -1003,6 +1005,7 @@ const DEFAULT_CONFIG = {
       'school-morning': {
         provider: '',
         routeLabel: 'US-17 N to School',
+        stopCount: 0,
         durationMinutes: null,
         trafficStatus: '',
         updatedAt: '',
@@ -1239,10 +1242,12 @@ function updateKid(i, key, value) { config.family.kids[i][key] = key === 'age' ?
 
 function populateFamilyForm() {
   const loc = config.family.location || {};
+  const schoolRoute = (config.commute.routes || {})['school-morning'] || {};
   setVal('homeCityApp', loc.city || '');
-  setVal('schoolRoute', loc.schoolRoute || loc.school || '');
+  setVal('schoolRoute', schoolRoute.routeLabel || loc.schoolRoute || loc.school || '');
   setVal('commuteOrigin', CredentialStore.getCommuteOrigin());
   setVal('commuteDestination', CredentialStore.getCommuteDestination());
+  setVal('commuteStopCount', schoolRoute.stopCount || 0);
   setVal('homeLat', loc.lat || '');
   setVal('homeLon', loc.lon || '');
   setVal('gcalAppInput', '');
@@ -1261,8 +1266,14 @@ function saveFamily() {
   saveConfig(); saveAndSync('Family settings saved');
 }
 function saveSegments() {
-  config.family.location.schoolRoute = getVal('schoolRoute');
-  config.family.location.school = getVal('schoolRoute');
+  const routeLabel = getVal('schoolRoute');
+  const stopCount = Math.max(0, Math.floor(getNum('commuteStopCount', 0)));
+  config.family.location.schoolRoute = routeLabel;
+  config.family.location.school = routeLabel;
+  config.commute.routes = config.commute.routes || {};
+  config.commute.routes['school-morning'] = config.commute.routes['school-morning'] || {};
+  config.commute.routes['school-morning'].routeLabel = routeLabel;
+  config.commute.routes['school-morning'].stopCount = stopCount;
   CredentialStore.setCommuteOrigin(getVal('commuteOrigin'));
   CredentialStore.setCommuteDestination(getVal('commuteDestination'));
   saveConfig(); saveAndSync('Segments saved');
@@ -1368,11 +1379,13 @@ async function updateDerivedCommute() {
     const duration = result.duration_in_traffic || result.duration;
     const now = new Date();
     const expires = new Date(now.getTime() + 15 * 60 * 1000);
+    const existingRoute = (config.commute.routes || {})['school-morning'] || {};
     config.commute.activeRouteId = 'school-morning';
     config.commute.routes = config.commute.routes || {};
     config.commute.routes['school-morning'] = {
       provider: 'google-maps',
       routeLabel: config.family.location.schoolRoute || config.family.location.school || 'to School',
+      stopCount: Number(existingRoute.stopCount || 0),
       durationMinutes: Math.max(1, Math.round(duration.value / 60)),
       trafficStatus: trafficStatus(duration.value, result.duration && result.duration.value),
       updatedAt: now.toISOString(),

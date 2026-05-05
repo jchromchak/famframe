@@ -28,3 +28,13 @@ Current MVP credential storage:
 Future phase:
 - Move from `dashboard-config.js` to JSON config files.
 - Consider Cloudflare Worker or another edge proxy for Maps and write operations.
+
+## Routine model direction
+
+The admin app is moving toward a routine model built from:
+- family members and a shared home base
+- daily routines with weekday or specific-day overrides
+- itinerary segments with a destination, optional stops, and per-stop buffer minutes
+- list templates that can be adopted by segments and assigned to family members
+
+Until the JSON migration is complete, `dashboard-config.js` remains the compatibility layer. Route addresses and private Places details should stay local to the admin app. The repo may store safe display data such as `routeLabel`, `stopCount`, derived commute duration, traffic status, and freshness timestamps.
