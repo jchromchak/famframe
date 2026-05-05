@@ -3,7 +3,7 @@
 // DASHBOARD CONFIG — edit this file, not the dashboard HTML
 // ═══════════════════════════════════════════════════════════════════
  
-const DASHBOARD_CONFIG = {
+var DASHBOARD_CONFIG = {
  
   // ── FAMILY ────────────────────────────────────────────────────────
   family: {
