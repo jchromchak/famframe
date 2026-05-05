@@ -135,6 +135,12 @@ input[type="text"], input[type="password"] {
 }
 input:focus { border-color: rgba(200,169,110,0.4); }
 input::placeholder { color: var(--dim); }
+input[type="time"], input[type="number"] {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 14px; font-family: var(--mono);
+  font-size: 13px; color: var(--text); outline: none;
+  -webkit-appearance: none;
+}
  
 .eye-btn {
   position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
@@ -442,6 +448,26 @@ select {
   font-size: 13px; color: var(--text); outline: none;
   -webkit-appearance: none; appearance: none; margin-bottom: 8px;
 }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+.form-grid.three { grid-template-columns: .7fr 1fr 1fr; }
+.editor-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px; margin-bottom: 10px;
+}
+.editor-card-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.editor-card-title { font-family: var(--serif); font-size: 18px; font-weight: 300; }
+.small-btn {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--sub); font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  padding: 8px 10px; cursor: pointer;
+}
+.small-btn:active { border-color: rgba(200,169,110,.35); color: var(--gold); }
+.small-btn.danger { color: var(--crit); }
+.code-panel {
+  width: 100%; min-height: 240px; background: #0a0a09; border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px; color: var(--text); font-family: var(--mono);
+  font-size: 11px; line-height: 1.55; resize: vertical; outline: none;
+}
 </style>
 </head>
 <body>
@@ -643,29 +669,77 @@ select {
   <!-- SCENES -->
   <div class="page" id="pageScenes">
     <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Scenes</div>
-    <div class="page-sub">WHEN · WHAT · HOW</div>
-    <div id="sceneCards"></div>
-    <button class="save-btn" style="margin-top:8px" onclick="pushToGitHub()">Push to GitHub →</button>
+    <div class="page-title">Schedule</div>
+    <div class="page-sub">TIMEZONE · WINDOWS · SCHOOL DAY</div>
+
+    <div class="section-label">Timezone</div>
+    <div class="field-label">IANA time zone</div>
+    <input type="text" id="timeZoneInput" class="full-input" placeholder="America/New_York">
+
+    <div class="section-label">Mode windows</div>
+    <div class="form-grid">
+      <div>
+        <div class="field-label">Morning start</div>
+        <input type="time" id="morningStart">
+      </div>
+      <div>
+        <div class="field-label">Morning end</div>
+        <input type="time" id="morningEnd">
+      </div>
+      <div>
+        <div class="field-label">Evening start</div>
+        <input type="time" id="eveningStart">
+      </div>
+      <div>
+        <div class="field-label">Evening end</div>
+        <input type="time" id="eveningEnd">
+      </div>
+    </div>
+
+    <div class="section-label">Default school day</div>
+    <div class="form-grid">
+      <div>
+        <div class="field-label">Leave</div>
+        <input type="time" id="defaultLeave">
+      </div>
+      <div>
+        <div class="field-label">School</div>
+        <input type="time" id="defaultSchool">
+      </div>
+      <div>
+        <div class="field-label">Late bell</div>
+        <input type="time" id="defaultLateBell">
+      </div>
+      <div>
+        <div class="field-label">Drive min</div>
+        <input type="number" id="defaultDrive" min="0" step="1">
+      </div>
+    </div>
+
+    <div class="section-label">School days</div>
+    <div id="schoolDayToggles"></div>
+
+    <button class="save-btn" onclick="saveSchedule()">Save schedule</button>
   </div>
  
   <!-- MODULES -->
   <div class="page" id="pageModules">
     <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Modules</div>
-    <div class="page-sub">GLOBAL MODULE DEFAULTS</div>
- 
-    <div class="section-label">Display modules</div>
-    <div id="moduleRows"></div>
- 
-    <div class="section-label" style="margin-top:16px">Weather</div>
-    <div class="field-label">Default view</div>
-    <select id="weatherWhen">
-      <option value="now">Current conditions</option>
-      <option value="tomorrow">Tomorrow</option>
-      <option value="3day">3-day outlook</option>
-    </select>
- 
+    <div class="page-title">Routines</div>
+    <div class="page-sub">CHECKLIST · EVENING · COMMUTE</div>
+
+    <div class="section-label">Morning checklist</div>
+    <div id="checklistEditor"></div>
+    <button class="small-btn" onclick="addChecklistItem()">+ ADD CHECKLIST ITEM</button>
+
+    <div class="section-label" style="margin-top:16px">Evening timeline</div>
+    <div id="timelineItems"></div>
+    <button class="small-btn" onclick="addTimelineItem()">+ ADD TIMELINE ITEM</button>
+
+    <div class="section-label" style="margin-top:16px">Commute estimates</div>
+    <div id="commuteEditor"></div>
+    <button class="small-btn" onclick="addCommuteEstimate()">+ ADD DRIVE WINDOW</button>
+
     <div class="section-label" style="margin-top:16px">Quote</div>
     <div class="field-label">Source</div>
     <select id="quoteSource">
@@ -675,10 +749,7 @@ select {
       <option value="any">Any category</option>
     </select>
  
-    <div class="section-label" style="margin-top:16px">Evening timeline</div>
-    <div id="timelineItems"></div>
- 
-    <button class="save-btn" onclick="saveModules()">Save module settings</button>
+    <button class="save-btn" onclick="saveRoutines()">Save routines</button>
   </div>
  
   <!-- QUICK ACTIONS -->
@@ -688,26 +759,32 @@ select {
     <div class="page-sub">RUN · SYNC · OVERRIDE</div>
  
     <div class="section-label">GitHub sync</div>
+    <button class="action-btn" onclick="pullFromGitHub()">
+      <span class="action-icon">↓</span>
+      <span class="action-label">Pull latest dashboard config</span>
+    </button>
+    <div class="action-result" id="pullResult"></div>
+
     <button class="action-btn" onclick="pushToGitHub()">
       <span class="action-icon">↑</span>
-      <span class="action-label">Push config to GitHub</span>
+      <span class="action-label">Save config to GitHub</span>
     </button>
     <div class="action-result" id="pushResult"></div>
  
-    <button class="action-btn" onclick="pullFromGitHub()" style="margin-top:8px">
-      <span class="action-icon">↓</span>
-      <span class="action-label">Pull config from GitHub</span>
+    <div class="section-label" style="margin-top:16px">Raw config</div>
+    <textarea id="rawConfig" class="code-panel" spellcheck="false"></textarea>
+    <button class="action-btn" onclick="applyRawConfig()" style="margin-top:8px">
+      <span class="action-icon">✓</span>
+      <span class="action-label">Apply raw editor changes</span>
     </button>
-    <div class="action-result" id="pullResult"></div>
+    <div class="action-result" id="rawResult"></div>
  
     <div class="section-label" style="margin-top:16px">Force scene</div>
     <select id="forceSceneSelect" style="margin-bottom:10px">
       <option value="">— Select a scene to force —</option>
-      <option value="weekday_morning">Weekday morning</option>
-      <option value="weekday_evening">Weekday evening</option>
-      <option value="saturday_soccer">Saturday soccer</option>
-      <option value="weekend_relaxed">Weekend relaxed</option>
-      <option value="no_school">No school</option>
+      <option value="morning">Morning</option>
+      <option value="evening">Evening</option>
+      <option value="weekend">Weekend</option>
       <option value="art">Art / blank mode</option>
     </select>
     <button class="action-btn" onclick="forceScene()">
@@ -715,13 +792,6 @@ select {
       <span class="action-label">Force this scene now</span>
     </button>
     <div class="action-result" id="forceResult"></div>
- 
-    <div class="section-label" style="margin-top:16px">Tonight's timeline</div>
-    <div id="quickTimeline"></div>
-    <button class="action-btn" onclick="saveQuickTimeline()" style="margin-top:4px">
-      <span class="action-icon">✓</span>
-      <span class="action-label">Save tonight's overrides</span>
-    </button>
  
     <div class="section-label" style="margin-top:16px">Feedback</div>
     <div style="margin-bottom:10px">
@@ -781,9 +851,7 @@ select {
 <div class="toast" id="toast"></div>
  
 <script>
-// ══════════════════════════════════════════════════════
-// STORAGE KEYS
-// ══════════════════════════════════════════════════════
+// Fam Frame admin: edits the dashboard-config.js model used by /dashboard/.
 const KEYS = {
   pat:       'fam_frame_github_pat',
   repo:      'fam_frame_config_repo',
@@ -791,213 +859,224 @@ const KEYS = {
   branch:    'fam_frame_config_branch',
   gcal:      'fam_frame_gcal_key',
   config:    'fam_frame_config',
+  sha:       'fam_frame_config_sha',
   onboarded: 'fam_frame_onboarded',
 };
- 
-// ══════════════════════════════════════════════════════
-// DEFAULT CONFIG
-// ══════════════════════════════════════════════════════
+
 const DEFAULT_CONFIG = {
+  time: {
+    timeZone: 'America/New_York',
+    locale: 'en-US',
+    hour12: true,
+    morningProgressWindowMin: 75,
+    countdownClockAtMin: 4,
+    morningMessageThresholds: { critMin: 5, hotMin: 10, warnMin: 20 },
+    departureUrgency: { critMin: 10, warnMin: 20 },
+    checklistTiming: { activeBeforeMin: 8, doneAfterMin: 2 },
+  },
   family: {
     kids: [
-      { name: "Joe",  active: true,  note: "" },
-      { name: "Jack", active: true,  note: "" },
-      { name: "Sue",  active: false, note: "baby" },
+      { name: 'Kid 1', age: null },
+      { name: 'Kid 2', age: null },
     ],
-    location: { city: "Mount Pleasant, SC", lat: 32.83, lon: -79.83, schoolRoute: "US-17 N to School" },
+    location: {
+      city: 'Mount Pleasant, SC',
+      lat: 32.83,
+      lon: -79.83,
+      school: 'US-17 N to School',
+    },
   },
+  api: { googleCalendarKey: '', googleCalendarIds: [] },
   modules: {
-    clock:     { enabled: true },
-    countdown: { enabled: true },
-    checklist: { enabled: true },
-    weather:   { enabled: true,  when: "now" },
-    calendar:  { enabled: true,  when: "today" },
-    traffic:   { enabled: true },
-    timeline:  { enabled: true },
-    quote:     { enabled: true,  source: "stoic" },
+    quote: { source: 'stoic' },
   },
-  scenes: [
-    {
-      id: "weekday_morning",
-      name: "Weekday Morning",
-      trigger: { days: [1,2,3,4,5], timeStart: "06:00", timeEnd: "08:30", priority: 10 },
-      layout: ["clock","countdown","checklist","weather","traffic","calendar"],
-      departure: { leaveHour:6, leaveMin:45, schoolHour:7, schoolMin:20, lateBellHour:7, lateBellMin:25, driveMin:22, carBuffer:5 },
+  modes: {
+    morning: { start: '06:00', end: '12:30' },
+    evening: { start: '17:00', end: '21:00' },
+  },
+  schoolDays: [1,2,3,4,5],
+  scenarios: {
+    default: {
+      leave: '12:45',
+      school: '13:20',
+      lateBell: '13:25',
+      driveMinEst: 22,
+      carBufferMin: 5,
+      note: '',
     },
-    {
-      id: "weekday_evening",
-      name: "Weekday Evening",
-      trigger: { days: [1,2,3,4,5], timeStart: "17:00", timeEnd: "21:00", priority: 10 },
-      layout: ["clock","timeline","weather","calendar","quote"],
-      weather: { when: "tomorrow" },
-      calendar: { when: "tomorrow" },
-    },
-    {
-      id: "saturday_soccer",
-      name: "Saturday · Soccer",
-      trigger: { days: [6], timeStart: "07:00", timeEnd: "11:00", calendarMatch: ["soccer","game","practice"], priority: 20 },
-      layout: ["clock","countdown","weather","traffic","quote"],
-      departure: { calendarDriven: true, bufferMin: 30, carBuffer: 5 },
-    },
-    {
-      id: "weekend_relaxed",
-      name: "Weekend · Relaxed",
-      trigger: { days: [0,6], timeStart: "07:00", timeEnd: "10:00", priority: 5 },
-      layout: ["clock","weather","quote"],
-      weather: { when: "3day" },
-    },
-    {
-      id: "no_school",
-      name: "No School",
-      trigger: { days: [1,2,3,4,5], timeStart: "06:00", timeEnd: "09:00", calendarMatch: ["no school","holiday","break","snow day"], priority: 30 },
-      layout: ["clock","weather","quote"],
-      message: "No school today.",
-    },
+  },
+  morningChecklist: [
+    { id:'breakfast', label:'Breakfast', icon:'🥣', targetMin:-40 },
+    { id:'dressed', label:'Get dressed', icon:'👕', targetMin:-30 },
+    { id:'backpack', label:'Backpacks ready', icon:'🎒', targetMin:-20 },
+    { id:'teeth', label:'Brush teeth', icon:'🪥', targetMin:-15 },
+    { id:'shoes', label:'Shoes on', icon:'👟', targetMin:-5 },
+    { id:'car', label:'Get in the car', icon:'🚗', targetMin:0 },
   ],
   eveningTimeline: [
-    { id:"home",     label:"Home & decompress", icon:"🏠", startHour:17, startMin:30, durationMin:30, note:"Snack, unwind" },
-    { id:"homework", label:"Homework",           icon:"📚", startHour:18, startMin:0,  durationMin:30, note:"Both kids" },
-    { id:"dinner",   label:"Dinner",             icon:"🍽", startHour:18, startMin:30, durationMin:30, note:"Together" },
-    { id:"baths",    label:"Baths",              icon:"🛁", startHour:19, startMin:15, durationMin:30, note:"" },
-    { id:"reading",  label:"Reading",            icon:"📖", startHour:19, startMin:45, durationMin:30, note:"30 min each" },
-    { id:"winddown", label:"Wind down",          icon:"🌙", startHour:20, startMin:15, durationMin:15, note:"No screens" },
-    { id:"bed",      label:"Lights out",         icon:"💤", startHour:20, startMin:30, durationMin:0,  note:"8:30 PM" },
+    { id:'home', label:'Home & decompress', icon:'🏠', start:'17:30', durationMin:30, note:'Snack, unwind' },
+    { id:'homework', label:'Homework', icon:'📚', start:'18:00', durationMin:30, note:'Both kids' },
+    { id:'dinner', label:'Dinner', icon:'🍽', start:'18:30', durationMin:30, note:'Together' },
+    { id:'baths', label:'Baths', icon:'🛁', start:'19:15', durationMin:30, note:'' },
+    { id:'reading', label:'Reading', icon:'📖', start:'19:45', durationMin:30, note:'30 min each' },
+    { id:'winddown', label:'Wind down', icon:'🌙', start:'20:15', durationMin:15, note:'No screens' },
+    { id:'bed', label:'Lights out', icon:'💤', start:'20:30', durationMin:0, note:'8:30 PM' },
   ],
-  morningChecklist: [
-    { id:"breakfast", label:"Breakfast",      icon:"🥣", targetMin:-40 },
-    { id:"dressed",   label:"Get dressed",    icon:"👕", targetMin:-30 },
-    { id:"backpack",  label:"Backpacks",      icon:"🎒", targetMin:-20 },
-    { id:"teeth",     label:"Brush teeth",    icon:"🪥", targetMin:-15 },
-    { id:"shoes",     label:"Shoes on",       icon:"👟", targetMin:-5  },
-    { id:"car",       label:"Get in the car", icon:"🚗", targetMin:0   },
-  ],
+  messages: {
+    morning: {
+      calm: ['Morning is easy.', 'Plenty of time.', 'Take your time.'],
+      warn: ['Start getting ready.', 'Time to move.', 'Get going soon.'],
+      hot: ['Shoes on, please.', 'Almost time.', 'Wrap it up.'],
+      crit: ['Move it!', "Let's go!", 'Out the door!'],
+      gone: ['Have a great day. ☀︎', "Go get 'em.", 'See you this afternoon.'],
+    },
+    evening: {
+      onTrack: ['On track. Nice work.', 'Looking good.', 'Good rhythm tonight.'],
+      behind: ['Running a little behind.', 'Pick up the pace.', 'Stay on schedule.'],
+      late: ['Behind schedule.', "Let's catch up.", 'Time to hustle.'],
+      done: ['Great job tonight. Rest up.', 'All done. Sleep well.', 'See you in the morning. 💤'],
+    },
+  },
+  weekend: { enabled: true, message: 'No school today.', subtext: 'Enjoy the morning.', showWeather: true },
+  commute: {
+    defaultDriveMin: 12,
+    driveEstimates: [
+      { start:'06:00', end:'07:00', driveMin:14 },
+      { start:'07:00', end:'07:30', driveMin:20 },
+      { start:'07:30', end:'08:30', driveMin:26 },
+      { start:'08:30', end:'09:00', driveMin:18 },
+    ],
+  },
 };
- 
-// ══════════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════════
-let config = DEFAULT_CONFIG;
- 
+
+let config = clone(DEFAULT_CONFIG);
+let lastRemoteSha = localStorage.getItem(KEYS.sha) || null;
+
+function clone(x) { return JSON.parse(JSON.stringify(x)); }
+function deepMerge(base, override) {
+  if (!override || typeof override !== 'object' || Array.isArray(override)) return override === undefined ? base : override;
+  const out = clone(base || {});
+  Object.keys(override).forEach(k => {
+    if (override[k] && typeof override[k] === 'object' && !Array.isArray(override[k])) out[k] = deepMerge(out[k] || {}, override[k]);
+    else out[k] = override[k];
+  });
+  return out;
+}
+function ensureModel() {
+  config = deepMerge(DEFAULT_CONFIG, config || {});
+  config.family = config.family || clone(DEFAULT_CONFIG.family);
+  config.family.kids = Array.isArray(config.family.kids) ? config.family.kids : [];
+  config.family.location = config.family.location || {};
+  config.api = config.api || { googleCalendarKey:'', googleCalendarIds:[] };
+  config.modules = deepMerge(DEFAULT_CONFIG.modules, config.modules || {});
+  config.time = deepMerge(DEFAULT_CONFIG.time, config.time || {});
+  config.modes = deepMerge(DEFAULT_CONFIG.modes, config.modes || {});
+  config.scenarios = deepMerge(DEFAULT_CONFIG.scenarios, config.scenarios || {});
+  config.scenarios.default = deepMerge(DEFAULT_CONFIG.scenarios.default, config.scenarios.default || {});
+  config.schoolDays = Array.isArray(config.schoolDays) ? config.schoolDays : [1,2,3,4,5];
+  config.morningChecklist = Array.isArray(config.morningChecklist) ? config.morningChecklist : [];
+  config.eveningTimeline = Array.isArray(config.eveningTimeline) ? config.eveningTimeline : [];
+  config.commute = deepMerge(DEFAULT_CONFIG.commute, config.commute || {});
+  config.commute.driveEstimates = Array.isArray(config.commute.driveEstimates) ? config.commute.driveEstimates : [];
+}
 function loadConfig() {
   const saved = localStorage.getItem(KEYS.config);
   if (saved) { try { config = JSON.parse(saved); } catch(e) {} }
+  ensureModel();
 }
- 
 function saveConfig() {
+  ensureModel();
   localStorage.setItem(KEYS.config, JSON.stringify(config));
+  renderRawConfig();
+  setSyncStatus('syncing', 'LOCAL');
 }
- 
-// ══════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════
+function html(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+function slug(s, fallback) {
+  const v = String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return v || fallback || ('item_' + Date.now());
+}
+function toTime(value, fallback) {
+  if (typeof value === 'string' && /^\d{1,2}:\d{2}$/.test(value)) {
+    const parts = value.split(':');
+    return String(parts[0]).padStart(2,'0') + ':' + parts[1];
+  }
+  if (typeof value === 'number') return String(value).padStart(2,'0') + ':00';
+  return fallback || '00:00';
+}
+function timeFromParts(obj, key, hourKey, minKey, fallback) {
+  if (obj && obj[key]) return toTime(obj[key], fallback);
+  if (obj && obj[hourKey] != null) return String(obj[hourKey]).padStart(2,'0') + ':' + String(obj[minKey] || 0).padStart(2,'0');
+  return fallback || '00:00';
+}
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val == null ? '' : val; }
+function getVal(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function getNum(id, fallback) { const n = Number(getVal(id)); return Number.isFinite(n) ? n : fallback; }
+
 window.addEventListener('load', () => {
   loadConfig();
-  const onboarded = localStorage.getItem(KEYS.onboarded);
-  if (onboarded) {
-    showApp();
-  } else {
-    // Pre-fill if PAT already exists
-    const pat = localStorage.getItem(KEYS.pat);
-    if (pat) document.getElementById('patInput').value = pat;
-    const repo = localStorage.getItem(KEYS.repo);
-    if (repo) document.getElementById('repoInput').value = repo;
-  }
+  prefillConnectionFields();
+  if (localStorage.getItem(KEYS.onboarded)) showApp();
   updateSyncStatus();
 });
- 
-// ══════════════════════════════════════════════════════
-// ONBOARDING
-// ══════════════════════════════════════════════════════
-function toggleStep(n) {
-  document.querySelectorAll('.step').forEach((s,i) => {
-    if (i+1 === n) s.classList.toggle('active');
-  });
+
+function prefillConnectionFields() {
+  setVal('patInput', localStorage.getItem(KEYS.pat) || '');
+  setVal('repoInput', localStorage.getItem(KEYS.repo) || 'jchromchak/famframe');
+  setVal('pathInput', localStorage.getItem(KEYS.path) || 'dashboard-config.js');
+  setVal('patAppInput', localStorage.getItem(KEYS.pat) || '');
+  setVal('gcalAppInput', localStorage.getItem(KEYS.gcal) || config.api.googleCalendarKey || '');
 }
- 
+function toggleStep(n) {
+  document.querySelectorAll('.step').forEach((s,i) => { if (i+1 === n) s.classList.toggle('active'); });
+}
 function togglePATVisibility() {
   const inp = document.getElementById('patInput');
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
- 
-function onPATInput(val) {
-  localStorage.setItem(KEYS.pat, val.trim());
-}
-function onRepoInput(val) {
-  localStorage.setItem(KEYS.repo, val.trim());
-}
- 
+function onPATInput(val) { localStorage.setItem(KEYS.pat, val.trim()); }
+function onRepoInput(val) { localStorage.setItem(KEYS.repo, val.trim()); }
+
 async function validateGitHub() {
-  const pat    = document.getElementById('patInput').value.trim();
-  const repo   = document.getElementById('repoInput').value.trim();
+  const pat = getVal('patInput');
+  const repo = getVal('repoInput');
   const result = document.getElementById('patResult');
- 
-  if (!pat || !repo) {
-    result.className = 'validate-result fail';
-    result.textContent = 'Enter your token and repo first.';
-    return;
-  }
- 
-  result.className = 'validate-result';
-  result.textContent = 'Checking…';
-  result.style.display = 'block';
- 
+  if (!pat || !repo) { result.className='validate-result fail'; result.textContent='Enter your token and repo first.'; return; }
+  result.className='validate-result'; result.style.display='block'; result.textContent='Checking…';
   try {
-    const res = await fetch(`https://api.github.com/repos/${repo}`, {
-      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }
-    });
-    if (res.ok) {
-      result.className = 'validate-result ok';
-      result.textContent = '✓ Connected. Repo found.';
-      localStorage.setItem(KEYS.pat, pat);
-      localStorage.setItem(KEYS.repo, repo);
-      // Auto-advance
-      document.getElementById('step1').classList.remove('active');
-      document.getElementById('step1').classList.add('done');
-      document.getElementById('step2').classList.add('active');
-    } else {
-      result.className = 'validate-result fail';
-      result.textContent = `✕ Error ${res.status}. Check token + repo name.`;
-    }
+    const res = await fetch(`https://api.github.com/repos/${repo}`, { headers: githubHeaders(pat) });
+    if (!res.ok) throw new Error('GitHub returned ' + res.status);
+    localStorage.setItem(KEYS.pat, pat);
+    localStorage.setItem(KEYS.repo, repo);
+    result.className='validate-result ok'; result.textContent='✓ Connected. Repo found.';
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step1').classList.add('done');
+    document.getElementById('step2').classList.add('active');
   } catch(e) {
-    result.className = 'validate-result fail';
-    result.textContent = '✕ Network error. Check connection.';
+    result.className='validate-result fail'; result.textContent='✕ Could not connect. Check token, repo, and Contents permission.';
   }
 }
- 
 function completeOnboarding() {
-  // Save all onboarding values
-  const pat    = document.getElementById('patInput').value.trim();
-  const repo   = document.getElementById('repoInput').value.trim();
-  const path   = document.getElementById('pathInput').value.trim() || 'dashboard-config.js';
-  const branch = document.getElementById('branchSelect').value;
-  const gcal   = document.getElementById('gcalInput').value.trim();
- 
-  if (pat)    localStorage.setItem(KEYS.pat,    pat);
-  if (repo)   localStorage.setItem(KEYS.repo,   repo);
-  if (path)   localStorage.setItem(KEYS.path,   path);
+  const pat = getVal('patInput');
+  const repo = getVal('repoInput');
+  const path = getVal('pathInput') || 'dashboard-config.js';
+  const branch = getVal('branchSelect') || 'main';
+  const gcal = getVal('gcalInput');
+  if (pat) localStorage.setItem(KEYS.pat, pat);
+  if (repo) localStorage.setItem(KEYS.repo, repo);
+  if (path) localStorage.setItem(KEYS.path, path);
   if (branch) localStorage.setItem(KEYS.branch, branch);
-  if (gcal)   localStorage.setItem(KEYS.gcal,   gcal);
- 
-  // Save kid names
-  config.family.kids[0].name = document.getElementById('kid1Name').value || 'Joe';
-  config.family.kids[1].name = document.getElementById('kid2Name').value || 'Jack';
-  config.family.kids[2].name = document.getElementById('kid3Name').value || 'Sue';
-  config.family.location.city = document.getElementById('homeCity').value || 'Mount Pleasant, SC';
-  if (gcal) config.api = { googleCalendarKey: gcal };
+  if (gcal) { localStorage.setItem(KEYS.gcal, gcal); config.api.googleCalendarKey = gcal; }
+  const kids = [getVal('kid1Name'), getVal('kid2Name'), getVal('kid3Name')].filter(Boolean).map(name => ({ name, age:null }));
+  if (kids.length) config.family.kids = kids;
+  config.family.location.city = getVal('homeCity') || config.family.location.city;
   saveConfig();
- 
   localStorage.setItem(KEYS.onboarded, '1');
   showApp();
 }
- 
-function skipOnboarding() {
-  localStorage.setItem(KEYS.onboarded, '1');
-  showApp();
-}
- 
-// ══════════════════════════════════════════════════════
-// APP NAV
-// ══════════════════════════════════════════════════════
+function skipOnboarding() { localStorage.setItem(KEYS.onboarded, '1'); showApp(); }
+
 function showApp() {
   document.getElementById('onboarding').classList.remove('active');
   document.getElementById('app').classList.add('active');
@@ -1005,401 +1084,260 @@ function showApp() {
   renderAll();
   updateSyncStatus();
 }
- 
 function nav(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
-  // Update bottom nav
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const map = { home:'navHome', scenes:'navScenes', modules:'navModules', actions:'navActions', family:'navHome' };
-  const active = map[page];
-  if (active) document.getElementById(active).classList.add('active');
+  if (map[page]) document.getElementById(map[page]).classList.add('active');
 }
- 
-// ══════════════════════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════════════════════
 function renderAll() {
+  ensureModel();
   renderKids();
-  renderScenes();
-  renderModules();
-  renderTimeline();
-  renderQuickTimeline();
   populateFamilyForm();
+  renderSchedule();
+  renderChecklistEditor();
+  renderTimeline();
+  renderCommuteEditor();
+  setVal('quoteSource', (((config.modules || {}).quote || {}).source) || 'stoic');
+  renderRawConfig();
 }
- 
+
 function renderKids() {
   const el = document.getElementById('kidCards');
-  el.innerHTML = config.family.kids.map(k => `
-    <div class="kid-card" style="margin-bottom:10px">
-      <div class="kid-avatar">${k.name.charAt(0)}</div>
-      <div class="kid-info">
-        <div class="kid-name">${k.name}</div>
-        <div class="kid-meta">${k.note ? k.note.toUpperCase() : (k.active ? 'ON SCHEDULE' : 'INACTIVE')}</div>
+  if (!el) return;
+  el.innerHTML = config.family.kids.map((k,i) => `
+    <div class="editor-card">
+      <div class="editor-card-head">
+        <div class="editor-card-title">${html(k.name || 'Kid')}</div>
+        <button class="small-btn danger" onclick="removeKid(${i})">REMOVE</button>
       </div>
-      ${k.active ? '<div class="kid-active-badge">ACTIVE</div>' : '<div class="kid-inactive-badge">INACTIVE</div>'}
+      <div class="form-grid">
+        <div><div class="field-label">Name</div><input type="text" value="${html(k.name)}" onchange="updateKid(${i}, 'name', this.value)"></div>
+        <div><div class="field-label">Age</div><input type="number" value="${k.age == null ? '' : html(k.age)}" onchange="updateKid(${i}, 'age', this.value)"></div>
+      </div>
+    </div>`).join('') + '<button class="small-btn" onclick="addKid()">+ ADD KID</button>';
+}
+function addKid() { config.family.kids.push({ name:'New kid', age:null }); saveConfig(); renderKids(); }
+function removeKid(i) { config.family.kids.splice(i,1); saveConfig(); renderKids(); }
+function updateKid(i, key, value) { config.family.kids[i][key] = key === 'age' ? (value ? Number(value) : null) : value; saveConfig(); renderKids(); }
+
+function populateFamilyForm() {
+  const loc = config.family.location || {};
+  setVal('homeCityApp', loc.city || '');
+  setVal('schoolRoute', loc.schoolRoute || loc.school || '');
+  setVal('homeLat', loc.lat || '');
+  setVal('homeLon', loc.lon || '');
+  setVal('gcalAppInput', localStorage.getItem(KEYS.gcal) || config.api.googleCalendarKey || '');
+  setVal('patAppInput', localStorage.getItem(KEYS.pat) || '');
+}
+function saveFamily() {
+  config.family.location.city = getVal('homeCityApp');
+  config.family.location.schoolRoute = getVal('schoolRoute');
+  config.family.location.school = getVal('schoolRoute');
+  config.family.location.lat = getNum('homeLat', config.family.location.lat || 0);
+  config.family.location.lon = getNum('homeLon', config.family.location.lon || 0);
+  const gcal = getVal('gcalAppInput');
+  const pat = getVal('patAppInput');
+  if (gcal) { localStorage.setItem(KEYS.gcal, gcal); config.api.googleCalendarKey = gcal; }
+  if (pat) localStorage.setItem(KEYS.pat, pat);
+  saveConfig(); toast('Family settings saved');
+}
+
+function renderSchedule() {
+  setVal('timeZoneInput', config.time.timeZone);
+  setVal('morningStart', timeFromParts(config.modes.morning, 'start', 'startHour', 'startMin', '06:00'));
+  setVal('morningEnd', timeFromParts(config.modes.morning, 'end', 'endHour', 'endMin', '10:30'));
+  setVal('eveningStart', timeFromParts(config.modes.evening, 'start', 'startHour', 'startMin', '17:00'));
+  setVal('eveningEnd', timeFromParts(config.modes.evening, 'end', 'endHour', 'endMin', '21:00'));
+  const s = config.scenarios.default;
+  setVal('defaultLeave', timeFromParts(s, 'leave', 'leaveHour', 'leaveMin', '07:00'));
+  setVal('defaultSchool', timeFromParts(s, 'school', 'schoolHour', 'schoolMin', '07:30'));
+  setVal('defaultLateBell', timeFromParts(s, 'lateBell', 'lateBellHour', 'lateBellMin', '07:35'));
+  setVal('defaultDrive', s.driveMinEst || 0);
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const el = document.getElementById('schoolDayToggles');
+  if (el) el.innerHTML = days.map((d,i) => `<label style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 10px 0;color:var(--sub);font-size:11px;letter-spacing:.12em"><input type="checkbox" ${config.schoolDays.includes(i)?'checked':''} onchange="toggleSchoolDay(${i}, this.checked)">${d}</label>`).join('');
+}
+function toggleSchoolDay(day, on) {
+  const set = new Set(config.schoolDays || []);
+  if (on) set.add(day); else set.delete(day);
+  config.schoolDays = Array.from(set).sort(); saveConfig(); renderSchedule();
+}
+function saveSchedule() {
+  config.time.timeZone = getVal('timeZoneInput') || 'America/New_York';
+  config.modes.morning = { start:getVal('morningStart'), end:getVal('morningEnd') };
+  config.modes.evening = { start:getVal('eveningStart'), end:getVal('eveningEnd') };
+  config.scenarios.default.leave = getVal('defaultLeave');
+  config.scenarios.default.school = getVal('defaultSchool');
+  config.scenarios.default.lateBell = getVal('defaultLateBell');
+  config.scenarios.default.driveMinEst = getNum('defaultDrive', 0);
+  saveConfig(); toast('Schedule saved');
+}
+
+function renderChecklistEditor() {
+  const el = document.getElementById('checklistEditor');
+  if (!el) return;
+  el.innerHTML = config.morningChecklist.map((item,i) => `
+    <div class="editor-card">
+      <div class="editor-card-head"><div class="editor-card-title">${html(item.icon || '')} ${html(item.label || 'Checklist item')}</div><button class="small-btn danger" onclick="removeChecklistItem(${i})">REMOVE</button></div>
+      <div class="form-grid three">
+        <div><div class="field-label">Icon</div><input type="text" value="${html(item.icon || '')}" onchange="updateChecklistItem(${i}, 'icon', this.value)"></div>
+        <div><div class="field-label">Label</div><input type="text" value="${html(item.label || '')}" onchange="updateChecklistItem(${i}, 'label', this.value)"></div>
+        <div><div class="field-label">Min from leave</div><input type="number" value="${Number(item.targetMin || 0)}" onchange="updateChecklistItem(${i}, 'targetMin', this.value)"></div>
+      </div>
     </div>`).join('');
 }
- 
-function renderScenes() {
-  const now = new Date();
-  const el  = document.getElementById('sceneCards');
-  el.innerHTML = config.scenes.map(s => {
-    const isActive = isSceneActive(s, now);
-    const mods     = (s.layout||[]).map(m =>
-      `<div class="module-chip on">${m}</div>`).join('');
-    const days     = (s.trigger.days||[]).map(d =>
-      ['Su','Mo','Tu','We','Th','Fr','Sa'][d]).join(' ');
-    return `<div class="scene-card" style="margin-bottom:10px">
-      <div class="scene-card-header">
-        <div class="scene-name">${s.name}</div>
-        ${isActive
-          ? '<div class="scene-active-pill">ACTIVE NOW</div>'
-          : '<div class="scene-inactive-pill">INACTIVE</div>'}
-      </div>
-      <div class="scene-trigger">${days} · ${s.trigger.timeStart}–${s.trigger.timeEnd}${s.trigger.calendarMatch ? ' · calendar-driven' : ''}</div>
-      <div class="scene-modules">${mods}</div>
-    </div>`;
-  }).join('');
- 
-  // Force scene select
-  const sel = document.getElementById('forceSceneSelect');
-  if (sel) {
-    sel.innerHTML = '<option value="">— Select a scene —</option>' +
-      config.scenes.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  }
-}
- 
-function isSceneActive(scene, now) {
-  const day  = now.getDay();
-  const hhmm = now.getHours()*60 + now.getMinutes();
-  const [sh,sm] = (scene.trigger.timeStart||"00:00").split(':').map(Number);
-  const [eh,em] = (scene.trigger.timeEnd  ||"23:59").split(':').map(Number);
-  return (scene.trigger.days||[]).includes(day) &&
-    hhmm >= sh*60+sm && hhmm < eh*60+em;
-}
- 
-const MODULE_META = {
-  clock:     { icon:'🕐', name:'Clock',     desc:'Current time display' },
-  countdown: { icon:'⏱', name:'Countdown', desc:'Time until departure' },
-  checklist: { icon:'✓',  name:'Checklist', desc:'Morning task reminders' },
-  weather:   { icon:'☁️', name:'Weather',   desc:'Current or forecast conditions' },
-  calendar:  { icon:'📅', name:'Calendar',  desc:'Today or tomorrow events' },
-  traffic:   { icon:'🚗', name:'Traffic',   desc:'Commute time + status dot' },
-  timeline:  { icon:'↓',  name:'Timeline',  desc:'Evening routine tracker' },
-  quote:     { icon:'❝',  name:'Quote',     desc:'Stoic or family quote' },
-};
- 
-function renderModules() {
-  const el = document.getElementById('moduleRows');
-  el.innerHTML = Object.entries(MODULE_META).map(([key, m]) => {
-    const mod = config.modules[key] || { enabled: false };
-    return `<div class="module-row">
-      <div class="module-icon">${m.icon}</div>
-      <div class="module-info">
-        <div class="module-name">${m.name}</div>
-        <div class="module-desc">${m.desc}</div>
-      </div>
-      <label class="toggle">
-        <input type="checkbox" ${mod.enabled ? 'checked' : ''}
-          onchange="toggleModule('${key}', this.checked)">
-        <div class="toggle-track"></div>
-        <div class="toggle-thumb"></div>
-      </label>
-    </div>`;
-  }).join('');
- 
-  // Set weather/quote selects
-  const ww = document.getElementById('weatherWhen');
-  if (ww) ww.value = config.modules.weather?.when || 'now';
-  const qs = document.getElementById('quoteSource');
-  if (qs) qs.value = config.modules.quote?.source || 'stoic';
-}
- 
-function toggleModule(key, val) {
-  if (!config.modules[key]) config.modules[key] = {};
-  config.modules[key].enabled = val;
+function addChecklistItem() { config.morningChecklist.push({ id:'new_item', label:'New item', icon:'✓', targetMin:-10 }); saveConfig(); renderChecklistEditor(); }
+function removeChecklistItem(i) { config.morningChecklist.splice(i,1); saveConfig(); renderChecklistEditor(); }
+function updateChecklistItem(i, key, value) {
+  const item = config.morningChecklist[i];
+  item[key] = key === 'targetMin' ? Number(value) : value;
+  item.id = slug(item.label, item.id);
   saveConfig();
 }
- 
+
 function renderTimeline() {
   const el = document.getElementById('timelineItems');
   if (!el) return;
-  el.innerHTML = (config.eveningTimeline||[]).map((item,i) => `
-    <div class="timeline-edit-item">
-      <div class="tl-drag">⠿</div>
-      <div class="tl-edit-icon">${item.icon}</div>
-      <div class="tl-edit-label">${item.label}</div>
-      <div class="tl-edit-time">${item.startHour}:${String(item.startMin).padStart(2,'0')}</div>
+  el.innerHTML = config.eveningTimeline.map((item,i) => `
+    <div class="editor-card">
+      <div class="editor-card-head"><div class="editor-card-title">${html(item.icon || '')} ${html(item.label || 'Timeline item')}</div><button class="small-btn danger" onclick="removeTimelineItem(${i})">REMOVE</button></div>
+      <div class="form-grid">
+        <div><div class="field-label">Start</div><input type="time" value="${timeFromParts(item, 'start', 'startHour', 'startMin', '18:00')}" onchange="updateTimelineItem(${i}, 'start', this.value)"></div>
+        <div><div class="field-label">Duration</div><input type="number" value="${Number(item.durationMin || 0)}" onchange="updateTimelineItem(${i}, 'durationMin', this.value)"></div>
+        <div><div class="field-label">Icon</div><input type="text" value="${html(item.icon || '')}" onchange="updateTimelineItem(${i}, 'icon', this.value)"></div>
+        <div><div class="field-label">Label</div><input type="text" value="${html(item.label || '')}" onchange="updateTimelineItem(${i}, 'label', this.value)"></div>
+      </div>
+      <div class="field-label">Note</div><input type="text" value="${html(item.note || '')}" onchange="updateTimelineItem(${i}, 'note', this.value)">
     </div>`).join('');
 }
- 
-function renderQuickTimeline() {
-  const el = document.getElementById('quickTimeline');
+function addTimelineItem() { config.eveningTimeline.push({ id:'new_item', label:'New item', icon:'•', start:'18:00', durationMin:15, note:'' }); saveConfig(); renderTimeline(); }
+function removeTimelineItem(i) { config.eveningTimeline.splice(i,1); saveConfig(); renderTimeline(); }
+function updateTimelineItem(i, key, value) {
+  const item = config.eveningTimeline[i];
+  item[key] = key === 'durationMin' ? Number(value) : value;
+  if (key === 'label') item.id = slug(value, item.id);
+  delete item.startHour; delete item.startMin;
+  saveConfig();
+}
+
+function renderCommuteEditor() {
+  const el = document.getElementById('commuteEditor');
   if (!el) return;
-  el.innerHTML = (config.eveningTimeline||[]).map((item,i) => `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <div style="font-size:16px;width:24px;text-align:center">${item.icon}</div>
-      <div style="flex:1;font-family:var(--serif);font-size:16px;font-weight:300;color:var(--sub)">${item.label}</div>
-      <input type="time" value="${String(item.startHour).padStart(2,'0')}:${String(item.startMin).padStart(2,'0')}"
-        style="background:var(--surface);border:1px solid var(--border);border-radius:4px;
-               padding:6px 8px;color:var(--text);font-family:var(--mono);font-size:12px;
-               outline:none;width:90px"
-        onchange="updateTimelineItem(${i}, this.value)">
-    </div>`).join('');
+  el.innerHTML = `<div class="field-label">Default drive minutes</div><input type="number" value="${Number(config.commute.defaultDriveMin || 0)}" onchange="config.commute.defaultDriveMin=Number(this.value);saveConfig()" style="margin-bottom:10px">` +
+    config.commute.driveEstimates.map((item,i) => `
+      <div class="editor-card">
+        <div class="editor-card-head"><div class="editor-card-title">${html(item.start)}–${html(item.end)}</div><button class="small-btn danger" onclick="removeCommuteEstimate(${i})">REMOVE</button></div>
+        <div class="form-grid three">
+          <div><div class="field-label">Drive</div><input type="number" value="${Number(item.driveMin || 0)}" onchange="updateCommuteEstimate(${i}, 'driveMin', this.value)"></div>
+          <div><div class="field-label">Start</div><input type="time" value="${toTime(item.start,'06:00')}" onchange="updateCommuteEstimate(${i}, 'start', this.value)"></div>
+          <div><div class="field-label">End</div><input type="time" value="${toTime(item.end,'07:00')}" onchange="updateCommuteEstimate(${i}, 'end', this.value)"></div>
+        </div>
+      </div>`).join('');
 }
- 
-function updateTimelineItem(i, val) {
-  const [h,m] = val.split(':').map(Number);
-  config.eveningTimeline[i].startHour = h;
-  config.eveningTimeline[i].startMin  = m;
+function addCommuteEstimate() { config.commute.driveEstimates.push({ start:'07:00', end:'08:00', driveMin:20 }); saveConfig(); renderCommuteEditor(); }
+function removeCommuteEstimate(i) { config.commute.driveEstimates.splice(i,1); saveConfig(); renderCommuteEditor(); }
+function updateCommuteEstimate(i, key, value) { config.commute.driveEstimates[i][key] = key === 'driveMin' ? Number(value) : value; saveConfig(); renderCommuteEditor(); }
+
+function saveRoutines() {
+  config.modules = config.modules || {};
+  config.modules.quote = config.modules.quote || {};
+  config.modules.quote.source = getVal('quoteSource') || 'stoic';
+  saveConfig(); toast('Routines saved');
 }
- 
-function populateFamilyForm() {
-  const loc = config.family.location || {};
-  const set = (id, val) => { const el=document.getElementById(id); if(el && val) el.value=val; };
-  set('homeCityApp',  loc.city);
-  set('schoolRoute',  loc.schoolRoute);
-  set('homeLat',      loc.lat);
-  set('homeLon',      loc.lon);
-  set('gcalAppInput', localStorage.getItem(KEYS.gcal));
-  set('patAppInput',  localStorage.getItem(KEYS.pat));
+function renderRawConfig() { const el = document.getElementById('rawConfig'); if (el) el.value = JSON.stringify(config, null, 2); }
+function applyRawConfig() {
+  const el = document.getElementById('rawResult');
+  try { config = JSON.parse(getVal('rawConfig')); ensureModel(); saveConfig(); renderAll(); showResult(el, true, '✓ Raw config applied.'); }
+  catch(e) { showResult(el, false, '✕ Invalid JSON: ' + e.message); }
 }
- 
-// ══════════════════════════════════════════════════════
-// SAVE ACTIONS
-// ══════════════════════════════════════════════════════
-function saveFamily() {
-  config.family.location.city        = document.getElementById('homeCityApp').value;
-  config.family.location.schoolRoute = document.getElementById('schoolRoute').value;
-  config.family.location.lat         = parseFloat(document.getElementById('homeLat').value) || 32.83;
-  config.family.location.lon         = parseFloat(document.getElementById('homeLon').value) || -79.83;
-  const gcal = document.getElementById('gcalAppInput').value.trim();
-  const pat  = document.getElementById('patAppInput').value.trim();
-  if (gcal) localStorage.setItem(KEYS.gcal, gcal);
-  if (pat)  localStorage.setItem(KEYS.pat,  pat);
-  saveConfig();
-  toast('Family settings saved');
-}
- 
-function saveModules() {
-  config.modules.weather.when  = document.getElementById('weatherWhen').value;
-  config.modules.quote.source  = document.getElementById('quoteSource').value;
-  saveConfig();
-  toast('Module settings saved');
-}
- 
-function saveQuickTimeline() {
-  saveConfig();
-  toast('Timeline saved — push to sync');
-}
- 
 function forceScene() {
-  const id  = document.getElementById('forceSceneSelect').value;
-  const el  = document.getElementById('forceResult');
+  const id = getVal('forceSceneSelect'); const el = document.getElementById('forceResult');
   if (!id) { showResult(el, false, 'Select a scene first.'); return; }
   localStorage.setItem('fam_frame_force_scene', id);
-  showResult(el, true, `Scene "${id}" forced. Clears on next auto-detect.`);
-  toast('Scene override set');
+  showResult(el, true, `Scene "${id}" forced in this browser.`);
 }
- 
 function clearAllData() {
-  if (!confirm('Clear all Fam Frame data and reset?')) return;
+  if (!confirm('Clear all Fam Frame admin data and reset?')) return;
   Object.values(KEYS).forEach(k => localStorage.removeItem(k));
-  localStorage.removeItem('fam_frame_force_scene');
-  location.reload();
+  localStorage.removeItem('fam_frame_force_scene'); location.reload();
 }
- 
-// ══════════════════════════════════════════════════════
-// GITHUB PUSH / PULL
-// ══════════════════════════════════════════════════════
-function configToJS() {
-  return `// Fam Frame — generated config\n// Last updated: ${new Date().toISOString()}\n\nconst DASHBOARD_CONFIG = ${JSON.stringify(config, null, 2)};\n\nif (typeof module !== 'undefined') module.exports = DASHBOARD_CONFIG;\n`;
-}
- 
-async function pushToGitHub() {
-  const pat    = localStorage.getItem(KEYS.pat);
-  const repo   = localStorage.getItem(KEYS.repo);
-  const path   = localStorage.getItem(KEYS.path) || 'dashboard-config.js';
-  const branch = localStorage.getItem(KEYS.branch) || 'main';
-  const el     = document.getElementById('pushResult');
- 
-  if (!pat || !repo) {
-    showResult(el, false, 'GitHub token or repo not set. Check settings.');
-    return;
-  }
- 
-  setSyncStatus('syncing', 'SYNCING');
- 
-  try {
-    // Get current SHA
-    const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
-      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }
-    });
- 
-    let sha = null;
-    if (getRes.ok) {
-      const data = await getRes.json();
-      sha = data.sha;
-    }
- 
-    const content = btoa(unescape(encodeURIComponent(configToJS())));
-    const body    = { message: `Fam Frame config update — ${new Date().toLocaleString()}`, content, branch };
-    if (sha) body.sha = sha;
- 
-    const putRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
- 
-    if (putRes.ok) {
-      setSyncStatus('synced', 'SYNCED');
-      showResult(el, true, '✓ Config pushed to GitHub. Dashboard will update within 2 min.');
-      toast('Pushed to GitHub ✓');
-    } else {
-      const err = await putRes.json();
-      setSyncStatus('error', 'ERROR');
-      showResult(el, false, `✕ ${err.message || 'Push failed.'}`);
-    }
-  } catch(e) {
-    setSyncStatus('error', 'ERROR');
-    showResult(el, false, '✕ Network error.');
-  }
-}
- 
-async function pullFromGitHub() {
-  const pat    = localStorage.getItem(KEYS.pat);
-  const repo   = localStorage.getItem(KEYS.repo);
-  const path   = localStorage.getItem(KEYS.path) || 'dashboard-config.js';
-  const branch = localStorage.getItem(KEYS.branch) || 'main';
-  const el     = document.getElementById('pullResult');
- 
-  if (!pat || !repo) {
-    showResult(el, false, 'GitHub token or repo not set.');
-    return;
-  }
- 
-  try {
-    const res  = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
-      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }
-    });
-    if (!res.ok) { showResult(el, false, `✕ Error ${res.status}`); return; }
- 
-    const data    = await res.json();
-    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
- 
-    // Extract JSON from the JS file
-    const match = decoded.match(/const DASHBOARD_CONFIG = (\{[\s\S]*\});/);
-    if (match) {
-      config = JSON.parse(match[1]);
-      saveConfig();
-      renderAll();
-      showResult(el, true, '✓ Config pulled from GitHub.');
-      toast('Config pulled ✓');
-    } else {
-      showResult(el, false, '✕ Could not parse config file.');
-    }
-  } catch(e) {
-    showResult(el, false, '✕ Pull failed.');
-  }
-}
- 
-// ══════════════════════════════════════════════════════
-// SYNC STATUS
-// ══════════════════════════════════════════════════════
-function updateSyncStatus() {
-  const pat  = localStorage.getItem(KEYS.pat);
-  const repo = localStorage.getItem(KEYS.repo);
-  if (pat && repo) setSyncStatus('synced', 'CONNECTED');
-  else setSyncStatus('', 'NOT SET');
-}
- 
-function setSyncStatus(state, label) {
-  const dot = document.getElementById('syncDot');
-  const lbl = document.getElementById('syncLabel');
-  if (!dot) return;
-  dot.className = 'sync-dot' + (state ? ' ' + state : '');
-  lbl.textContent = label;
-}
- 
-// ══════════════════════════════════════════════════════
-// FEEDBACK
-// ══════════════════════════════════════════════════════
-// Set FEEDBACK_ENDPOINT to your Postgres API URL when ready.
-// Until then, submissions are logged locally + shown in UI.
-// Postgres schema (3 cols):
-//   id          uuid default gen_random_uuid()
-//   created_at  timestamptz default now()
-//   type        text   -- bug | feature | general | wtp
-//   message     text
-//   name        text
-//   repo        text   -- which user's repo (for identifying testers)
-const FEEDBACK_ENDPOINT = ""; // e.g. "https://your-api.famframe.io/feedback"
- 
-async function submitFeedback() {
-  const type    = document.getElementById('feedbackType').value;
-  const message = document.getElementById('feedbackBody').value.trim();
-  const name    = document.getElementById('feedbackName').value.trim();
-  const repo    = localStorage.getItem(KEYS.repo) || "unknown";
-  const el      = document.getElementById('feedbackResult');
- 
-  if (!message) {
-    showResult(el, false, 'Add a message before submitting.');
-    return;
-  }
- 
-  const payload = {
-    type, message, name, repo,
-    created_at: new Date().toISOString(),
-    app_version: "0.1.0",
+
+function githubHeaders(pat) { return { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }; }
+function connection() {
+  return {
+    pat: localStorage.getItem(KEYS.pat) || getVal('patAppInput'),
+    repo: localStorage.getItem(KEYS.repo) || getVal('repoInput') || 'jchromchak/famframe',
+    path: localStorage.getItem(KEYS.path) || getVal('pathInput') || 'dashboard-config.js',
+    branch: localStorage.getItem(KEYS.branch) || getVal('branchSelect') || 'main',
   };
- 
-  // Log locally always (useful for debugging early testers)
+}
+function configToJS() {
+  return `// ═══════════════════════════════════════════════════════════════════\n// DASHBOARD CONFIG — edit through /admin/ or carefully by hand\n// Last updated: ${new Date().toISOString()}\n// ═══════════════════════════════════════════════════════════════════\n\nvar DASHBOARD_CONFIG = ${JSON.stringify(config, null, 2)};\n\nif (typeof module !== "undefined") module.exports = DASHBOARD_CONFIG;\n`;
+}
+function parseConfigJS(source) {
+  const fn = new Function(source + '\n;return typeof DASHBOARD_CONFIG !== "undefined" ? DASHBOARD_CONFIG : null;');
+  const parsed = fn();
+  if (!parsed || typeof parsed !== 'object') throw new Error('DASHBOARD_CONFIG not found');
+  return parsed;
+}
+async function pullFromGitHub() {
+  const c = connection(); const el = document.getElementById('pullResult');
+  if (!c.pat || !c.repo) { showResult(el, false, 'GitHub token or repo not set.'); return; }
+  setSyncStatus('syncing', 'PULLING');
+  try {
+    const res = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
+    if (!res.ok) throw new Error('GitHub returned ' + res.status);
+    const data = await res.json();
+    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+    config = parseConfigJS(decoded);
+    lastRemoteSha = data.sha;
+    localStorage.setItem(KEYS.sha, data.sha);
+    saveConfig(); renderAll(); setSyncStatus('synced', 'PULLED'); showResult(el, true, '✓ Pulled latest config.'); toast('Config pulled ✓');
+  } catch(e) { setSyncStatus('error', 'ERROR'); showResult(el, false, '✕ Pull failed: ' + e.message); }
+}
+async function pushToGitHub() {
+  const c = connection(); const el = document.getElementById('pushResult');
+  if (!c.pat || !c.repo) { showResult(el, false, 'GitHub token or repo not set.'); return; }
+  setSyncStatus('syncing', 'SAVING');
+  try {
+    let sha = lastRemoteSha;
+    const getRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
+    if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
+    const content = btoa(unescape(encodeURIComponent(configToJS())));
+    const body = { message: `Update Fam Frame dashboard config`, content, branch: c.branch };
+    if (sha) body.sha = sha;
+    const putRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}`, {
+      method:'PUT', headers:{ ...githubHeaders(c.pat), 'Content-Type':'application/json' }, body: JSON.stringify(body)
+    });
+    if (!putRes.ok) { const err = await putRes.json().catch(() => ({})); throw new Error(err.message || ('GitHub returned ' + putRes.status)); }
+    const data = await putRes.json();
+    lastRemoteSha = data.content && data.content.sha;
+    if (lastRemoteSha) localStorage.setItem(KEYS.sha, lastRemoteSha);
+    setSyncStatus('synced', 'SAVED'); showResult(el, true, '✓ Saved to GitHub. Refresh the dashboard after Pages updates.'); toast('Saved to GitHub ✓');
+  } catch(e) { setSyncStatus('error', 'ERROR'); showResult(el, false, '✕ Save failed: ' + e.message); }
+}
+function updateSyncStatus() {
+  const pat = localStorage.getItem(KEYS.pat); const repo = localStorage.getItem(KEYS.repo);
+  if (pat && repo) setSyncStatus('synced', 'CONNECTED'); else setSyncStatus('', 'NOT SET');
+}
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('syncDot'); const lbl = document.getElementById('syncLabel');
+  if (!dot || !lbl) return; dot.className = 'sync-dot' + (state ? ' ' + state : ''); lbl.textContent = label;
+}
+
+const FEEDBACK_ENDPOINT = '';
+async function submitFeedback() {
+  const el = document.getElementById('feedbackResult');
+  const payload = { type:getVal('feedbackType'), message:getVal('feedbackBody'), name:getVal('feedbackName'), repo:localStorage.getItem(KEYS.repo) || 'unknown', created_at:new Date().toISOString() };
+  if (!payload.message) { showResult(el, false, 'Add a message before submitting.'); return; }
   console.log('[Fam Frame Feedback]', payload);
- 
-  if (FEEDBACK_ENDPOINT) {
-    try {
-      const res = await fetch(FEEDBACK_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        showResult(el, true, '✓ Feedback received. Thank you.');
-        document.getElementById('feedbackBody').value = '';
-        document.getElementById('feedbackName').value = '';
-        toast('Feedback sent ✓');
-      } else {
-        showResult(el, false, `✕ Server error ${res.status}. Logged locally.`);
-      }
-    } catch(e) {
-      showResult(el, false, '✕ Network error. Feedback logged locally.');
-    }
-  } else {
-    // No endpoint yet — still thank the user, log is captured above
-    showResult(el, true, '✓ Feedback noted. Endpoint not yet connected — logged locally.');
-    document.getElementById('feedbackBody').value = '';
-    document.getElementById('feedbackName').value = '';
-    toast('Feedback logged ✓');
-  }
+  showResult(el, true, '✓ Feedback logged locally for now.');
+  setVal('feedbackBody', ''); setVal('feedbackName', ''); toast('Feedback logged ✓');
 }
- 
-// ══════════════════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════════════════
-function showResult(el, ok, msg) {
-  if (!el) return;
-  el.className = 'action-result ' + (ok ? 'ok' : 'fail');
-  el.textContent = msg;
-}
- 
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2200);
-}
+function showResult(el, ok, msg) { if (!el) return; el.className = 'action-result ' + (ok ? 'ok' : 'fail'); el.textContent = msg; }
+function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); }
 </script>
 </body>
 </html>

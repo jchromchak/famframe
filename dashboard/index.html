@@ -11,10 +11,11 @@
 <script src="./dashboard-config.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+:root{--app-width:100vw;--app-height:100dvh;--stage-scale:1}
 html,body{width:100%;height:100%;overflow:hidden;background:#050504;color:#efe7d7;cursor:none}
 body{font-family:'DM Mono',monospace}
-.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#050504}
-.stage{width:1920px;height:1080px;position:relative;overflow:hidden;background:#0b0b09;transform-origin:center center}
+.viewport{position:fixed;left:0;top:0;width:var(--app-width);height:var(--app-height);display:flex;align-items:center;justify-content:center;background:#050504}
+.stage{width:1920px;height:1080px;position:relative;overflow:hidden;background:#0b0b09;transform:scale(var(--stage-scale));transform-origin:center center;box-shadow:0 0 0 1px rgba(239,231,215,.11) inset}
 .stage:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E")}
 .layout{display:none;grid-template-columns:1fr 430px;grid-template-rows:1fr auto;width:100%;height:100%}
 .layout.active{display:grid}
@@ -63,6 +64,7 @@ body{font-family:'DM Mono',monospace}
 /* ── CALENDAR ── */
 .cal-event{margin-bottom:24px}
 .cal-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;color:rgba(239,231,215,.7);line-height:1.06}
+.cal-more{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:rgba(239,231,215,.32);padding-top:2px}
 .badge{display:inline-block;color:#d99a3d;border:1px solid rgba(217,154,61,.58);padding:6px 10px;margin-bottom:12px}
 
 /* ── DEPARTURE BAR ── */
@@ -84,10 +86,10 @@ body{font-family:'DM Mono',monospace}
 .dep-sub{font-size:14px;letter-spacing:.14em;line-height:1.6;color:rgba(239,231,215,.3);margin-top:16px;text-transform:uppercase}
 
 /* ── MORNING CHECKLIST ── */
-.checklist{margin-top:36px;display:flex;flex-direction:column;gap:10px;max-width:620px}
-.cl-item{display:flex;align-items:center;gap:16px;padding:10px 18px;background:rgba(239,231,215,.04);border:1px solid rgba(239,231,215,.09);border-radius:4px;transition:opacity .5s,border-color .5s}
-.cl-item.done{opacity:.28;border-color:transparent}
-.cl-item.active{border-color:rgba(217,154,61,.35);background:rgba(217,154,61,.05)}
+.checklist{margin-top:36px;display:flex;flex-direction:column;max-width:620px;border-top:1px solid rgba(239,231,215,.12)}
+.cl-item{display:flex;align-items:center;gap:18px;min-height:52px;padding:10px 0;border-bottom:1px solid rgba(239,231,215,.1);transition:opacity .5s,color .5s}
+.cl-item.done{opacity:.28}
+.cl-item.active{color:#d99a3d}
 .cl-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
 .cl-label{font-size:19px;letter-spacing:.1em;color:rgba(239,231,215,.72);flex:1}
 .cl-time{font-size:14px;letter-spacing:.12em;color:rgba(239,231,215,.3)}
@@ -122,9 +124,7 @@ body{font-family:'DM Mono',monospace}
 .config-error h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:82px;font-weight:300}
 .config-error p{font-size:22px;line-height:1.6;color:rgba(239,231,215,.65);max-width:980px;margin-top:24px}
 
-/* ── SCALE TO ANY SCREEN ── */
-@media(max-aspect-ratio:16/9){.stage{transform:scale(calc(100vw / 1920))}}
-@media(min-aspect-ratio:16/9){.stage{transform:scale(calc(100vh / 1080))}}
+/* JS sets --stage-scale from the actual visible viewport, including browser chrome. */
 </style>
 </head>
 <body>
@@ -380,6 +380,15 @@ body{font-family:'DM Mono',monospace}
   function fmtMin(total) {
     total = ((Number(total) % 1440) + 1440) % 1440;
     return fmt(Math.floor(total / 60), total % 60);
+  }
+  function fitStage() {
+    var vv = window.visualViewport;
+    var w = vv && vv.width ? vv.width : window.innerWidth;
+    var h = vv && vv.height ? vv.height : window.innerHeight;
+    var scale = Math.min(w / 1920, h / 1080);
+    document.documentElement.style.setProperty('--app-width', Math.max(1, w) + 'px');
+    document.documentElement.style.setProperty('--app-height', Math.max(1, h) + 'px');
+    document.documentElement.style.setProperty('--stage-scale', Math.max(0.1, scale));
   }
 
   var WMO = {
@@ -736,7 +745,7 @@ body{font-family:'DM Mono',monospace}
           '?key=' + encodeURIComponent(key) +
           '&timeMin=' + encodeURIComponent(start.toISOString()) +
           '&timeMax=' + encodeURIComponent(end.toISOString()) +
-          '&singleEvents=true&orderBy=startTime&maxResults=5';
+          '&singleEvents=true&orderBy=startTime&maxResults=10';
         var data = await fetch(url).then(function (r) { return r.json(); });
         if (data.items) all = all.concat(data.items);
       }
@@ -752,9 +761,10 @@ body{font-family:'DM Mono',monospace}
         el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">No events</div>';
         return;
       }
-      el.innerHTML = all.slice(0, 4).map(function (ev) {
+      var shown = all.slice(0, 1).map(function (ev) {
         var dt    = ev.start && ev.start.dateTime ? new Date(ev.start.dateTime) : null;
-        var t     = dt ? fmt(dt.getHours(), dt.getMinutes()) : 'ALL DAY';
+        var zp    = dt ? zonedParts(dt) : null;
+        var t     = zp ? fmt(zp.hour, zp.minute) : 'ALL DAY';
         var title = ev.summary || 'Untitled';
         return '<div class="cal-event">' +
           (LATE.test(title) ? '<div class="badge">LATE START</div>' : '') +
@@ -763,12 +773,22 @@ body{font-family:'DM Mono',monospace}
           '<div class="cal-time">' + t + '</div>' +
           '</div>';
       }).join('');
+      if (all.length > 1) shown += '<div class="cal-more">and ' + (all.length - 1) + ' more</div>';
+      el.innerHTML = shown;
     } catch (e) {
       el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">Calendar unavailable</div>';
     }
   }
 
   // ── INIT ──────────────────────────────────────────────────────────
+  fitStage();
+  window.addEventListener('resize', fitStage);
+  window.addEventListener('orientationchange', fitStage);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fitStage);
+    window.visualViewport.addEventListener('scroll', fitStage);
+  }
+
   tick();
   fetchWeather();
   fetchQuote();
