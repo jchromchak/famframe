@@ -13,19 +13,19 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
  
-:root {
-  --bg:             #0f0f0d;
-  --surface:        #1a1a16;
-  --border:         rgba(255,255,255,0.07);
-  --text-primary:   #f0ede6;
-  --text-secondary: rgba(240,237,230,0.45);
-  --text-dim:       rgba(240,237,230,0.2);
-  --gold:           #c8b88a;
+ :root {
+  --bg:             #0b0b09;
+  --surface:        transparent;
+  --border:         rgba(239,231,215,0.14);
+  --text-primary:   #efe7d7;
+  --text-secondary: rgba(239,231,215,0.68);
+  --text-dim:       rgba(239,231,215,0.34);
+  --gold:           #d99a3d;
   --warm:           #d4845a;
   --crit:           #c94f3a;
   --ok:             #7aaa8a;
-  --warn:           #c8b88a;
-  --purple:         #8b85a8;
+  --warn:           #d99a3d;
+  --purple:         #8d879f;
   --font-serif:     'Cormorant Garamond', Georgia, serif;
   --font-mono:      'DM Mono', monospace;
 }
@@ -49,7 +49,7 @@ body::before {
 /* ── LAYOUT SHELLS ── */
 .layout {
   display: none;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 360px;
   grid-template-rows: 1fr auto;
   height: 100vh;
 }
@@ -77,11 +77,19 @@ body::before {
 }
  
 .main-panel {
-  display: flex; flex-direction: column; justify-content: center;
-  padding: 72px 96px; border-right: 1px solid var(--border); position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 72px 72px 32px 72px;
+  border-right: none;
+  position: relative;
 }
  
-.side-panel { display: flex; flex-direction: column; }
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+}
  
 .date-line {
   font-size: 11px; letter-spacing: 0.25em; color: var(--text-secondary);
@@ -89,11 +97,17 @@ body::before {
 }
  
 .progress-track {
-  position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
-  background: var(--border);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(239,231,215,0.08);
 }
 .progress-fill {
-  height: 100%; background: var(--gold);
+  height: 100%;
+  background: var(--gold);
+  box-shadow: 0 0 12px rgba(217,154,61,0.55);
   transition: width 1s linear, background 2s;
 }
  
@@ -275,12 +289,22 @@ body::before {
    EVENING MODE
 ══════════════════════════════════════ */
 .evening-hero {
-  font-family: var(--font-serif); font-size: clamp(52px, 7vw, 88px);
-  font-weight: 300; line-height: 0.9; color: var(--text-primary); margin-bottom: 8px;
+  font-family: var(--font-serif);
+  font-size: clamp(82px, 9vw, 128px);
+  font-weight: 300;
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+  margin-bottom: 4px;
 }
 .evening-time {
-  font-family: var(--font-serif); font-size: clamp(52px, 7vw, 88px);
-  font-weight: 300; line-height: 0.9; color: var(--text-primary); margin-bottom: 28px;
+  font-family: var(--font-serif);
+  font-size: clamp(66px, 7vw, 96px);
+  font-weight: 300;
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+  margin-bottom: 30px;
 }
 .evening-time .ampm {
   font-size: 0.35em; font-family: var(--font-mono); font-weight: 300;
@@ -289,25 +313,46 @@ body::before {
 }
  
 /* Timeline */
-.timeline { display: flex; flex-direction: column; position: relative; }
-.tl-item  { display: flex; align-items: flex-start; gap: 14px; padding: 8px 0; position: relative; }
+.timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-top: 4px;
+  max-width: 460px;
+}
+.tl-item  {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 5px 0;
+  position: relative;
+}
  
 .tl-left  { display: flex; flex-direction: column; align-items: center; width: 28px; flex-shrink: 0; }
 .tl-dot   {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--border); border: 1px solid rgba(139,133,168,0.3);
-  flex-shrink: 0; transition: background 0.5s, box-shadow 0.5s; z-index: 1;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(239,231,215,0.42);
+  flex-shrink: 0;
+  transition: background 0.5s, box-shadow 0.5s;
+  z-index: 1;
 }
 .tl-line  {
-  width: 1px; flex: 1; min-height: 20px;
-  background: var(--border); margin-top: 2px;
+  width: 1px;
+  flex: 1;
+  min-height: 22px;
+  background: rgba(239,231,215,0.2);
+  margin-top: 2px;
 }
 .tl-item:last-child .tl-line { display: none; }
  
 /* done — muted purple */
 .tl-done .tl-dot {
-  background: var(--purple); border-color: var(--purple);
-  opacity: 0.7;
+  background: var(--purple);
+  border-color: var(--purple);
+  opacity: 0.75;
 }
 .tl-done .tl-line { background: rgba(139,133,168,0.2); }
  
@@ -317,16 +362,24 @@ body::before {
   padding: 4px 0; position: relative;
 }
 .tl-now-dot {
-  width: 12px; height: 12px; border-radius: 50%;
-  background: var(--gold); border: 2px solid var(--gold);
-  box-shadow: 0 0 12px var(--gold), 0 0 24px rgba(200,184,138,0.3);
-  flex-shrink: 0; margin-left: 8px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid #f0c06d;
+  box-shadow: 0 0 10px rgba(217,154,61,0.9), 0 0 28px rgba(217,154,61,0.45);
+  flex-shrink: 0;
+  margin-left: 6px;
   animation: nowpulse 1.8s ease-in-out infinite;
 }
 @keyframes nowpulse { 0%,100%{opacity:1; box-shadow:0 0 12px var(--gold), 0 0 24px rgba(200,184,138,0.3);} 50%{opacity:0.6; box-shadow:0 0 6px var(--gold);} }
 .tl-now-label {
-  font-family: var(--font-serif); font-style: italic; font-size: 14px;
-  font-weight: 300; color: var(--gold); letter-spacing: 0.05em;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--gold);
+  letter-spacing: 0.05em;
 }
 .tl-now-line {
   width: 1px; min-height: 8px; background: linear-gradient(var(--gold), var(--border));
@@ -339,9 +392,9 @@ body::before {
 }
  
 .tl-content { flex: 1; padding-bottom: 2px; }
-.tl-time    { font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); margin-bottom: 2px; }
+.tl-time    { font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); margin-bottom: 2px; }
 .tl-label   {
-  font-family: var(--font-serif); font-size: 17px; font-weight: 300;
+  font-family: var(--font-serif); font-size: 19px; font-weight: 300;
   color: var(--text-secondary); line-height: 1.2; transition: color 0.5s;
 }
 .tl-active .tl-label { color: var(--text-primary); }
@@ -360,18 +413,34 @@ body::before {
   margin-top: 18px; display: flex; align-items: center; gap: 10px;
 }
 .ev-track { flex: 1; height: 2px; background: var(--border); border-radius: 1px; }
-.ev-fill  { height: 100%; background: var(--gold); border-radius: 1px; transition: width 30s linear; }
+.ev-fill  {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 1px;
+  box-shadow: 0 0 12px rgba(217,154,61,0.55);
+  transition: width 30s linear;
+}
 .ev-pct   { font-size: 9px; letter-spacing: 0.15em; color: var(--text-dim); }
  
 /* Quote bar */
 .quote-bar {
-  grid-column: 1 / 3; padding: 14px 68px;
+  grid-column: 1 / 3;
+  padding: 18px 72px;
   border-top: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
 }
 .quote-text {
-  font-family: var(--font-serif); font-style: italic; font-size: 15px;
-  font-weight: 300; color: var(--text-dim); line-height: 1.5; flex: 1;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 300;
+  color: rgba(239,231,215,0.55);
+  line-height: 1.5;
+  text-align: center;
+  flex: 1;
 }
 .quote-author {
   font-size: 9px; letter-spacing: 0.25em; color: var(--text-dim);
@@ -385,6 +454,83 @@ body::before {
   background: rgba(200,184,138,0.1); color: var(--gold);
   border: 1px solid rgba(200,184,138,0.15); vertical-align: middle;
 }
+
+
+/* ── IMAGE-MATCHING POLISH OVERRIDES ── */
+.weather-panel,
+.traffic-panel,
+.cal-panel {
+  padding-left: 36px;
+  padding-right: 36px;
+}
+
+.weather-panel {
+  background: transparent;
+}
+
+.weather-temp {
+  font-size: 78px;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+}
+
+.weather-icon {
+  color: var(--gold);
+  opacity: 0.95;
+}
+
+.cal-event,
+.fc-slot {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding-left: 0;
+}
+
+.cal-event {
+  margin-bottom: 14px;
+}
+
+.cal-event-title {
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.cal-badge {
+  background: transparent;
+  color: var(--gold);
+  border-color: rgba(217,154,61,0.55);
+}
+
+.panel-label,
+.detail-label,
+.cal-event-time,
+.fc-time,
+.quote-author {
+  color: var(--text-dim);
+}
+
+.bottom-bar {
+  padding: 24px 72px;
+}
+
+.countdown-label {
+  font-family: var(--font-mono);
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--text-secondary);
+}
+
+.countdown-display {
+  font-size: clamp(120px, 16vw, 210px);
+  letter-spacing: -0.045em;
+}
+
+.date-line {
+  color: var(--text-secondary);
+}
+
 </style>
 </head>
 <body>
@@ -567,13 +713,13 @@ const C = (typeof DASHBOARD_CONFIG !== 'undefined') ? DASHBOARD_CONFIG : {
       trigger:{ days:[0,6], timeStart:"07:00", timeEnd:"10:00", priority:5 } },
   ],
   eveningTimeline: [
-    { id:"home",     label:"Home & decompress", icon:"🏠", startHour:17, startMin:30, durationMin:30, note:"Snack, unwind" },
-    { id:"homework", label:"Homework",           icon:"📚", startHour:18, startMin:0,  durationMin:30, note:"Both kids" },
-    { id:"dinner",   label:"Dinner",             icon:"🍽", startHour:18, startMin:30, durationMin:30, note:"Together" },
-    { id:"baths",    label:"Baths",              icon:"🛁", startHour:19, startMin:15, durationMin:30, note:"" },
-    { id:"reading",  label:"Reading",            icon:"📖", startHour:19, startMin:45, durationMin:30, note:"30 min each" },
-    { id:"winddown", label:"Wind down",          icon:"🌙", startHour:20, startMin:15, durationMin:15, note:"No screens" },
-    { id:"bed",      label:"Lights out",         icon:"💤", startHour:20, startMin:30, durationMin:0,  note:"8:30 PM" },
+    { id:"home",     label:"Home & decompress", icon:"", startHour:18, startMin:0, durationMin:30, note:"" },
+    { id:"homework", label:"Homework",           icon:"", startHour:18, startMin:30,  durationMin:30, note:"" },
+    { id:"dinner",   label:"Dinner",             icon:"", startHour:19, startMin:0, durationMin:45, note:"" },
+    { id:"baths",    label:"Baths",              icon:"", startHour:19, startMin:45, durationMin:30, note:"" },
+    { id:"reading",  label:"Reading",            icon:"", startHour:20, startMin:15, durationMin:30, note:"" },
+    { id:"winddown", label:"Wind down",          icon:"", startHour:20, startMin:45, durationMin:45, note:"" },
+    { id:"bed",      label:"Lights out",         icon:"", startHour:21, startMin:30, durationMin:0,  note:"" },
   ],
   morningChecklist: [
     { id:"breakfast", label:"Breakfast",      icon:"🥣", targetMin:-40 },
@@ -795,19 +941,6 @@ function updateEvening() {
   document.getElementById("eProgressPct").textContent  = Math.round(evPct)+"%";
   document.getElementById("eProgress").style.width     = evPct+"%";
  
-  // Message
-  const bedM  = 20*60+30;
-  const msgEl = document.getElementById("eMessage");
-  if (!msgEl) return;
-  if (nowM >= bedM) msgEl.textContent = pick(msgs.done);
-  else {
-    const anyBehind = tl.some(i => {
-      const sm = i.startHour*60+i.startMin;
-      return nowM > sm+8 && i.durationMin > 0;
-    });
-    msgEl.textContent = anyBehind ? pick(msgs.behind) : pick(msgs.onTrack);
-  }
- 
   // Build timeline with floating "now" dot between items
   const tlEl = document.getElementById("eTimeline");
   let html   = "";
@@ -846,7 +979,7 @@ function updateEvening() {
       </div>
       <div class="tl-content">
         <div class="tl-time">${fmtTime(item.startHour,item.startMin)}${endTimeStr}</div>
-        <div class="tl-label">${item.icon} ${item.label}</div>
+        <div class="tl-label">${item.icon ? item.icon + " " : ""}${item.label}</div>
         ${item.note?`<div class="tl-note">${item.note}</div>`:""}
         ${untilText?`<div class="tl-until">${untilText}</div>`:""}
       </div>
@@ -1060,5 +1193,4 @@ setInterval(()=>{
 </body>
 </html>
  
-
 
