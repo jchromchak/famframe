@@ -7,50 +7,45 @@
 
 ## Current Handoff
 
-session: codex-783510e6
-date: 2026-05-05T21:43Z
-scope: Security-first MVP refactor: TV no longer receives secrets, admin owns credentials locally, and commute data is derived before writing to repo config.
+session: codex-514d38cb
+date: 2026-05-05T22:01Z
+scope: First pass at the admin refactor around the user's Family -> Daily Routines -> Segments -> Lists mental model while preserving the security-first MVP boundary.
 
 ### Files Touched
-- dashboard/index.html: Added ConfigService boundary, secret-like config warnings, removed TV-side Maps/Calendar credential calls, and renders derived commute freshness/fallback state.
-- admin/index.html: Added CredentialStore, local-only PAT/Maps/Calendar credential handling, zero-width token cleanup, safe config serialization, local route origin/destination storage, and derived commute generation.
-- dashboard-config.js: Removed shared API-key fields and added safe derived commute route shape.
-- README.md: Added security model.
-- .famframe-context/rules.md: Added TV-no-secrets rule.
-- .famframe-context/changelog.md: Logged this security refactor.
+- admin/index.html: Reorganized home cards into Family, Daily Routines, Segments, Lists, Integrations, and Sync & Advanced; moved credentials into Integrations; moved checklist editing into Lists; reframed route setup as Segments with local-only origin/destination handling; added member assignment to checklist items.
+- .famframe-context/tasks.md: Marked admin navigation, routine destination modeling, and autocomplete work in progress with notes about this first pass.
+- .famframe-context/changelog.md: Logged this admin refactor start.
 - .famframe-context/session-handoff.md: Replaced handoff with current state.
 
 ### Decisions Made
-- task-1ec8cfcb: Re-envision admin navigation around iPhone-first setup flows.
-- task-fb53f89c: Redesign schedule model so routines can have different destinations by day/time.
-- task-6e4af661: Add robust location autocomplete and place capture in admin.
-- task-9f48ead6: Improve GitHub PAT recovery and diagnostics in admin.
+- Preserve the existing dashboard-config.js compatibility model for now.
+- Treat Segments as itinerary blocks behind routines, but do not commit private route addresses to GitHub.
+- Keep the TV security rule intact: admin owns credentials and private addresses locally; repo stores safe labels and derived commute data only.
 
 ### Tasks Added
 - none
 
 ### Tasks Completed
-- risk-f3bc945f: Browser-visible Google Maps key can be abused if unrestricted.
+- none
 
 ### Rules Added
-- rule-94edd7b0: TV dashboard must never receive secrets.
+- none
 
 ### Risks Added
 - none
 
 ### Boundary Conditions Triggered
-- none
+- Full JSON routine migration was intentionally not completed in this pass.
 
 ### Pending
-- Decide how to handle non-16:9 visible browser viewports: keep letterboxing, crop slightly, or introduce adaptive artboard width.
-- Use the new Actions → Check GitHub access button to diagnose PAT failure and capture exact output if saving still fails.
-- Add the actual Google Maps browser key through admin, plus commute origin and destination, then save to GitHub.
-- Restrict the Google Maps key in Google Cloud to the Fam Frame GitHub Pages domain and required Maps APIs.
-- Verify the commute panel shows fresh derived commute data and falls back when stale.
-- Continue task-1ec8cfcb and task-fb53f89c to redesign the admin flow around home plus routine-specific destinations.
+- Finish task-1ec8cfcb: refine the iPhone flow after testing on phone, especially whether bottom nav should include Lists/Integrations directly or remain card-drill-in only.
+- Continue task-fb53f89c: define the future JSON model for routines, day overrides, segments, stops, buffers, inherited list templates, and routine-specific destinations.
+- Continue task-6e4af661: capture richer Places metadata for destinations/stops once the Maps key is added and verified.
+- Continue task-9f48ead6: improve PAT recovery flow and diagnose any phone save failures.
+- Verify the admin page in-browser on mobile/iPad widths before calling the flow polished.
 
 ### Next Session Start Here
-Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The security boundary is now: admin keeps credentials locally, repo stores safe display/derived data, TV is read-only and ignores secret-like config. Next product step is task-1ec8cfcb plus task-fb53f89c: redesign admin flow and model routines with their own destinations.
+Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The current code is still dashboard-config.js based, but the admin IA now points toward the future JSON model: Family owns members and home; Daily Routines own display windows and default timing; Segments own itinerary/destination concepts; Lists own checklist/task templates; Integrations own local credentials and content sources.
 
 ---
 

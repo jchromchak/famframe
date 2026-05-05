@@ -41,14 +41,14 @@
 - [ ] Re-envision admin navigation around iPhone-first setup flows
   id: task-1ec8cfcb
   priority: now
-  status: open
-  revisionId: rev-8df34268
+  status: in-progress
+  revisionId: rev-d7e359c1
 
   owner: john
   decision: decision-b0982db9
 
   notes:
-    Replace the current clunky Scenes / Modules / Actions organization with shorter drill-in screens. Primary use case is iPhone; iPad and desktop are secondary. Proposed top-level areas: Today, Daily Rhythm, School Schedule, Commute, Routines, Integrations, Advanced.
+    Replace the current clunky Scenes / Modules / Actions organization with shorter drill-in screens. Primary use case is iPhone; iPad and desktop are secondary. First pass now uses Family, Daily Routines, Segments, Lists, Integrations, and Sync & Advanced.
 
   blocked-by:
     - none
@@ -56,14 +56,14 @@
 - [ ] Redesign schedule model so routines can have different destinations by day/time
   id: task-fb53f89c
   priority: now
-  status: open
-  revisionId: rev-8df34268
+  status: in-progress
+  revisionId: rev-d7e359c1
 
   owner: john
   rule: rule-29881d80
 
   notes:
-    Family should have a home location, but each routine may have a different end location. Morning routines may route to school, while Monday and Wednesday PM routines may route somewhere else. Model this without exposing contradictory scenes/modes/scenarios language in admin.
+    Family should have a home location, but each routine may have a different end location. Morning routines may route to school, while Monday and Wednesday PM routines may route somewhere else. First admin pass exposes Segments as itinerary blocks and keeps route addresses local; full day-specific JSON routine modeling remains next.
 
   blocked-by:
     - task-1ec8cfcb
@@ -71,8 +71,8 @@
 - [ ] Add robust location autocomplete and place capture in admin
   id: task-6e4af661
   priority: now
-  status: open
-  revisionId: rev-8df34268
+  status: in-progress
+  revisionId: rev-d7e359c1
 
   owner: john
   risk: risk-f3bc945f

@@ -110,6 +110,20 @@
   action: updated
   summary: Refactored MVP security boundary so TV reads safe config only and admin stores credentials locally.
 
+- rev-d7e359c1
+  date: 2026-05-05T22:01Z
+  user: john
+  origin: codex
+  codex-session: codex-514d38cb
+  objects:
+    - task-1ec8cfcb: updated
+    - task-fb53f89c: updated
+    - task-6e4af661: updated
+    - admin/index.html: updated
+    - .famframe-context/session-handoff.md: updated
+  action: updated
+  summary: Started the iPhone-first admin refactor around Family, Daily Routines, Segments, Lists, and Integrations.
+
 ---
 
 *changelog.md — Fam Frame — v0.1*

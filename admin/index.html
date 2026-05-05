@@ -610,26 +610,42 @@ select {
         <div class="nav-card-arrow">›</div>
       </div>
       <div class="nav-card" onclick="nav('scenes')">
-        <div class="nav-card-icon">☀️</div>
+        <div class="nav-card-icon">↻</div>
         <div class="nav-card-body">
-          <div class="nav-card-title">Scenes</div>
-          <div class="nav-card-desc">Configure morning, evening<br>and special day scenes</div>
+          <div class="nav-card-title">Daily Routines</div>
+          <div class="nav-card-desc">When the frame wakes,<br>rests, and switches modes</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
       <div class="nav-card" onclick="nav('modules')">
-        <div class="nav-card-icon">⊞</div>
+        <div class="nav-card-icon">⇢</div>
         <div class="nav-card-body">
-          <div class="nav-card-title">Modules</div>
-          <div class="nav-card-desc">Enable and configure<br>dashboard modules</div>
+          <div class="nav-card-title">Segments</div>
+          <div class="nav-card-desc">Trips, stops, buffers<br>and destinations</div>
+        </div>
+        <div class="nav-card-arrow">›</div>
+      </div>
+      <div class="nav-card" onclick="nav('lists')">
+        <div class="nav-card-icon">☑</div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Lists</div>
+          <div class="nav-card-desc">Checklist templates,<br>tasks and assignments</div>
+        </div>
+        <div class="nav-card-arrow">›</div>
+      </div>
+      <div class="nav-card" onclick="nav('integrations')">
+        <div class="nav-card-icon">⌁</div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Integrations</div>
+          <div class="nav-card-desc">GitHub, Google Maps,<br>Calendar and quote source</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
       <div class="nav-card" onclick="nav('actions')">
         <div class="nav-card-icon">⚡</div>
         <div class="nav-card-body">
-          <div class="nav-card-title">Quick Actions</div>
-          <div class="nav-card-desc">Sync, override scenes<br>and system actions</div>
+          <div class="nav-card-title">Sync & Advanced</div>
+          <div class="nav-card-desc">Push, pull, diagnose<br>and raw config tools</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
@@ -640,26 +656,124 @@ select {
   <div class="page" id="pageFamily">
     <button class="back-btn" onclick="nav('home')">← Back</button>
     <div class="page-title">Family</div>
-    <div class="page-sub">WHO'S ON THE DASHBOARD</div>
+    <div class="page-sub">MEMBERS · HOME BASE</div>
  
-    <div class="section-label">Kids</div>
+    <div class="section-label">Members</div>
     <div id="kidCards"></div>
  
-    <div class="section-label" style="margin-top:16px">Location</div>
+    <div class="section-label" style="margin-top:16px">Home</div>
     <div class="field-label">Home city</div>
     <input type="text" id="homeCityApp" class="full-input" placeholder="Mount Pleasant, SC">
-    <div class="field-label">School route description</div>
-    <input type="text" id="schoolRoute" class="full-input" placeholder="US-17 N to School">
-    <div class="field-label">Google Maps origin</div>
-    <input type="text" id="commuteOrigin" class="full-input" placeholder="Home address or lat,lng">
-    <div class="field-label">Google Maps destination</div>
-    <input type="text" id="commuteDestination" class="full-input" placeholder="School address">
     <div class="field-label">Latitude</div>
     <input type="text" id="homeLat" class="full-input" placeholder="32.83">
     <div class="field-label">Longitude</div>
     <input type="text" id="homeLon" class="full-input" placeholder="-79.83">
  
-    <div class="section-label" style="margin-top:16px">API Keys</div>
+    <button class="save-btn" onclick="saveFamily()">Save family settings</button>
+  </div>
+ 
+  <!-- DAILY ROUTINES -->
+  <div class="page" id="pageScenes">
+    <button class="back-btn" onclick="nav('home')">← Back</button>
+    <div class="page-title">Daily Routines</div>
+    <div class="page-sub">SCREEN WINDOWS · DAYS · DEFAULT RHYTHM</div>
+
+    <div class="section-label">Timezone</div>
+    <div class="field-label">IANA time zone</div>
+    <input type="text" id="timeZoneInput" class="full-input" placeholder="America/New_York">
+
+    <div class="section-label">Display windows</div>
+    <div class="form-grid">
+      <div>
+        <div class="field-label">Wake display</div>
+        <input type="time" id="morningStart">
+      </div>
+      <div>
+        <div class="field-label">Morning standby</div>
+        <input type="time" id="morningEnd">
+      </div>
+      <div>
+        <div class="field-label">Evening display</div>
+        <input type="time" id="eveningStart">
+      </div>
+      <div>
+        <div class="field-label">Evening standby</div>
+        <input type="time" id="eveningEnd">
+      </div>
+    </div>
+
+    <div class="section-label">Default morning routine</div>
+    <div class="form-grid">
+      <div>
+        <div class="field-label">Leave home</div>
+        <input type="time" id="defaultLeave">
+      </div>
+      <div>
+        <div class="field-label">Arrive by</div>
+        <input type="time" id="defaultSchool">
+      </div>
+      <div>
+        <div class="field-label">Hard deadline</div>
+        <input type="time" id="defaultLateBell">
+      </div>
+      <div>
+        <div class="field-label">Fallback drive</div>
+        <input type="number" id="defaultDrive" min="0" step="1">
+      </div>
+    </div>
+
+    <div class="section-label">Routine days</div>
+    <div id="schoolDayToggles"></div>
+
+    <button class="save-btn" onclick="saveSchedule()">Save daily routine</button>
+  </div>
+ 
+  <!-- SEGMENTS -->
+  <div class="page" id="pageModules">
+    <button class="back-btn" onclick="nav('home')">← Back</button>
+    <div class="page-title">Segments</div>
+    <div class="page-sub">DESTINATIONS · STOPS · BUFFERS</div>
+
+    <div class="section-label">Default school segment</div>
+    <div class="field-label">Display label</div>
+    <input type="text" id="schoolRoute" class="full-input" placeholder="US-17 N to School">
+    <div class="field-label">Origin</div>
+    <input type="text" id="commuteOrigin" class="full-input" placeholder="Home address or lat,lng">
+    <div class="field-label">Destination</div>
+    <input type="text" id="commuteDestination" class="full-input" placeholder="School address">
+    <div class="field-hint">Segments are itinerary blocks behind a routine. Addresses stay local to this admin device; the repo only receives safe labels and derived commute timing. Future segments will support multiple stops, per-stop buffers, and day-specific destinations.</div>
+
+    <div class="section-label" style="margin-top:16px">Evening display segments</div>
+    <div id="timelineItems"></div>
+    <button class="small-btn" onclick="addTimelineItem()">+ ADD SEGMENT</button>
+
+    <div class="section-label" style="margin-top:16px">Fallback drive windows</div>
+    <div id="commuteEditor"></div>
+    <button class="small-btn" onclick="addCommuteEstimate()">+ ADD DRIVE WINDOW</button>
+
+    <button class="save-btn" onclick="saveSegments()">Save segments</button>
+  </div>
+
+  <!-- LISTS -->
+  <div class="page" id="pageLists">
+    <button class="back-btn" onclick="nav('home')">← Back</button>
+    <div class="page-title">Lists</div>
+    <div class="page-sub">TASKS · TEMPLATES · ASSIGNMENTS</div>
+
+    <div class="section-label">Morning checklist</div>
+    <div id="checklistEditor"></div>
+    <button class="small-btn" onclick="addChecklistItem()">+ ADD LIST ITEM</button>
+
+    <button class="save-btn" onclick="saveLists()">Save lists</button>
+  </div>
+
+  <!-- INTEGRATIONS -->
+  <div class="page" id="pageIntegrations">
+    <button class="back-btn" onclick="nav('home')">← Back</button>
+    <div class="page-title">Integrations</div>
+    <div class="page-sub">LOCAL CREDENTIALS · CONTENT SOURCES</div>
+
+    <div class="section-label">Credentials</div>
     <div class="field-label">Google Calendar API key</div>
     <div class="input-wrap" style="margin-bottom:8px">
       <input type="password" id="gcalAppInput" class="full-input" style="margin-bottom:0" placeholder="AIza...">
@@ -672,85 +786,9 @@ select {
     <div class="input-wrap" style="margin-bottom:8px">
       <input type="password" id="patAppInput" class="full-input" style="margin-bottom:0" placeholder="ghp_...">
     </div>
- 
-    <button class="save-btn" onclick="saveFamily()">Save family settings</button>
-  </div>
- 
-  <!-- SCENES -->
-  <div class="page" id="pageScenes">
-    <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Schedule</div>
-    <div class="page-sub">TIMEZONE · WINDOWS · SCHOOL DAY</div>
+    <div class="field-hint">Credentials are stored only on this admin device. They are stripped before config is written to GitHub.</div>
 
-    <div class="section-label">Timezone</div>
-    <div class="field-label">IANA time zone</div>
-    <input type="text" id="timeZoneInput" class="full-input" placeholder="America/New_York">
-
-    <div class="section-label">Mode windows</div>
-    <div class="form-grid">
-      <div>
-        <div class="field-label">Morning start</div>
-        <input type="time" id="morningStart">
-      </div>
-      <div>
-        <div class="field-label">Morning end</div>
-        <input type="time" id="morningEnd">
-      </div>
-      <div>
-        <div class="field-label">Evening start</div>
-        <input type="time" id="eveningStart">
-      </div>
-      <div>
-        <div class="field-label">Evening end</div>
-        <input type="time" id="eveningEnd">
-      </div>
-    </div>
-
-    <div class="section-label">Default school day</div>
-    <div class="form-grid">
-      <div>
-        <div class="field-label">Leave</div>
-        <input type="time" id="defaultLeave">
-      </div>
-      <div>
-        <div class="field-label">School</div>
-        <input type="time" id="defaultSchool">
-      </div>
-      <div>
-        <div class="field-label">Late bell</div>
-        <input type="time" id="defaultLateBell">
-      </div>
-      <div>
-        <div class="field-label">Drive min</div>
-        <input type="number" id="defaultDrive" min="0" step="1">
-      </div>
-    </div>
-
-    <div class="section-label">School days</div>
-    <div id="schoolDayToggles"></div>
-
-    <button class="save-btn" onclick="saveSchedule()">Save schedule</button>
-  </div>
- 
-  <!-- MODULES -->
-  <div class="page" id="pageModules">
-    <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Routines</div>
-    <div class="page-sub">CHECKLIST · EVENING · COMMUTE</div>
-
-    <div class="section-label">Morning checklist</div>
-    <div id="checklistEditor"></div>
-    <button class="small-btn" onclick="addChecklistItem()">+ ADD CHECKLIST ITEM</button>
-
-    <div class="section-label" style="margin-top:16px">Evening timeline</div>
-    <div id="timelineItems"></div>
-    <button class="small-btn" onclick="addTimelineItem()">+ ADD TIMELINE ITEM</button>
-
-    <div class="section-label" style="margin-top:16px">Commute estimates</div>
-    <div id="commuteEditor"></div>
-    <button class="small-btn" onclick="addCommuteEstimate()">+ ADD DRIVE WINDOW</button>
-
-    <div class="section-label" style="margin-top:16px">Quote</div>
+    <div class="section-label" style="margin-top:16px">Quote source</div>
     <div class="field-label">Source</div>
     <select id="quoteSource">
       <option value="stoic">Stoic (Quotable API)</option>
@@ -758,8 +796,8 @@ select {
       <option value="family">Family + love</option>
       <option value="any">Any category</option>
     </select>
- 
-    <button class="save-btn" onclick="saveRoutines()">Save routines</button>
+
+    <button class="save-btn" onclick="saveIntegrations()">Save integrations</button>
   </div>
  
   <!-- QUICK ACTIONS -->
@@ -850,16 +888,16 @@ select {
     <span class="nav-btn-label">HOME</span>
   </button>
   <button class="nav-btn" id="navScenes" onclick="nav('scenes')">
-    <span class="nav-btn-icon">☀</span>
-    <span class="nav-btn-label">SCENES</span>
+    <span class="nav-btn-icon">↻</span>
+    <span class="nav-btn-label">ROUTINES</span>
   </button>
   <button class="nav-btn" id="navModules" onclick="nav('modules')">
-    <span class="nav-btn-icon">⊞</span>
-    <span class="nav-btn-label">MODULES</span>
+    <span class="nav-btn-icon">⇢</span>
+    <span class="nav-btn-label">SEGMENTS</span>
   </button>
   <button class="nav-btn" id="navActions" onclick="nav('actions')">
     <span class="nav-btn-icon">⚡</span>
-    <span class="nav-btn-label">ACTIONS</span>
+    <span class="nav-btn-label">SYNC</span>
   </button>
 </div>
  
@@ -868,6 +906,8 @@ select {
  
 <script>
 // Fam Frame admin: edits the dashboard-config.js model used by /dashboard/.
+// TODO(json-config): split this compatibility model into family, display,
+// routines, routes, modules, messages, and quotes JSON/content files.
 const KEYS = {
   pat:       'fam_frame_github_pat',
   repo:      'fam_frame_config_repo',
@@ -1162,7 +1202,7 @@ function nav(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const map = { home:'navHome', scenes:'navScenes', modules:'navModules', actions:'navActions', family:'navHome' };
+  const map = { home:'navHome', scenes:'navScenes', modules:'navModules', actions:'navActions', family:'navHome', lists:'navModules', integrations:'navActions' };
   if (map[page]) document.getElementById(map[page]).classList.add('active');
   if (page === 'family') setupPlacesAutocomplete();
 }
@@ -1216,19 +1256,30 @@ function populateFamilyForm() {
 }
 function saveFamily() {
   config.family.location.city = getVal('homeCityApp');
+  config.family.location.lat = getNum('homeLat', config.family.location.lat || 0);
+  config.family.location.lon = getNum('homeLon', config.family.location.lon || 0);
+  saveConfig(); saveAndSync('Family settings saved');
+}
+function saveSegments() {
   config.family.location.schoolRoute = getVal('schoolRoute');
   config.family.location.school = getVal('schoolRoute');
   CredentialStore.setCommuteOrigin(getVal('commuteOrigin'));
   CredentialStore.setCommuteDestination(getVal('commuteDestination'));
-  config.family.location.lat = getNum('homeLat', config.family.location.lat || 0);
-  config.family.location.lon = getNum('homeLon', config.family.location.lon || 0);
+  saveConfig(); saveAndSync('Segments saved');
+  setupPlacesAutocomplete();
+}
+function saveIntegrations() {
   const gcal = getVal('gcalAppInput');
   const gmaps = getVal('gmapsAppInput');
   const pat = getVal('patAppInput');
   if (gcal) CredentialStore.setGoogleCalendarKey(gcal);
   if (gmaps) CredentialStore.setGoogleMapsKey(gmaps);
   if (pat) CredentialStore.setGitHubToken(pat);
-  saveConfig(); saveAndSync('Family settings saved');
+  config.modules = config.modules || {};
+  config.modules.quote = config.modules.quote || {};
+  config.modules.quote.source = getVal('quoteSource') || 'stoic';
+  prefillConnectionFields();
+  saveConfig(); saveAndSync('Integrations saved');
   setupPlacesAutocomplete();
 }
 
@@ -1370,7 +1421,7 @@ function saveSchedule() {
   config.scenarios.default.school = getVal('defaultSchool');
   config.scenarios.default.lateBell = getVal('defaultLateBell');
   config.scenarios.default.driveMinEst = getNum('defaultDrive', 0);
-  saveConfig(); saveAndSync('Schedule saved');
+  saveConfig(); saveAndSync('Daily routine saved');
 }
 
 function renderChecklistEditor() {
@@ -1379,14 +1430,19 @@ function renderChecklistEditor() {
   el.innerHTML = config.morningChecklist.map((item,i) => `
     <div class="editor-card">
       <div class="editor-card-head"><div class="editor-card-title">${html(item.icon || '')} ${html(item.label || 'Checklist item')}</div><button class="small-btn danger" onclick="removeChecklistItem(${i})">REMOVE</button></div>
-      <div class="form-grid three">
+      <div class="form-grid">
         <div><div class="field-label">Icon</div><input type="text" value="${html(item.icon || '')}" onchange="updateChecklistItem(${i}, 'icon', this.value)"></div>
         <div><div class="field-label">Label</div><input type="text" value="${html(item.label || '')}" onchange="updateChecklistItem(${i}, 'label', this.value)"></div>
         <div><div class="field-label">Min from leave</div><input type="number" value="${Number(item.targetMin || 0)}" onchange="updateChecklistItem(${i}, 'targetMin', this.value)"></div>
+        <div><div class="field-label">Assigned to</div><select onchange="updateChecklistItem(${i}, 'assignee', this.value)">${memberOptions(item.assignee || '')}</select></div>
       </div>
     </div>`).join('');
 }
-function addChecklistItem() { config.morningChecklist.push({ id:'new_item', label:'New item', icon:'✓', targetMin:-10 }); saveConfig(); renderChecklistEditor(); }
+function memberOptions(selected) {
+  const opts = ['<option value="">Everyone</option>'].concat((config.family.kids || []).map(k => '<option value="' + html(k.name || '') + '"' + (selected === k.name ? ' selected' : '') + '>' + html(k.name || 'Member') + '</option>'));
+  return opts.join('');
+}
+function addChecklistItem() { config.morningChecklist.push({ id:'new_item', label:'New item', icon:'✓', targetMin:-10, assignee:'' }); saveConfig(); renderChecklistEditor(); }
 function removeChecklistItem(i) { config.morningChecklist.splice(i,1); saveConfig(); renderChecklistEditor(); }
 function updateChecklistItem(i, key, value) {
   const item = config.morningChecklist[i];
@@ -1445,11 +1501,8 @@ function addCommuteEstimate() { config.commute.driveEstimates.push({ start:'07:0
 function removeCommuteEstimate(i) { config.commute.driveEstimates.splice(i,1); saveConfig(); renderCommuteEditor(); }
 function updateCommuteEstimate(i, key, value) { config.commute.driveEstimates[i][key] = key === 'driveMin' ? Number(value) : value; saveConfig(); renderCommuteEditor(); }
 
-function saveRoutines() {
-  config.modules = config.modules || {};
-  config.modules.quote = config.modules.quote || {};
-  config.modules.quote.source = getVal('quoteSource') || 'stoic';
-  saveConfig(); saveAndSync('Routines saved');
+function saveLists() {
+  saveConfig(); saveAndSync('Lists saved');
 }
 function renderRawConfig() { const el = document.getElementById('rawConfig'); if (el) el.value = JSON.stringify(config, null, 2); }
 function applyRawConfig() {
