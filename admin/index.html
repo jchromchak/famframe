@@ -650,6 +650,10 @@ select {
     <input type="text" id="homeCityApp" class="full-input" placeholder="Mount Pleasant, SC">
     <div class="field-label">School route description</div>
     <input type="text" id="schoolRoute" class="full-input" placeholder="US-17 N to School">
+    <div class="field-label">Google Maps origin</div>
+    <input type="text" id="commuteOrigin" class="full-input" placeholder="Home address or lat,lng">
+    <div class="field-label">Google Maps destination</div>
+    <input type="text" id="commuteDestination" class="full-input" placeholder="School address">
     <div class="field-label">Latitude</div>
     <input type="text" id="homeLat" class="full-input" placeholder="32.83">
     <div class="field-label">Longitude</div>
@@ -659,6 +663,10 @@ select {
     <div class="field-label">Google Calendar API key</div>
     <div class="input-wrap" style="margin-bottom:8px">
       <input type="password" id="gcalAppInput" class="full-input" style="margin-bottom:0" placeholder="AIza...">
+    </div>
+    <div class="field-label">Google Maps browser API key</div>
+    <div class="input-wrap" style="margin-bottom:8px">
+      <input type="password" id="gmapsAppInput" class="full-input" style="margin-bottom:0" placeholder="AIza...">
     </div>
     <div class="field-label">GitHub PAT</div>
     <div class="input-wrap" style="margin-bottom:8px">
@@ -860,6 +868,7 @@ const KEYS = {
   path:      'fam_frame_config_path',
   branch:    'fam_frame_config_branch',
   gcal:      'fam_frame_gcal_key',
+  gmaps:     'fam_frame_gmaps_key',
   config:    'fam_frame_config',
   sha:       'fam_frame_config_sha',
   onboarded: 'fam_frame_onboarded',
@@ -888,7 +897,7 @@ const DEFAULT_CONFIG = {
       school: 'US-17 N to School',
     },
   },
-  api: { googleCalendarKey: '', googleCalendarIds: [] },
+  api: { googleCalendarKey: '', googleCalendarIds: [], googleMapsKey: '' },
   modules: {
     quote: { source: 'stoic' },
   },
@@ -941,6 +950,9 @@ const DEFAULT_CONFIG = {
   },
   weekend: { enabled: true, message: 'No school today.', subtext: 'Enjoy the morning.', showWeather: true },
   commute: {
+    origin: '',
+    destination: '',
+    trafficModel: 'bestguess',
     defaultDriveMin: 12,
     driveEstimates: [
       { start:'06:00', end:'07:00', driveMin:14 },
@@ -969,7 +981,7 @@ function ensureModel() {
   config.family = config.family || clone(DEFAULT_CONFIG.family);
   config.family.kids = Array.isArray(config.family.kids) ? config.family.kids : [];
   config.family.location = config.family.location || {};
-  config.api = config.api || { googleCalendarKey:'', googleCalendarIds:[] };
+  config.api = deepMerge(DEFAULT_CONFIG.api, config.api || {});
   config.modules = deepMerge(DEFAULT_CONFIG.modules, config.modules || {});
   config.time = deepMerge(DEFAULT_CONFIG.time, config.time || {});
   config.modes = deepMerge(DEFAULT_CONFIG.modes, config.modes || {});
@@ -1029,6 +1041,7 @@ function prefillConnectionFields() {
   setVal('pathInput', localStorage.getItem(KEYS.path) || 'dashboard-config.js');
   setVal('patAppInput', localStorage.getItem(KEYS.pat) || '');
   setVal('gcalAppInput', localStorage.getItem(KEYS.gcal) || config.api.googleCalendarKey || '');
+  setVal('gmapsAppInput', localStorage.getItem(KEYS.gmaps) || config.api.googleMapsKey || '');
 }
 function toggleStep(n) {
   document.querySelectorAll('.step').forEach((s,i) => { if (i+1 === n) s.classList.toggle('active'); });
@@ -1134,20 +1147,27 @@ function populateFamilyForm() {
   const loc = config.family.location || {};
   setVal('homeCityApp', loc.city || '');
   setVal('schoolRoute', loc.schoolRoute || loc.school || '');
+  setVal('commuteOrigin', config.commute.origin || '');
+  setVal('commuteDestination', config.commute.destination || '');
   setVal('homeLat', loc.lat || '');
   setVal('homeLon', loc.lon || '');
   setVal('gcalAppInput', localStorage.getItem(KEYS.gcal) || config.api.googleCalendarKey || '');
+  setVal('gmapsAppInput', localStorage.getItem(KEYS.gmaps) || config.api.googleMapsKey || '');
   setVal('patAppInput', localStorage.getItem(KEYS.pat) || '');
 }
 function saveFamily() {
   config.family.location.city = getVal('homeCityApp');
   config.family.location.schoolRoute = getVal('schoolRoute');
   config.family.location.school = getVal('schoolRoute');
+  config.commute.origin = getVal('commuteOrigin');
+  config.commute.destination = getVal('commuteDestination');
   config.family.location.lat = getNum('homeLat', config.family.location.lat || 0);
   config.family.location.lon = getNum('homeLon', config.family.location.lon || 0);
   const gcal = getVal('gcalAppInput');
+  const gmaps = getVal('gmapsAppInput');
   const pat = getVal('patAppInput');
   if (gcal) { localStorage.setItem(KEYS.gcal, gcal); config.api.googleCalendarKey = gcal; }
+  if (gmaps) { localStorage.setItem(KEYS.gmaps, gmaps); config.api.googleMapsKey = gmaps; }
   if (pat) localStorage.setItem(KEYS.pat, pat);
   saveConfig(); saveAndSync('Family settings saved');
 }
@@ -1233,7 +1253,14 @@ function updateTimelineItem(i, key, value) {
 function renderCommuteEditor() {
   const el = document.getElementById('commuteEditor');
   if (!el) return;
-  el.innerHTML = `<div class="field-label">Default drive minutes</div><input type="number" value="${Number(config.commute.defaultDriveMin || 0)}" onchange="config.commute.defaultDriveMin=Number(this.value);saveConfig()" style="margin-bottom:10px">` +
+  el.innerHTML =
+    `<div class="field-label">Traffic model</div>
+    <select onchange="config.commute.trafficModel=this.value;saveConfig()" style="margin-bottom:10px">
+      <option value="bestguess" ${config.commute.trafficModel === 'bestguess' ? 'selected' : ''}>Best guess</option>
+      <option value="optimistic" ${config.commute.trafficModel === 'optimistic' ? 'selected' : ''}>Optimistic</option>
+      <option value="pessimistic" ${config.commute.trafficModel === 'pessimistic' ? 'selected' : ''}>Pessimistic</option>
+    </select>
+    <div class="field-label">Fallback drive minutes</div><input type="number" value="${Number(config.commute.defaultDriveMin || 0)}" onchange="config.commute.defaultDriveMin=Number(this.value);saveConfig()" style="margin-bottom:10px">` +
     config.commute.driveEstimates.map((item,i) => `
       <div class="editor-card">
         <div class="editor-card-head"><div class="editor-card-title">${html(item.start)}–${html(item.end)}</div><button class="small-btn danger" onclick="removeCommuteEstimate(${i})">REMOVE</button></div>

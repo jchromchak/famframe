@@ -82,6 +82,29 @@
   trigger:
     Admin access expands beyond trusted household devices or requires real login/account management.
 
+- risk-f3bc945f
+  title: Browser-visible Google Maps key can be abused if unrestricted
+  status: open
+  revisionId: rev-229be9fd
+
+  description:
+    The dashboard uses a browser-visible Google Maps JavaScript API key for commute traffic. If the key is not restricted, someone could reuse it outside Fam Frame.
+
+  likelihood: medium
+  impact: medium
+  severity: medium
+
+  decision: decision-3cdfc810
+
+  mitigation:
+    Restrict the key in Google Cloud to the Fam Frame GitHub Pages HTTP referrer and only the APIs needed for Maps JavaScript / commute routing.
+
+  contingency:
+    Rotate the key and move traffic calls behind a backend if usage expands beyond trusted static dashboard rendering.
+
+  trigger:
+    Unexpected Google Maps billing activity, public repo distribution beyond household use, or admin access expansion.
+
 ---
 
 *risks.md — Fam Frame — v0.1*

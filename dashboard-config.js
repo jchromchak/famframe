@@ -53,7 +53,8 @@ var DASHBOARD_CONFIG = {
   api: {
     googleCalendarKey: "",
     googleCalendarIds: [],
-    // googleMapsKey: "",  // optional — for real-time traffic
+    // Browser-visible key. Restrict to your GitHub Pages domain + required Maps APIs.
+    googleMapsKey: "",
   },
  
   // ── DISPLAY MODES & SCHEDULE ──────────────────────────────────────
@@ -200,8 +201,12 @@ var DASHBOARD_CONFIG = {
   },
 
   // ── COMMUTE ESTIMATES ─────────────────────────────────────────────
-  // Optional time-of-day drive estimates, also in time.timeZone.
+  // Google Maps powers live traffic when api.googleMapsKey, origin, and destination are set.
+  // The estimates below are fallback values when Maps is unavailable.
   commute: {
+    origin: "",
+    destination: "",
+    trafficModel: "bestguess",
     defaultDriveMin: 12,
     driveEstimates: [
       { start: "06:00", end: "07:00", driveMin: 14 },

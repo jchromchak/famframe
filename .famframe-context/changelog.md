@@ -66,6 +66,20 @@
   action: updated
   summary: Updated admin saves to auto-sync to GitHub with clearer error toasts and aligned admin typography with dashboard.
 
+- rev-229be9fd
+  date: 2026-05-05T19:30Z
+  user: john
+  origin: codex
+  codex-session: codex-ce7b730d
+  objects:
+    - dashboard-config.js: updated
+    - dashboard/index.html: updated
+    - admin/index.html: updated
+    - risk-f3bc945f: created
+    - .famframe-context/session-handoff.md: updated
+  action: updated
+  summary: Added Google Maps live commute support with fallback estimates and admin fields for Maps key/origin/destination.
+
 ---
 
 *changelog.md — Fam Frame — v0.1*

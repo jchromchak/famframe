@@ -454,19 +454,106 @@ body{font-family:'DM Mono',monospace}
 
   // ── DRIVE ESTIMATE ────────────────────────────────────────────────
   var driveMin = 0;
+  var driveSource = 'estimate';
+  var driveDistance = '';
+  var mapsDriveMin = null;
+  var mapsDistance = '';
+  var mapsUpdatedAt = 0;
+  var mapsPromise = null;
   function updateDrive(t) {
     t = t || zonedNow();
     var estimates = arr(['commute','driveEstimates']);
     var nowTotal = mins(t.hour, t.minute);
     driveMin = Number(val(['commute','defaultDriveMin'], val(['scenarios','default','driveMinEst'], 0)));
+    driveSource = 'estimate';
+    driveDistance = '';
     for (var i = 0; i < estimates.length; i++) {
       var est = estimates[i];
       var s = cfgTime(est, 'start', 'startHour', 'startMin');
       var e = cfgTime(est, 'end', 'endHour', 'endMin');
       if ((s <= e && nowTotal >= s && nowTotal < e) || (s > e && (nowTotal >= s || nowTotal < e))) {
         driveMin = Number(est.driveMin);
-        return;
+        break;
       }
+    }
+    if (mapsDriveMin && Date.now() - mapsUpdatedAt < 10 * 60 * 1000) {
+      driveMin = mapsDriveMin;
+      driveSource = 'maps';
+      driveDistance = mapsDistance;
+    }
+  }
+  function commuteOrigin() {
+    var configured = val(['commute','origin'], '');
+    if (configured) return configured;
+    var lat = val(['family','location','lat'], null);
+    var lon = val(['family','location','lon'], null);
+    if (lat !== null && lon !== null) return { lat:Number(lat), lng:Number(lon) };
+    return val(['family','location','city'], '');
+  }
+  function commuteDestination() {
+    return val(['commute','destination'], '') ||
+      val(['family','location','schoolAddress'], '');
+  }
+  function loadMaps() {
+    var key = val(['api','googleMapsKey'], '');
+    if (!key) return Promise.reject(new Error('Google Maps key not configured'));
+    if (window.google && window.google.maps) return Promise.resolve(window.google.maps);
+    if (mapsPromise) return mapsPromise;
+    mapsPromise = new Promise(function (resolve, reject) {
+      var cb = '__famFrameMapsReady';
+      window[cb] = function () { resolve(window.google.maps); delete window[cb]; };
+      var s = document.createElement('script');
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&v=weekly&callback=' + cb;
+      s.async = true;
+      s.onerror = function () { reject(new Error('Google Maps script failed to load')); };
+      document.head.appendChild(s);
+    });
+    return mapsPromise;
+  }
+  async function fetchMapsCommute() {
+    if (!cfg || !val(['api','googleMapsKey'], '')) return;
+    var origin = commuteOrigin();
+    var destination = commuteDestination();
+    if (!origin || !destination) return;
+    try {
+      var maps = await loadMaps();
+      var routes = maps.importLibrary ? await maps.importLibrary('routes') : maps;
+      var DistanceMatrixService = routes.DistanceMatrixService || maps.DistanceMatrixService;
+      var service = new DistanceMatrixService();
+      var request = {
+        origins: [origin],
+        destinations: [destination],
+        travelMode: maps.TravelMode.DRIVING,
+        unitSystem: maps.UnitSystem.IMPERIAL,
+        drivingOptions: {
+          departureTime: new Date(Date.now() + 60000),
+          trafficModel: val(['commute','trafficModel'], 'bestguess')
+        }
+      };
+      var response = service.getDistanceMatrix.length < 2
+        ? await service.getDistanceMatrix(request)
+        : await new Promise(function (resolve, reject) {
+            service.getDistanceMatrix(request, function (res, status) {
+              if (status === 'OK') resolve(res);
+              else reject(new Error(status));
+            });
+          });
+      var el = response && response.rows && response.rows[0] && response.rows[0].elements && response.rows[0].elements[0];
+      if (!el || el.status !== 'OK') throw new Error((el && el.status) || 'No route');
+      var duration = el.duration_in_traffic || el.duration;
+      if (!duration || !duration.value) throw new Error('No duration returned');
+      mapsDriveMin = Math.max(1, Math.round(duration.value / 60));
+      mapsUpdatedAt = Date.now();
+      driveMin = mapsDriveMin;
+      mapsDistance = el.distance && el.distance.text ? el.distance.text : '';
+      driveDistance = mapsDistance;
+      driveSource = 'maps';
+    } catch (e) {
+      mapsDriveMin = null;
+      mapsDistance = '';
+      mapsUpdatedAt = 0;
+      driveSource = 'estimate';
+      console.warn('Google Maps commute unavailable', e);
     }
   }
 
@@ -538,7 +625,9 @@ body{font-family:'DM Mono',monospace}
     if (id('depTime')) id('depTime').innerHTML = 'LEAVE BY ' + fmtMin(leaveTotal);
     if (sub) {
       var marginText = margin >= 0 ? '+' + margin + ' MIN ARRIVAL MARGIN' : Math.abs(margin) + ' MIN LATE IF YOU LEAVE NOW';
-      sub.innerHTML = driveMin + ' MIN DRIVE · ' + marginText + '<br>' + route;
+      var sourceText = driveSource === 'maps' ? 'LIVE TRAFFIC' : 'ESTIMATE';
+      var distanceText = driveDistance ? ' · ' + driveDistance : '';
+      sub.innerHTML = driveMin + ' MIN DRIVE · ' + sourceText + distanceText + ' · ' + marginText + '<br>' + route;
     }
 
     // Checklist
@@ -792,6 +881,7 @@ body{font-family:'DM Mono',monospace}
   tick();
   fetchWeather();
   fetchQuote();
+  fetchMapsCommute();
 
   fetchCalendar(zonedDay(0), 'mCalEvents');
   fetchCalendar(zonedDay(1), 'eCalEvents');
@@ -799,6 +889,7 @@ body{font-family:'DM Mono',monospace}
   setInterval(tick,         1000);
   setInterval(fetchWeather, 10 * 60 * 1000);
   setInterval(fetchQuote,   60 * 60 * 1000);
+  setInterval(fetchMapsCommute, 5 * 60 * 1000);
   setInterval(function () {
     fetchCalendar(zonedDay(0), 'mCalEvents');
     fetchCalendar(zonedDay(1), 'eCalEvents');

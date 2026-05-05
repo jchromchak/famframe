@@ -7,13 +7,16 @@
 
 ## Current Handoff
 
-session: codex-f2af64c9
-date: 2026-05-05T17:02Z
-scope: Fixed admin phone save flow so page-level saves attempt GitHub sync and show useful error toasts; aligned admin font stack with dashboard.
+session: codex-ce7b730d
+date: 2026-05-05T19:30Z
+scope: Added Google Maps live commute support while preserving configured fallback commute estimates.
 
 ### Files Touched
-- admin/index.html: Page-level saves now save locally and attempt GitHub sync; GitHub errors show clearer result text and toasts; validation checks config readability; font stack now uses Inter plus DM Mono.
-- .famframe-context/changelog.md: Logged this admin sync update.
+- dashboard-config.js: Added api.googleMapsKey plus commute origin, destination, and trafficModel fields.
+- dashboard/index.html: Dynamically loads Google Maps JavaScript API and uses DistanceMatrixService for live traffic commute duration when configured; falls back to configured estimates.
+- admin/index.html: Added Google Maps key, commute origin, commute destination, and traffic model controls.
+- .famframe-context/changelog.md: Logged this Maps commute update.
+- .famframe-context/risks.md: Added risk for browser-visible Google Maps key restrictions.
 - .famframe-context/session-handoff.md: Replaced handoff with current state.
 
 ### Decisions Made
@@ -23,7 +26,7 @@ scope: Fixed admin phone save flow so page-level saves attempt GitHub sync and s
 - none
 
 ### Tasks Completed
-- none
+- risk-f3bc945f: Browser-visible Google Maps key can be abused if unrestricted.
 
 ### Rules Added
 - none
@@ -36,11 +39,12 @@ scope: Fixed admin phone save flow so page-level saves attempt GitHub sync and s
 
 ### Pending
 - Decide how to handle non-16:9 visible browser viewports: keep letterboxing, crop slightly, or introduce adaptive artboard width.
-- Test admin from phone again: edit schedule time, tap Save schedule, confirm toast says "Saved to GitHub", wait for Pages, refresh dashboard.
-- If phone still cannot push, inspect the exact toast text; most likely cause is PAT lacking Contents read/write.
+- Add the actual Google Maps browser key through admin, plus commute origin and destination, then save to GitHub.
+- Restrict the Google Maps key in Google Cloud to the Fam Frame GitHub Pages domain and required Maps APIs.
+- Verify the commute panel shows "LIVE TRAFFIC" rather than "ESTIMATE" after deployment.
 
 ### Next Session Start Here
-Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The admin save flow should now push to GitHub directly from page-level save buttons when a PAT/repo are configured. Next testing should verify the phone save path and capture any GitHub error toast verbatim if it still fails.
+Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The commute panel now supports Google Maps live traffic through dashboard-config.js, but no actual key was committed. Next testing should enter the Maps key/origin/destination in admin, save to GitHub, then refresh the dashboard and confirm the commute line says LIVE TRAFFIC.
 
 ---
 
