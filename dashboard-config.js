@@ -47,15 +47,9 @@ var DASHBOARD_CONFIG = {
     },
   },
  
-  // ── API KEYS ──────────────────────────────────────────────────────
-  // Google Calendar: console.cloud.google.com → Calendar API → API Key
-  // Restrict key to Calendar API + your GitHub Pages domain
-  api: {
-    googleCalendarKey: "",
-    googleCalendarIds: [],
-    // Browser-visible key. Restrict to your GitHub Pages domain + required Maps APIs.
-    googleMapsKey: "",
-  },
+  // ── SAFE DISPLAY DATA ONLY ────────────────────────────────────────
+  // Do not commit API keys, tokens, PATs, or write credentials here.
+  // The admin app may store credentials locally and write safe derived data.
  
   // ── DISPLAY MODES & SCHEDULE ──────────────────────────────────────
   // The dashboard auto-switches mode based on local time in time.timeZone.
@@ -201,12 +195,20 @@ var DASHBOARD_CONFIG = {
   },
 
   // ── COMMUTE ESTIMATES ─────────────────────────────────────────────
-  // Google Maps powers live traffic when api.googleMapsKey, origin, and destination are set.
-  // The estimates below are fallback values when Maps is unavailable.
+  // Derived route data is safe for the TV. It may be written by the admin app.
+  // Fallback estimates are used when derived data is stale or missing.
   commute: {
-    origin: "",
-    destination: "",
-    trafficModel: "bestguess",
+    activeRouteId: "school-morning",
+    routes: {
+      "school-morning": {
+        provider: "",
+        routeLabel: "US-17 N to School",
+        durationMinutes: null,
+        trafficStatus: "",
+        updatedAt: "",
+        expiresAt: "",
+      },
+    },
     defaultDriveMin: 12,
     driveEstimates: [
       { start: "06:00", end: "07:00", driveMin: 14 },

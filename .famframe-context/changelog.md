@@ -95,6 +95,21 @@
   action: updated
   summary: Queued admin flow redesign and routine destination model work; added GitHub diagnostics and Places autocomplete starter.
 
+- rev-bbf3fc6e
+  date: 2026-05-05T21:43Z
+  user: john
+  origin: codex
+  codex-session: codex-783510e6
+  objects:
+    - rule-94edd7b0: created
+    - dashboard/index.html: updated
+    - admin/index.html: updated
+    - dashboard-config.js: updated
+    - README.md: updated
+    - .famframe-context/session-handoff.md: updated
+  action: updated
+  summary: Refactored MVP security boundary so TV reads safe config only and admin stores credentials locally.
+
 ---
 
 *changelog.md — Fam Frame — v0.1*

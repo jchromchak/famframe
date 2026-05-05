@@ -7,14 +7,17 @@
 
 ## Current Handoff
 
-session: codex-ddfb3082
-date: 2026-05-05T19:50Z
-scope: Queued admin flow redesign work, added GitHub PAT diagnostics, and added Google Places autocomplete starter for commute locations.
+session: codex-783510e6
+date: 2026-05-05T21:43Z
+scope: Security-first MVP refactor: TV no longer receives secrets, admin owns credentials locally, and commute data is derived before writing to repo config.
 
 ### Files Touched
-- admin/index.html: Added "Check GitHub access" diagnostics and Places autocomplete loading/attachment for commute origin/destination fields when a Maps key is present.
-- .famframe-context/tasks.md: Added queued tasks for admin flow redesign, routine destination model, location autocomplete, and PAT diagnostics.
-- .famframe-context/changelog.md: Logged this queue and diagnostics update.
+- dashboard/index.html: Added ConfigService boundary, secret-like config warnings, removed TV-side Maps/Calendar credential calls, and renders derived commute freshness/fallback state.
+- admin/index.html: Added CredentialStore, local-only PAT/Maps/Calendar credential handling, zero-width token cleanup, safe config serialization, local route origin/destination storage, and derived commute generation.
+- dashboard-config.js: Removed shared API-key fields and added safe derived commute route shape.
+- README.md: Added security model.
+- .famframe-context/rules.md: Added TV-no-secrets rule.
+- .famframe-context/changelog.md: Logged this security refactor.
 - .famframe-context/session-handoff.md: Replaced handoff with current state.
 
 ### Decisions Made
@@ -30,7 +33,7 @@ scope: Queued admin flow redesign work, added GitHub PAT diagnostics, and added 
 - risk-f3bc945f: Browser-visible Google Maps key can be abused if unrestricted.
 
 ### Rules Added
-- none
+- rule-94edd7b0: TV dashboard must never receive secrets.
 
 ### Risks Added
 - none
@@ -43,10 +46,11 @@ scope: Queued admin flow redesign work, added GitHub PAT diagnostics, and added 
 - Use the new Actions → Check GitHub access button to diagnose PAT failure and capture exact output if saving still fails.
 - Add the actual Google Maps browser key through admin, plus commute origin and destination, then save to GitHub.
 - Restrict the Google Maps key in Google Cloud to the Fam Frame GitHub Pages domain and required Maps APIs.
-- Verify the commute panel shows "LIVE TRAFFIC" rather than "ESTIMATE" after deployment.
+- Verify the commute panel shows fresh derived commute data and falls back when stale.
+- Continue task-1ec8cfcb and task-fb53f89c to redesign the admin flow around home plus routine-specific destinations.
 
 ### Next Session Start Here
-Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The immediate issue is PAT save failure on phone; use the new GitHub diagnostic action to identify token/repo/path/permission state. The larger next product step is task-1ec8cfcb plus task-fb53f89c: redesign admin flow and data model around home location plus routine-specific destinations.
+Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The security boundary is now: admin keeps credentials locally, repo stores safe display/derived data, TV is read-only and ignores secret-like config. Next product step is task-1ec8cfcb plus task-fb53f89c: redesign admin flow and model routines with their own destinations.
 
 ---
 

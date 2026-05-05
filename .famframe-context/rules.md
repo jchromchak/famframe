@@ -95,6 +95,26 @@
   violation-behavior:
     Auto-correct with log.
 
+- rule-94edd7b0
+  title: TV dashboard must never receive secrets
+  status: active
+  revisionId: rev-bbf3fc6e
+
+  description:
+    The TV dashboard is read-only and may only consume safe display config and derived data. GitHub PATs, Maps API keys, Calendar API keys, and other token-like values must stay out of TV-readable files.
+
+  rationale:
+    The dashboard runs in a browser on a shared display and should not be privileged. Secrets belong only in the mobile admin app for the personal MVP.
+
+  scope:
+    dashboard/index.html, dashboard-config.js, future /config JSON files, and any TV-readable content files.
+
+  exceptions:
+    - none
+
+  violation-behavior:
+    Block and ask.
+
 ---
 
 *rules.md — Fam Frame — v0.1*

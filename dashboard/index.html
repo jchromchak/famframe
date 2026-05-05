@@ -280,6 +280,37 @@ body{font-family:'DM Mono',monospace}
     var v = val(path, []);
     return Object.prototype.toString.call(v) === '[object Array]' ? v : [];
   }
+  function tvSecretWarnings(o, path) {
+    if (!o || typeof o !== 'object') return;
+    Object.keys(o).forEach(function (k) {
+      var next = path ? path + '.' + k : k;
+      var v = o[k];
+      if (/token|secret|pat|api.?key|googlemapskey|googlecalendarkey/i.test(k)) {
+        console.warn('Fam Frame TV ignored secret-like config field: ' + next);
+      }
+      if (typeof v === 'string' && /(ghp_|github_pat_|AIza)/.test(v)) {
+        console.warn('Fam Frame TV ignored token-like config value at: ' + next);
+      } else if (v && typeof v === 'object') {
+        tvSecretWarnings(v, next);
+      }
+    });
+  }
+  tvSecretWarnings(cfg, '');
+
+  // ConfigService is the boundary for the future JSON migration.
+  // TODO: replace DASHBOARD_CONFIG reads with /config/*.json and /content/*.md.
+  var ConfigService = {
+    getFamily: function () { return val(['family'], {}); },
+    getScenes: function () { return val(['modes'], {}); },
+    getMorningScenario: function (t) { return val(['scenarios', dayKey(t)], null) || val(['scenarios', 'default'], null); },
+    getEveningTimeline: function () { return arr(['eveningTimeline']); },
+    getMessages: function () { return val(['messages'], {}); },
+    getCalendarEvents: function (name) { return arr(['calendar', name]); },
+    getCommute: function (routeId) {
+      var id = routeId || val(['commute','activeRouteId'], 'school-morning');
+      return val(['commute','routes', id], val(['commute', id], null));
+    }
+  };
 
   // ── UTILS ─────────────────────────────────────────────────────────
   function pad(n) { return String(n).length < 2 ? '0' + n : String(n); }
@@ -401,7 +432,7 @@ body{font-family:'DM Mono',monospace}
 
   // ── SCENARIO / MODE ───────────────────────────────────────────────
   function scenario(t) {
-    return val(['scenarios', dayKey(t)], null) || val(['scenarios', 'default'], null);
+    return ConfigService.getMorningScenario(t);
   }
   function isSchoolDay(t) {
     var d = arr(['schoolDays']); if (!d.length) d = [1,2,3,4,5];
@@ -456,10 +487,8 @@ body{font-family:'DM Mono',monospace}
   var driveMin = 0;
   var driveSource = 'estimate';
   var driveDistance = '';
-  var mapsDriveMin = null;
-  var mapsDistance = '';
-  var mapsUpdatedAt = 0;
-  var mapsPromise = null;
+  var driveUpdatedText = '';
+  var driveUnavailable = false;
   function updateDrive(t) {
     t = t || zonedNow();
     var estimates = arr(['commute','driveEstimates']);
@@ -467,6 +496,8 @@ body{font-family:'DM Mono',monospace}
     driveMin = Number(val(['commute','defaultDriveMin'], val(['scenarios','default','driveMinEst'], 0)));
     driveSource = 'estimate';
     driveDistance = '';
+    driveUpdatedText = '';
+    driveUnavailable = false;
     for (var i = 0; i < estimates.length; i++) {
       var est = estimates[i];
       var s = cfgTime(est, 'start', 'startHour', 'startMin');
@@ -476,85 +507,27 @@ body{font-family:'DM Mono',monospace}
         break;
       }
     }
-    if (mapsDriveMin && Date.now() - mapsUpdatedAt < 10 * 60 * 1000) {
-      driveMin = mapsDriveMin;
-      driveSource = 'maps';
-      driveDistance = mapsDistance;
+
+    var route = ConfigService.getCommute();
+    var expires = route && route.expiresAt ? new Date(route.expiresAt) : null;
+    var updated = route && route.updatedAt ? new Date(route.updatedAt) : null;
+    var fresh = route && Number(route.durationMinutes) > 0 && expires && expires > new Date();
+    if (fresh) {
+      driveMin = Number(route.durationMinutes);
+      driveSource = route.provider || 'derived';
+      driveDistance = route.trafficStatus || '';
+      driveUpdatedText = updated ? 'UPDATED ' + ageText(updated) + ' AGO' : '';
+    } else if (route && Number(route.durationMinutes) > 0) {
+      driveUpdatedText = updated ? 'LAST UPDATED ' + ageText(updated) + ' AGO' : 'STALE';
+    } else {
+      driveUnavailable = true;
     }
   }
-  function commuteOrigin() {
-    var configured = val(['commute','origin'], '');
-    if (configured) return configured;
-    var lat = val(['family','location','lat'], null);
-    var lon = val(['family','location','lon'], null);
-    if (lat !== null && lon !== null) return { lat:Number(lat), lng:Number(lon) };
-    return val(['family','location','city'], '');
-  }
-  function commuteDestination() {
-    return val(['commute','destination'], '') ||
-      val(['family','location','schoolAddress'], '');
-  }
-  function loadMaps() {
-    var key = val(['api','googleMapsKey'], '');
-    if (!key) return Promise.reject(new Error('Google Maps key not configured'));
-    if (window.google && window.google.maps) return Promise.resolve(window.google.maps);
-    if (mapsPromise) return mapsPromise;
-    mapsPromise = new Promise(function (resolve, reject) {
-      var cb = '__famFrameMapsReady';
-      window[cb] = function () { resolve(window.google.maps); delete window[cb]; };
-      var s = document.createElement('script');
-      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&v=weekly&callback=' + cb;
-      s.async = true;
-      s.onerror = function () { reject(new Error('Google Maps script failed to load')); };
-      document.head.appendChild(s);
-    });
-    return mapsPromise;
-  }
-  async function fetchMapsCommute() {
-    if (!cfg || !val(['api','googleMapsKey'], '')) return;
-    var origin = commuteOrigin();
-    var destination = commuteDestination();
-    if (!origin || !destination) return;
-    try {
-      var maps = await loadMaps();
-      var routes = maps.importLibrary ? await maps.importLibrary('routes') : maps;
-      var DistanceMatrixService = routes.DistanceMatrixService || maps.DistanceMatrixService;
-      var service = new DistanceMatrixService();
-      var request = {
-        origins: [origin],
-        destinations: [destination],
-        travelMode: maps.TravelMode.DRIVING,
-        unitSystem: maps.UnitSystem.IMPERIAL,
-        drivingOptions: {
-          departureTime: new Date(Date.now() + 60000),
-          trafficModel: val(['commute','trafficModel'], 'bestguess')
-        }
-      };
-      var response = service.getDistanceMatrix.length < 2
-        ? await service.getDistanceMatrix(request)
-        : await new Promise(function (resolve, reject) {
-            service.getDistanceMatrix(request, function (res, status) {
-              if (status === 'OK') resolve(res);
-              else reject(new Error(status));
-            });
-          });
-      var el = response && response.rows && response.rows[0] && response.rows[0].elements && response.rows[0].elements[0];
-      if (!el || el.status !== 'OK') throw new Error((el && el.status) || 'No route');
-      var duration = el.duration_in_traffic || el.duration;
-      if (!duration || !duration.value) throw new Error('No duration returned');
-      mapsDriveMin = Math.max(1, Math.round(duration.value / 60));
-      mapsUpdatedAt = Date.now();
-      driveMin = mapsDriveMin;
-      mapsDistance = el.distance && el.distance.text ? el.distance.text : '';
-      driveDistance = mapsDistance;
-      driveSource = 'maps';
-    } catch (e) {
-      mapsDriveMin = null;
-      mapsDistance = '';
-      mapsUpdatedAt = 0;
-      driveSource = 'estimate';
-      console.warn('Google Maps commute unavailable', e);
-    }
+  function ageText(date) {
+    var min = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+    if (min < 1) return 'JUST NOW';
+    if (min < 60) return min + ' MIN';
+    return Math.floor(min / 60) + ' HR';
   }
 
   // ── MORNING ───────────────────────────────────────────────────────
@@ -602,7 +575,8 @@ body{font-family:'DM Mono',monospace}
     var fill       = id('depFill');
     var lbl        = id('depLabel');
     var sub        = id('depSub');
-    var route      = val(['family','location','schoolRoute'], val(['family','location','school'], 'to School'));
+    var commuteRoute = ConfigService.getCommute();
+    var route      = commuteRoute && commuteRoute.routeLabel ? commuteRoute.routeLabel : val(['family','location','schoolRoute'], val(['family','location','school'], 'to School'));
     var depCrit    = Number(val(['time','departureUrgency','critMin'], 10));
     var depWarn    = Number(val(['time','departureUrgency','warnMin'], 20));
 
@@ -625,9 +599,11 @@ body{font-family:'DM Mono',monospace}
     if (id('depTime')) id('depTime').innerHTML = 'LEAVE BY ' + fmtMin(leaveTotal);
     if (sub) {
       var marginText = margin >= 0 ? '+' + margin + ' MIN ARRIVAL MARGIN' : Math.abs(margin) + ' MIN LATE IF YOU LEAVE NOW';
-      var sourceText = driveSource === 'maps' ? 'LIVE TRAFFIC' : 'ESTIMATE';
-      var distanceText = driveDistance ? ' · ' + driveDistance : '';
-      sub.innerHTML = driveMin + ' MIN DRIVE · ' + sourceText + distanceText + ' · ' + marginText + '<br>' + route;
+      var sourceText = driveSource === 'google-maps' ? 'LIVE TRAFFIC' : 'ESTIMATE';
+      var statusText = driveDistance ? ' · ' + String(driveDistance).toUpperCase() : '';
+      var updateText = driveUpdatedText ? ' · ' + driveUpdatedText : '';
+      var prefix = driveUnavailable ? 'COMMUTE UNAVAILABLE · USING FALLBACK ESTIMATE' : driveMin + ' MIN DRIVE · ' + sourceText + statusText + updateText;
+      sub.innerHTML = prefix + ' · ' + marginText + '<br>' + route;
     }
 
     // Checklist
@@ -659,7 +635,7 @@ body{font-family:'DM Mono',monospace}
 
   // ── EVENING TIMELINE ──────────────────────────────────────────────
   function renderTimeline(t) {
-    var tl       = arr(['eveningTimeline']);
+    var tl       = ConfigService.getEveningTimeline();
     var n        = mins(t.hour, t.minute);
     var html     = '';
     var inserted = false;
@@ -813,60 +789,27 @@ body{font-family:'DM Mono',monospace}
   }
 
   // ── CALENDAR ──────────────────────────────────────────────────────
-  async function fetchCalendar(targetDate, elId) {
+  function renderCalendar(name, elId) {
     var el  = id(elId);
     if (!el || !cfg) return;
-    var key = val(['api','googleCalendarKey'], '');
-    var ids = arr(['api','googleCalendarIds']);
-
-    if (!key || !ids.length) {
+    var all = ConfigService.getCalendarEvents(name);
+    if (!all.length) {
       el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">Calendar not configured</div>';
       return;
     }
-    var target = targetDate && has(targetDate, 'year') ? targetDate : zonedParts(targetDate || new Date());
-    var start = zonedDate(target.year, target.monthIndex, target.day, 0, 0, 0, 0);
-    var end   = zonedDate(target.year, target.monthIndex, target.day, 23, 59, 59, 999);
-    try {
-      var all = [];
-      for (var i = 0; i < ids.length; i++) {
-        var url = 'https://www.googleapis.com/calendar/v3/calendars/' +
-          encodeURIComponent(ids[i]) + '/events' +
-          '?key=' + encodeURIComponent(key) +
-          '&timeMin=' + encodeURIComponent(start.toISOString()) +
-          '&timeMax=' + encodeURIComponent(end.toISOString()) +
-          '&singleEvents=true&orderBy=startTime&maxResults=10';
-        var data = await fetch(url).then(function (r) { return r.json(); });
-        if (data.items) all = all.concat(data.items);
-      }
-      all.sort(function (a, b) {
-        return String((a.start && (a.start.dateTime || a.start.date)) || '')
-          .localeCompare(String((b.start && (b.start.dateTime || b.start.date)) || ''));
-      });
-
-      var LATE = new RegExp(val(['calendarRules','lateStartPattern'], 'late start|delay|2.hour'), 'i');
-      var HOL  = /no school|holiday|break|closed/i;
-
-      if (!all.length) {
-        el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">No events</div>';
-        return;
-      }
-      var shown = all.slice(0, 1).map(function (ev) {
-        var dt    = ev.start && ev.start.dateTime ? new Date(ev.start.dateTime) : null;
-        var zp    = dt ? zonedParts(dt) : null;
-        var t     = zp ? fmt(zp.hour, zp.minute) : 'ALL DAY';
-        var title = ev.summary || 'Untitled';
-        return '<div class="cal-event">' +
-          (LATE.test(title) ? '<div class="badge">LATE START</div>' : '') +
-          (HOL.test(title)  ? '<div class="badge" style="color:#7aaa8a;border-color:rgba(122,170,138,.5)">NO SCHOOL</div>' : '') +
-          '<div class="cal-title">' + title + '</div>' +
-          '<div class="cal-time">' + t + '</div>' +
-          '</div>';
-      }).join('');
-      if (all.length > 1) shown += '<div class="cal-more">and ' + (all.length - 1) + ' more</div>';
-      el.innerHTML = shown;
-    } catch (e) {
-      el.innerHTML = '<div class="detail-value" style="color:rgba(239,231,215,.3)">Calendar unavailable</div>';
-    }
+    var shown = all.slice(0, 1).map(function (ev) {
+      var dt    = ev.start || ev.dateTime ? new Date(ev.start || ev.dateTime) : null;
+      var zp    = dt && !isNaN(dt.getTime()) ? zonedParts(dt) : null;
+      var t     = ev.time || (zp ? fmt(zp.hour, zp.minute) : 'ALL DAY');
+      var title = ev.title || ev.summary || 'Untitled';
+      return '<div class="cal-event">' +
+        (ev.badge ? '<div class="badge">' + ev.badge + '</div>' : '') +
+        '<div class="cal-title">' + title + '</div>' +
+        '<div class="cal-time">' + t + '</div>' +
+        '</div>';
+    }).join('');
+    if (all.length > 1) shown += '<div class="cal-more">and ' + (all.length - 1) + ' more</div>';
+    el.innerHTML = shown;
   }
 
   // ── INIT ──────────────────────────────────────────────────────────
@@ -881,18 +824,15 @@ body{font-family:'DM Mono',monospace}
   tick();
   fetchWeather();
   fetchQuote();
-  fetchMapsCommute();
-
-  fetchCalendar(zonedDay(0), 'mCalEvents');
-  fetchCalendar(zonedDay(1), 'eCalEvents');
+  renderCalendar('today', 'mCalEvents');
+  renderCalendar('tomorrow', 'eCalEvents');
 
   setInterval(tick,         1000);
   setInterval(fetchWeather, 10 * 60 * 1000);
   setInterval(fetchQuote,   60 * 60 * 1000);
-  setInterval(fetchMapsCommute, 5 * 60 * 1000);
   setInterval(function () {
-    fetchCalendar(zonedDay(0), 'mCalEvents');
-    fetchCalendar(zonedDay(1), 'eCalEvents');
+    renderCalendar('today', 'mCalEvents');
+    renderCalendar('tomorrow', 'eCalEvents');
   }, 15 * 60 * 1000);
 
 })();

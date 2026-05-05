@@ -875,6 +875,8 @@ const KEYS = {
   branch:    'fam_frame_config_branch',
   gcal:      'fam_frame_gcal_key',
   gmaps:     'fam_frame_gmaps_key',
+  commuteOrigin: 'fam_frame_commute_origin',
+  commuteDestination: 'fam_frame_commute_destination',
   config:    'fam_frame_config',
   sha:       'fam_frame_config_sha',
   onboarded: 'fam_frame_onboarded',
@@ -903,7 +905,7 @@ const DEFAULT_CONFIG = {
       school: 'US-17 N to School',
     },
   },
-  api: { googleCalendarKey: '', googleCalendarIds: [], googleMapsKey: '' },
+  api: {},
   modules: {
     quote: { source: 'stoic' },
   },
@@ -956,9 +958,17 @@ const DEFAULT_CONFIG = {
   },
   weekend: { enabled: true, message: 'No school today.', subtext: 'Enjoy the morning.', showWeather: true },
   commute: {
-    origin: '',
-    destination: '',
-    trafficModel: 'bestguess',
+    activeRouteId: 'school-morning',
+    routes: {
+      'school-morning': {
+        provider: '',
+        routeLabel: 'US-17 N to School',
+        durationMinutes: null,
+        trafficStatus: '',
+        updatedAt: '',
+        expiresAt: '',
+      },
+    },
     defaultDriveMin: 12,
     driveEstimates: [
       { start:'06:00', end:'07:00', driveMin:14 },
@@ -973,6 +983,20 @@ let config = clone(DEFAULT_CONFIG);
 let lastRemoteSha = localStorage.getItem(KEYS.sha) || null;
 let mapsAdminPromise = null;
 let placesAttached = false;
+
+const CredentialStore = {
+  getGitHubToken() { return localStorage.getItem(KEYS.pat) || ''; },
+  setGitHubToken(token) { if (token) localStorage.setItem(KEYS.pat, cleanToken(token)); },
+  clearGitHubToken() { localStorage.removeItem(KEYS.pat); },
+  getGoogleCalendarKey() { return localStorage.getItem(KEYS.gcal) || ''; },
+  setGoogleCalendarKey(key) { if (key) localStorage.setItem(KEYS.gcal, cleanToken(key)); },
+  getGoogleMapsKey() { return localStorage.getItem(KEYS.gmaps) || ''; },
+  setGoogleMapsKey(key) { if (key) localStorage.setItem(KEYS.gmaps, cleanToken(key)); },
+  getCommuteOrigin() { return localStorage.getItem(KEYS.commuteOrigin) || ''; },
+  setCommuteOrigin(value) { localStorage.setItem(KEYS.commuteOrigin, value || ''); },
+  getCommuteDestination() { return localStorage.getItem(KEYS.commuteDestination) || ''; },
+  setCommuteDestination(value) { localStorage.setItem(KEYS.commuteDestination, value || ''); },
+};
 
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
 function deepMerge(base, override) {
@@ -990,6 +1014,10 @@ function ensureModel() {
   config.family.kids = Array.isArray(config.family.kids) ? config.family.kids : [];
   config.family.location = config.family.location || {};
   config.api = deepMerge(DEFAULT_CONFIG.api, config.api || {});
+  if (config.api.googleCalendarKey) CredentialStore.setGoogleCalendarKey(config.api.googleCalendarKey);
+  if (config.api.googleMapsKey) CredentialStore.setGoogleMapsKey(config.api.googleMapsKey);
+  delete config.api.googleCalendarKey;
+  delete config.api.googleMapsKey;
   config.modules = deepMerge(DEFAULT_CONFIG.modules, config.modules || {});
   config.time = deepMerge(DEFAULT_CONFIG.time, config.time || {});
   config.modes = deepMerge(DEFAULT_CONFIG.modes, config.modes || {});
@@ -999,6 +1027,10 @@ function ensureModel() {
   config.morningChecklist = Array.isArray(config.morningChecklist) ? config.morningChecklist : [];
   config.eveningTimeline = Array.isArray(config.eveningTimeline) ? config.eveningTimeline : [];
   config.commute = deepMerge(DEFAULT_CONFIG.commute, config.commute || {});
+  if (config.commute.origin) CredentialStore.setCommuteOrigin(config.commute.origin);
+  if (config.commute.destination) CredentialStore.setCommuteDestination(config.commute.destination);
+  delete config.commute.origin;
+  delete config.commute.destination;
   config.commute.driveEstimates = Array.isArray(config.commute.driveEstimates) ? config.commute.driveEstimates : [];
 }
 function loadConfig() {
@@ -1033,8 +1065,12 @@ function timeFromParts(obj, key, hourKey, minKey, fallback) {
   return fallback || '00:00';
 }
 function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val == null ? '' : val; }
+function setPlaceholder(id, val) { const el = document.getElementById(id); if (el) el.placeholder = val == null ? '' : val; }
 function getVal(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function getNum(id, fallback) { const n = Number(getVal(id)); return Number.isFinite(n) ? n : fallback; }
+function cleanToken(value) {
+  return String(value || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+}
 
 window.addEventListener('load', () => {
   loadConfig();
@@ -1045,12 +1081,16 @@ window.addEventListener('load', () => {
 });
 
 function prefillConnectionFields() {
-  setVal('patInput', localStorage.getItem(KEYS.pat) || '');
+  setVal('patInput', '');
+  setPlaceholder('patInput', CredentialStore.getGitHubToken() ? 'GitHub connected - paste new token to replace' : 'ghp_xxxxxxxxxxxx');
   setVal('repoInput', localStorage.getItem(KEYS.repo) || 'jchromchak/famframe');
   setVal('pathInput', localStorage.getItem(KEYS.path) || 'dashboard-config.js');
-  setVal('patAppInput', localStorage.getItem(KEYS.pat) || '');
-  setVal('gcalAppInput', localStorage.getItem(KEYS.gcal) || config.api.googleCalendarKey || '');
-  setVal('gmapsAppInput', localStorage.getItem(KEYS.gmaps) || config.api.googleMapsKey || '');
+  setVal('patAppInput', '');
+  setVal('gcalAppInput', '');
+  setVal('gmapsAppInput', '');
+  setPlaceholder('patAppInput', CredentialStore.getGitHubToken() ? 'GitHub connected - paste new token to replace' : 'ghp_...');
+  setPlaceholder('gcalAppInput', CredentialStore.getGoogleCalendarKey() ? 'Calendar key saved locally' : 'AIza...');
+  setPlaceholder('gmapsAppInput', CredentialStore.getGoogleMapsKey() ? 'Maps key saved locally' : 'AIza...');
 }
 function toggleStep(n) {
   document.querySelectorAll('.step').forEach((s,i) => { if (i+1 === n) s.classList.toggle('active'); });
@@ -1059,11 +1099,14 @@ function togglePATVisibility() {
   const inp = document.getElementById('patInput');
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
-function onPATInput(val) { localStorage.setItem(KEYS.pat, val.trim()); }
+function onPATInput(val) {
+  if (!/saved token/i.test(val)) CredentialStore.setGitHubToken(val);
+}
 function onRepoInput(val) { localStorage.setItem(KEYS.repo, val.trim()); }
 
 async function validateGitHub() {
-  const pat = getVal('patInput');
+  const entered = getVal('patInput');
+  const pat = entered ? cleanToken(entered) : CredentialStore.getGitHubToken();
   const repo = getVal('repoInput');
   const path = getVal('pathInput') || 'dashboard-config.js';
   const branch = getVal('branchSelect') || 'main';
@@ -1075,7 +1118,7 @@ async function validateGitHub() {
     if (!res.ok) throw new Error('GitHub returned ' + res.status);
     const cfgRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, { headers: githubHeaders(pat) });
     if (!cfgRes.ok) throw new Error('Repo connected, but config file was not readable. GitHub returned ' + cfgRes.status + '.');
-    localStorage.setItem(KEYS.pat, pat);
+    CredentialStore.setGitHubToken(pat);
     localStorage.setItem(KEYS.repo, repo);
     localStorage.setItem(KEYS.path, path);
     localStorage.setItem(KEYS.branch, branch);
@@ -1088,16 +1131,17 @@ async function validateGitHub() {
   }
 }
 function completeOnboarding() {
-  const pat = getVal('patInput');
+  const enteredPat = getVal('patInput');
+  const pat = enteredPat ? cleanToken(enteredPat) : CredentialStore.getGitHubToken();
   const repo = getVal('repoInput');
   const path = getVal('pathInput') || 'dashboard-config.js';
   const branch = getVal('branchSelect') || 'main';
   const gcal = getVal('gcalInput');
-  if (pat) localStorage.setItem(KEYS.pat, pat);
+  if (pat) CredentialStore.setGitHubToken(pat);
   if (repo) localStorage.setItem(KEYS.repo, repo);
   if (path) localStorage.setItem(KEYS.path, path);
   if (branch) localStorage.setItem(KEYS.branch, branch);
-  if (gcal) { localStorage.setItem(KEYS.gcal, gcal); config.api.googleCalendarKey = gcal; }
+  if (gcal) CredentialStore.setGoogleCalendarKey(gcal);
   const kids = [getVal('kid1Name'), getVal('kid2Name'), getVal('kid3Name')].filter(Boolean).map(name => ({ name, age:null }));
   if (kids.length) config.family.kids = kids;
   config.family.location.city = getVal('homeCity') || config.family.location.city;
@@ -1157,13 +1201,16 @@ function populateFamilyForm() {
   const loc = config.family.location || {};
   setVal('homeCityApp', loc.city || '');
   setVal('schoolRoute', loc.schoolRoute || loc.school || '');
-  setVal('commuteOrigin', config.commute.origin || '');
-  setVal('commuteDestination', config.commute.destination || '');
+  setVal('commuteOrigin', CredentialStore.getCommuteOrigin());
+  setVal('commuteDestination', CredentialStore.getCommuteDestination());
   setVal('homeLat', loc.lat || '');
   setVal('homeLon', loc.lon || '');
-  setVal('gcalAppInput', localStorage.getItem(KEYS.gcal) || config.api.googleCalendarKey || '');
-  setVal('gmapsAppInput', localStorage.getItem(KEYS.gmaps) || config.api.googleMapsKey || '');
-  setVal('patAppInput', localStorage.getItem(KEYS.pat) || '');
+  setVal('gcalAppInput', '');
+  setVal('gmapsAppInput', '');
+  setVal('patAppInput', '');
+  setPlaceholder('gcalAppInput', CredentialStore.getGoogleCalendarKey() ? 'Calendar key saved locally' : 'AIza...');
+  setPlaceholder('gmapsAppInput', CredentialStore.getGoogleMapsKey() ? 'Maps key saved locally' : 'AIza...');
+  setPlaceholder('patAppInput', CredentialStore.getGitHubToken() ? 'GitHub connected - paste new token to replace' : 'ghp_...');
   placesAttached = false;
   setupPlacesAutocomplete();
 }
@@ -1171,22 +1218,23 @@ function saveFamily() {
   config.family.location.city = getVal('homeCityApp');
   config.family.location.schoolRoute = getVal('schoolRoute');
   config.family.location.school = getVal('schoolRoute');
-  config.commute.origin = getVal('commuteOrigin');
-  config.commute.destination = getVal('commuteDestination');
+  CredentialStore.setCommuteOrigin(getVal('commuteOrigin'));
+  CredentialStore.setCommuteDestination(getVal('commuteDestination'));
   config.family.location.lat = getNum('homeLat', config.family.location.lat || 0);
   config.family.location.lon = getNum('homeLon', config.family.location.lon || 0);
   const gcal = getVal('gcalAppInput');
   const gmaps = getVal('gmapsAppInput');
   const pat = getVal('patAppInput');
-  if (gcal) { localStorage.setItem(KEYS.gcal, gcal); config.api.googleCalendarKey = gcal; }
-  if (gmaps) { localStorage.setItem(KEYS.gmaps, gmaps); config.api.googleMapsKey = gmaps; }
-  if (pat) localStorage.setItem(KEYS.pat, pat);
+  if (gcal) CredentialStore.setGoogleCalendarKey(gcal);
+  if (gmaps) CredentialStore.setGoogleMapsKey(gmaps);
+  if (pat) CredentialStore.setGitHubToken(pat);
   saveConfig(); saveAndSync('Family settings saved');
   setupPlacesAutocomplete();
 }
 
 function mapsKey() {
-  return getVal('gmapsAppInput') || localStorage.getItem(KEYS.gmaps) || config.api.googleMapsKey || '';
+  const field = getVal('gmapsAppInput');
+  return /saved locally/i.test(field) ? CredentialStore.getGoogleMapsKey() : cleanToken(field || CredentialStore.getGoogleMapsKey());
 }
 function loadAdminMaps() {
   const key = mapsKey();
@@ -1228,7 +1276,8 @@ function attachPlaceAutocomplete(maps, el, key) {
     const place = ac.getPlace();
     const value = place.formatted_address || place.name || el.value;
     el.value = value;
-    config.commute[key] = value;
+    if (key === 'origin') CredentialStore.setCommuteOrigin(value);
+    if (key === 'destination') CredentialStore.setCommuteDestination(value);
     if (key === 'origin' && place.geometry && place.geometry.location) {
       config.family.location.lat = place.geometry.location.lat();
       config.family.location.lon = place.geometry.location.lng();
@@ -1237,6 +1286,60 @@ function attachPlaceAutocomplete(maps, el, key) {
     }
     saveConfig();
   });
+}
+
+async function updateDerivedCommute() {
+  const maps = await loadAdminMaps().catch(() => null);
+  const origin = CredentialStore.getCommuteOrigin();
+  const destination = CredentialStore.getCommuteDestination();
+  if (!maps || !origin || !destination) return false;
+  try {
+    const routes = maps.importLibrary ? await maps.importLibrary('routes') : maps;
+    const DistanceMatrixService = routes.DistanceMatrixService || maps.DistanceMatrixService;
+    const service = new DistanceMatrixService();
+    const request = {
+      origins: [origin],
+      destinations: [destination],
+      travelMode: maps.TravelMode.DRIVING,
+      unitSystem: maps.UnitSystem.IMPERIAL,
+      drivingOptions: {
+        departureTime: new Date(Date.now() + 60000),
+        trafficModel: config.commute.trafficModel || 'bestguess',
+      },
+    };
+    const response = service.getDistanceMatrix.length < 2
+      ? await service.getDistanceMatrix(request)
+      : await new Promise((resolve, reject) => {
+          service.getDistanceMatrix(request, (res, status) => status === 'OK' ? resolve(res) : reject(new Error(status)));
+        });
+    const result = response && response.rows && response.rows[0] && response.rows[0].elements && response.rows[0].elements[0];
+    if (!result || result.status !== 'OK') throw new Error((result && result.status) || 'No route');
+    const duration = result.duration_in_traffic || result.duration;
+    const now = new Date();
+    const expires = new Date(now.getTime() + 15 * 60 * 1000);
+    config.commute.activeRouteId = 'school-morning';
+    config.commute.routes = config.commute.routes || {};
+    config.commute.routes['school-morning'] = {
+      provider: 'google-maps',
+      routeLabel: config.family.location.schoolRoute || config.family.location.school || 'to School',
+      durationMinutes: Math.max(1, Math.round(duration.value / 60)),
+      trafficStatus: trafficStatus(duration.value, result.duration && result.duration.value),
+      updatedAt: now.toISOString(),
+      expiresAt: expires.toISOString(),
+    };
+    saveConfig();
+    return true;
+  } catch(e) {
+    console.warn('Commute derivation failed', e);
+    return false;
+  }
+}
+function trafficStatus(trafficSeconds, normalSeconds) {
+  if (!trafficSeconds || !normalSeconds) return 'unknown';
+  const ratio = trafficSeconds / normalSeconds;
+  if (ratio >= 1.35) return 'heavy';
+  if (ratio >= 1.12) return 'moderate';
+  return 'light';
 }
 
 function renderSchedule() {
@@ -1369,14 +1472,36 @@ function clearAllData() {
 function githubHeaders(pat) { return { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }; }
 function connection() {
   return {
-    pat: localStorage.getItem(KEYS.pat) || getVal('patAppInput'),
+    pat: CredentialStore.getGitHubToken() || cleanToken(getVal('patAppInput')),
     repo: localStorage.getItem(KEYS.repo) || getVal('repoInput') || 'jchromchak/famframe',
     path: localStorage.getItem(KEYS.path) || getVal('pathInput') || 'dashboard-config.js',
     branch: localStorage.getItem(KEYS.branch) || getVal('branchSelect') || 'main',
   };
 }
 function configToJS() {
-  return `// ═══════════════════════════════════════════════════════════════════\n// DASHBOARD CONFIG — edit through /admin/ or carefully by hand\n// Last updated: ${new Date().toISOString()}\n// ═══════════════════════════════════════════════════════════════════\n\nvar DASHBOARD_CONFIG = ${JSON.stringify(config, null, 2)};\n\nif (typeof module !== "undefined") module.exports = DASHBOARD_CONFIG;\n`;
+  return `// ═══════════════════════════════════════════════════════════════════\n// DASHBOARD CONFIG — safe display data only; no secrets\n// Last updated: ${new Date().toISOString()}\n// ═══════════════════════════════════════════════════════════════════\n\nvar DASHBOARD_CONFIG = ${JSON.stringify(safeConfigForRepo(config), null, 2)};\n\nif (typeof module !== "undefined") module.exports = DASHBOARD_CONFIG;\n`;
+}
+function safeConfigForRepo(source) {
+  const out = clone(source || {});
+  stripSecretFields(out);
+  if (out.commute) {
+    delete out.commute.origin;
+    delete out.commute.destination;
+  }
+  return out;
+}
+function stripSecretFields(obj) {
+  if (!obj || typeof obj !== 'object') return;
+  Object.keys(obj).forEach(k => {
+    const v = obj[k];
+    if (/token|secret|pat|api.?key|googlemapskey|googlecalendarkey/i.test(k)) {
+      delete obj[k];
+    } else if (typeof v === 'string' && /(ghp_|github_pat_|AIza)/.test(v)) {
+      delete obj[k];
+    } else if (v && typeof v === 'object') {
+      stripSecretFields(v);
+    }
+  });
 }
 function parseConfigJS(source) {
   const fn = new Function(source + '\n;return typeof DASHBOARD_CONFIG !== "undefined" ? DASHBOARD_CONFIG : null;');
@@ -1484,6 +1609,7 @@ async function saveAndSync(localMessage) {
     return;
   }
   toast(localMessage + '. Saving to GitHub…');
+  await updateDerivedCommute();
   await pushToGitHub();
 }
 async function githubError(res, fallback) {
