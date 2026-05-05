@@ -65,17 +65,23 @@ body{font-family:'DM Mono',monospace}
 .cal-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;color:rgba(239,231,215,.7);line-height:1.06}
 .badge{display:inline-block;color:#d99a3d;border:1px solid rgba(217,154,61,.58);padding:6px 10px;margin-bottom:12px}
 
-/* ── TRAFFIC STATUS DOT ── */
-.traffic-header{display:flex;align-items:center;gap:16px;margin-bottom:34px}
-.status-dot{width:12px;height:12px;border-radius:50%;background:#7aaa8a;box-shadow:0 0 8px #7aaa8a;flex-shrink:0;transition:background .8s,box-shadow .8s}
-.status-dot.warn{background:#c8b88a;box-shadow:0 0 8px #c8b88a}
-.status-dot.crit{background:#c94f3a;box-shadow:0 0 8px #c94f3a}
-.status-dot.pulse{animation:dotpulse 1.2s ease-in-out infinite}
-@keyframes dotpulse{0%,100%{opacity:1}50%{opacity:.3}}
-.traffic-margin{display:inline-block;font-size:15px;letter-spacing:.15em;padding:6px 12px;border-radius:3px;margin-top:14px;border:1px solid rgba(239,231,215,.12);color:rgba(239,231,215,.38);transition:color .8s,border-color .8s}
-.traffic-margin.ok{color:#7aaa8a;border-color:rgba(122,170,138,.3)}
-.traffic-margin.warn{color:#c8b88a;border-color:rgba(200,184,138,.3)}
-.traffic-margin.crit{color:#c94f3a;border-color:rgba(201,79,58,.3)}
+/* ── DEPARTURE BAR ── */
+.departure-panel{padding-top:54px}
+.dep-bar-wrap{margin-top:8px}
+.dep-bar-track{position:relative;height:4px;background:rgba(239,231,215,.1);border-radius:2px;margin-bottom:18px}
+.dep-bar-fill{position:absolute;left:0;top:0;height:100%;min-width:26px;max-width:100%;border-radius:2px;background:#d99a3d;box-shadow:0 0 14px rgba(217,154,61,.7);transition:width 1s linear,background 1s,box-shadow 1s}
+.dep-bar-fill.warn{background:#d4845a;box-shadow:0 0 14px rgba(212,132,90,.8)}
+.dep-bar-fill.crit{background:#c94f3a;box-shadow:0 0 18px rgba(201,79,58,.95)}
+.dep-car{position:absolute;right:-2px;top:50%;transform:translateY(-50%);font-size:22px;line-height:1;filter:drop-shadow(0 0 6px rgba(217,154,61,.9));transition:filter 1s}
+.dep-bar-fill.warn .dep-car{filter:drop-shadow(0 0 8px rgba(212,132,90,1))}
+.dep-bar-fill.crit .dep-car{filter:drop-shadow(0 0 10px rgba(201,79,58,1));animation:carshake .4s ease-in-out infinite}
+@keyframes carshake{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-2px)}}
+.dep-bar-labels{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.dep-bar-left{font-size:15px;letter-spacing:.18em;color:rgba(239,231,215,.55);text-transform:uppercase;white-space:nowrap}
+.dep-bar-left.warn{color:#d4845a}
+.dep-bar-left.crit{color:#c94f3a}
+.dep-bar-right{font-size:15px;letter-spacing:.18em;color:rgba(239,231,215,.28);white-space:nowrap}
+.dep-sub{font-size:14px;letter-spacing:.14em;line-height:1.6;color:rgba(239,231,215,.3);margin-top:16px;text-transform:uppercase}
 
 /* ── MORNING CHECKLIST ── */
 .checklist{margin-top:36px;display:flex;flex-direction:column;gap:10px;max-width:620px}
@@ -159,15 +165,20 @@ body{font-family:'DM Mono',monospace}
           <div><div class="detail-label">UV index</div><div class="detail-value" id="mUV">—</div></div>
         </div>
       </section>
-      <section class="traffic-panel">
-        <div class="traffic-header">
-          <div class="status-dot" id="mStatusDot"></div>
-          <div class="panel-label" style="margin-bottom:0">Commute</div>
+      <section class="traffic-panel departure-panel">
+        <div class="panel-label">Commute</div>
+        <div class="dep-bar-wrap">
+          <div class="dep-bar-track">
+            <div class="dep-bar-fill" id="depFill">
+              <span class="dep-car">🚗</span>
+            </div>
+          </div>
+          <div class="dep-bar-labels">
+            <div class="dep-bar-left" id="depLabel">— min to leave</div>
+            <div class="dep-bar-right" id="depTime">—</div>
+          </div>
+          <div class="dep-sub" id="depSub">—</div>
         </div>
-        <div class="weather-temp" id="mDrive">—<span class="deg">min</span></div>
-        <div class="weather-desc" id="mDriveTo">to School</div>
-        <div class="detail-value" id="mRouteInfo" style="color:rgba(239,231,215,.38);font-size:16px">—</div>
-        <div class="traffic-margin" id="mMargin">—</div>
       </section>
       <section class="cal-panel">
         <div class="panel-label">Today</div>
@@ -386,35 +397,39 @@ body{font-family:'DM Mono',monospace}
              :               arr(['messages','morning','calm']);
     id('mMessage').innerHTML = pick(pool, 'Good morning');
 
-    // Traffic status dot + margin
-    var schoolTot = Number(s.schoolHour) * 60 + Number(s.schoolMin);
-    var nowTot    = now.getHours() * 60 + now.getMinutes();
-    var margin    = schoolTot - nowTot - driveMin;
-    var dot       = id('mStatusDot');
-    var mEl       = id('mMargin');
+    // Departure urgency bar
+    var leaveTotal = leaveH * 60 + leaveM;
+    var nowTotal   = now.getHours() * 60 + now.getMinutes();
+    var minsLeft   = leaveTotal - nowTotal;
+    var schoolTot  = Number(s.schoolHour) * 60 + Number(s.schoolMin);
+    var margin     = schoolTot - nowTotal - driveMin;
+    var pct        = Math.max(0, Math.min(100, (minsLeft / 75) * 100));
+    var fill       = id('depFill');
+    var lbl        = id('depLabel');
+    var sub        = id('depSub');
+    var route      = val(['family','location','schoolRoute'], val(['family','location','school'], 'to School'));
 
-    if (margin >= 12) {
-      dot.className = 'status-dot';
-      mEl.className = 'traffic-margin ok';
-      mEl.innerHTML = '+' + margin + ' min margin';
-    } else if (margin >= 5) {
-      dot.className = 'status-dot warn pulse';
-      mEl.className = 'traffic-margin warn';
-      mEl.innerHTML = '+' + margin + ' min — getting tight';
-    } else if (margin >= 0) {
-      dot.className = 'status-dot crit pulse';
-      mEl.className = 'traffic-margin crit';
-      mEl.innerHTML = '+' + margin + ' min — cutting it close';
-    } else {
-      dot.className = 'status-dot crit pulse';
-      mEl.className = 'traffic-margin crit';
-      mEl.innerHTML = Math.abs(margin) + ' min late if you leave now';
+    if (fill) {
+      fill.style.width = pct + '%';
+      if (minsLeft <= 0) {
+        fill.className = 'dep-bar-fill crit';
+        if (lbl) { lbl.className = 'dep-bar-left crit'; lbl.innerHTML = 'LEAVE NOW'; }
+      } else if (minsLeft <= 10) {
+        fill.className = 'dep-bar-fill crit';
+        if (lbl) { lbl.className = 'dep-bar-left crit'; lbl.innerHTML = minsLeft + ' MIN TO LEAVE'; }
+      } else if (minsLeft <= 20) {
+        fill.className = 'dep-bar-fill warn';
+        if (lbl) { lbl.className = 'dep-bar-left warn'; lbl.innerHTML = minsLeft + ' MIN TO LEAVE'; }
+      } else {
+        fill.className = 'dep-bar-fill';
+        if (lbl) { lbl.className = 'dep-bar-left'; lbl.innerHTML = minsLeft + ' MIN TO LEAVE'; }
+      }
     }
-
-    id('mDrive').innerHTML   = driveMin + '<span class="deg">min</span>';
-    id('mDriveTo').innerHTML = 'to School';
-    id('mRouteInfo').innerHTML =
-      val(['family','location','schoolRoute'], val(['family','location','school'], ''));
+    if (id('depTime')) id('depTime').innerHTML = 'LEAVE BY ' + fmt(leaveH, leaveM);
+    if (sub) {
+      var marginText = margin >= 0 ? '+' + margin + ' MIN ARRIVAL MARGIN' : Math.abs(margin) + ' MIN LATE IF YOU LEAVE NOW';
+      sub.innerHTML = driveMin + ' MIN DRIVE · ' + marginText + '<br>' + route;
+    }
 
     // Checklist
     renderChecklist(now, s);
