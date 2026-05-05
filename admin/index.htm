@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Fam Frame">
+<meta name="theme-color" content="#0f0f0d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Fam Frame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+ 
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+ 
+:root {
+  --bg:       #0f0f0d;
+  --surface:  #1a1a16;
+  --surface2: #222220;
+  --border:   rgba(255,255,255,0.08);
+  --text:     #f0ede6;
+  --sub:      rgba(240,237,230,0.45);
+  --dim:      rgba(240,237,230,0.2);
+  --gold:     #c8a96e;
+  --gold-dim: rgba(200,169,110,0.15);
+  --ok:       #7aaa8a;
+  --crit:     #c94f3a;
+  --serif:    'Cormorant Garamond', Georgia, serif;
+  --mono:     'DM Mono', monospace;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+ 
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg); color: var(--text);
+  font-family: var(--mono); font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+ 
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+ 
+/* ── ONBOARDING ── */
+#onboarding {
+  align-items: center; justify-content: flex-start;
+  padding: calc(var(--safe-top) + 20px) 28px calc(var(--safe-bot) + 24px);
+}
+ 
+.skip-btn {
+  align-self: flex-end; font-size: 11px; letter-spacing: 0.18em;
+  color: var(--dim); background: none; border: none; cursor: pointer;
+  padding: 8px 0; font-family: var(--mono);
+}
+ 
+/* Logo mark (SVG inline) */
+.logo-mark {
+  width: 80px; height: 60px; margin: 20px auto 0;
+}
+ 
+.app-title {
+  font-family: var(--serif); font-size: 42px; font-weight: 400;
+  text-align: center; margin-top: 12px; letter-spacing: 0.01em;
+}
+ 
+.app-sub {
+  font-family: var(--serif); font-style: italic; font-size: 16px;
+  font-weight: 300; color: var(--sub); text-align: center; margin-top: 6px;
+}
+ 
+.divider {
+  width: 100%; height: 1px; background: var(--border); margin: 28px 0;
+}
+ 
+/* Setup steps */
+.setup-steps { width: 100%; display: flex; flex-direction: column; gap: 0; }
+ 
+.step {
+  display: flex; flex-direction: column;
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+}
+ 
+.step-header {
+  display: flex; align-items: center; gap: 14px; cursor: pointer;
+}
+ 
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border); display: flex; align-items: center;
+  justify-content: center; font-size: 12px; letter-spacing: 0;
+  color: var(--dim); flex-shrink: 0; transition: border-color 0.3s, color 0.3s;
+}
+.step.active .step-num  { border-color: var(--gold); color: var(--gold); }
+.step.done   .step-num  { border-color: var(--ok); color: var(--ok); background: rgba(122,170,138,0.1); }
+ 
+.step-title {
+  font-size: 13px; letter-spacing: 0.15em; color: var(--sub); flex: 1;
+  transition: color 0.3s;
+}
+.step.active .step-title { color: var(--text); }
+.step.done   .step-title { color: var(--ok); }
+ 
+.step-chevron {
+  font-size: 11px; color: var(--dim); transition: transform 0.3s;
+}
+.step.active .step-chevron { transform: rotate(180deg); color: var(--gold); }
+ 
+.step-body {
+  display: none; padding-top: 16px; padding-left: 42px;
+  flex-direction: column; gap: 12px;
+}
+.step.active .step-body { display: flex; }
+ 
+/* Inputs */
+.field-label {
+  font-size: 10px; letter-spacing: 0.22em; color: var(--dim);
+  text-transform: uppercase; margin-bottom: 6px;
+}
+ 
+.input-wrap { position: relative; }
+ 
+input[type="text"], input[type="password"] {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 40px 12px 14px;
+  font-family: var(--mono); font-size: 13px; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+input:focus { border-color: rgba(200,169,110,0.4); }
+input::placeholder { color: var(--dim); }
+ 
+.eye-btn {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--dim);
+  font-size: 16px; padding: 4px;
+}
+ 
+.field-hint {
+  font-size: 10px; letter-spacing: 0.12em; color: var(--dim);
+  margin-top: 4px; line-height: 1.5;
+}
+ 
+.validate-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 16px; font-family: var(--mono);
+  font-size: 11px; letter-spacing: 0.15em; color: var(--sub);
+  cursor: pointer; transition: border-color 0.2s, color 0.2s; width: 100%;
+}
+.validate-btn:active { border-color: var(--gold); color: var(--gold); }
+ 
+.validate-result {
+  font-size: 11px; letter-spacing: 0.15em; padding: 8px 12px;
+  border-radius: 4px; display: none;
+}
+.validate-result.ok   { background: rgba(122,170,138,0.1); color: var(--ok); display: block; }
+.validate-result.fail { background: rgba(201,79,58,0.1);   color: var(--crit); display: block; }
+ 
+/* Kid rows in onboarding */
+.kid-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.kid-row input { flex: 1; }
+.kid-tag {
+  font-size: 10px; letter-spacing: 0.15em; padding: 4px 8px;
+  border-radius: 3px; background: var(--gold-dim); color: var(--gold);
+  border: 1px solid rgba(200,169,110,0.2); white-space: nowrap;
+}
+ 
+/* Continue button */
+.cta-btn {
+  width: 100%; padding: 16px; margin-top: 28px;
+  background: var(--gold); border: none; border-radius: 10px;
+  font-family: var(--mono); font-size: 13px; letter-spacing: 0.15em;
+  color: #0f0f0d; cursor: pointer; font-weight: 400;
+  transition: opacity 0.2s; -webkit-appearance: none;
+}
+.cta-btn:active { opacity: 0.8; }
+.cta-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+ 
+/* ── MAIN APP ── */
+#app { padding-bottom: calc(var(--safe-bot) + 80px); }
+ 
+.app-header {
+  padding: calc(var(--safe-top) + 16px) 24px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0;
+  background: var(--bg); z-index: 50;
+}
+ 
+.app-header-title {
+  font-family: var(--serif); font-size: 22px; font-weight: 400;
+}
+ 
+.sync-status {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 9px; letter-spacing: 0.2em; color: var(--dim);
+}
+.sync-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--dim);
+  transition: background 0.5s;
+}
+.sync-dot.synced  { background: var(--ok); }
+.sync-dot.syncing { background: var(--gold); animation: blink 0.8s infinite; }
+.sync-dot.error   { background: var(--crit); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+ 
+/* Page content */
+.page { display: none; padding: 24px; flex-direction: column; gap: 16px; }
+.page.active { display: flex; }
+ 
+.page-title {
+  font-family: var(--serif); font-size: 28px; font-weight: 300;
+  margin-bottom: 4px;
+}
+.page-sub {
+  font-size: 11px; letter-spacing: 0.15em; color: var(--dim); margin-bottom: 8px;
+}
+ 
+/* Cards (home screen) */
+.nav-cards { display: flex; flex-direction: column; gap: 12px; padding: 24px; }
+ 
+.nav-card {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px; cursor: pointer;
+  transition: border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-card:active { border-color: rgba(200,169,110,0.3); }
+ 
+.nav-card-icon {
+  font-size: 24px; width: 40px; text-align: center; flex-shrink: 0;
+  color: var(--gold);
+}
+ 
+.nav-card-body { flex: 1; }
+.nav-card-title {
+  font-family: var(--serif); font-size: 22px; font-weight: 400; margin-bottom: 3px;
+}
+.nav-card-desc {
+  font-size: 11px; letter-spacing: 0.12em; color: var(--sub); line-height: 1.5;
+}
+ 
+.nav-card-arrow { color: var(--dim); font-size: 14px; }
+ 
+/* Back button */
+.back-btn {
+  display: flex; align-items: center; gap: 8px; background: none; border: none;
+  color: var(--gold); font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.18em; cursor: pointer; padding: 0; margin-bottom: 20px;
+}
+ 
+/* Section headers */
+.section-label {
+  font-size: 10px; letter-spacing: 0.3em; color: var(--dim);
+  text-transform: uppercase; margin-bottom: 10px; margin-top: 8px;
+}
+ 
+/* Settings rows */
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.setting-label { font-size: 13px; letter-spacing: 0.1em; color: var(--sub); }
+.setting-value { font-size: 12px; color: var(--dim); max-width: 55%; text-align: right; }
+ 
+/* Toggle */
+.toggle {
+  position: relative; width: 44px; height: 26px; flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; inset: 0; background: var(--surface2);
+  border-radius: 13px; border: 1px solid var(--border);
+  transition: background 0.3s;
+}
+.toggle input:checked + .toggle-track { background: var(--gold); border-color: var(--gold); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--dim); transition: transform 0.3s, background 0.3s;
+}
+.toggle input:checked ~ .toggle-thumb { transform: translateX(18px); background: #0f0f0d; }
+ 
+/* Kid cards */
+.kid-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; display: flex;
+  align-items: center; gap: 14px;
+}
+.kid-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--gold-dim); border: 1px solid rgba(200,169,110,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 18px; color: var(--gold); flex-shrink: 0;
+}
+.kid-info { flex: 1; }
+.kid-name { font-family: var(--serif); font-size: 20px; font-weight: 300; }
+.kid-meta { font-size: 10px; letter-spacing: 0.15em; color: var(--dim); margin-top: 2px; }
+.kid-active-badge {
+  font-size: 9px; letter-spacing: 0.18em; padding: 3px 7px; border-radius: 3px;
+  background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(200,169,110,0.2);
+}
+.kid-inactive-badge {
+  font-size: 9px; letter-spacing: 0.18em; padding: 3px 7px; border-radius: 3px;
+  background: var(--surface2); color: var(--dim); border: 1px solid var(--border);
+}
+ 
+/* Scene cards */
+.scene-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.scene-card:active { border-color: rgba(200,169,110,0.3); }
+.scene-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.scene-name { font-family: var(--serif); font-size: 20px; font-weight: 300; }
+.scene-active-pill {
+  font-size: 9px; letter-spacing: 0.18em; padding: 3px 8px; border-radius: 3px;
+  background: rgba(122,170,138,0.12); color: var(--ok);
+  border: 1px solid rgba(122,170,138,0.2);
+}
+.scene-inactive-pill {
+  font-size: 9px; letter-spacing: 0.18em; padding: 3px 8px; border-radius: 3px;
+  background: var(--surface2); color: var(--dim); border: 1px solid var(--border);
+}
+.scene-trigger {
+  font-size: 10px; letter-spacing: 0.13em; color: var(--dim); margin-bottom: 10px;
+}
+.scene-modules {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.module-chip {
+  font-size: 9px; letter-spacing: 0.15em; padding: 3px 8px; border-radius: 3px;
+  background: var(--surface2); color: var(--sub); border: 1px solid var(--border);
+}
+.module-chip.on { background: var(--gold-dim); color: var(--gold); border-color: rgba(200,169,110,0.2); }
+ 
+/* Module rows */
+.module-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 10px;
+}
+.module-icon { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+.module-info { flex: 1; }
+.module-name { font-family: var(--serif); font-size: 18px; font-weight: 300; }
+.module-desc { font-size: 10px; letter-spacing: 0.12em; color: var(--dim); margin-top: 2px; }
+ 
+/* Quick action buttons */
+.action-btn {
+  width: 100%; padding: 16px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.15em;
+  color: var(--sub); cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 14px;
+  transition: border-color 0.2s, color 0.2s;
+  -webkit-appearance: none;
+}
+.action-btn:active { border-color: rgba(200,169,110,0.3); color: var(--gold); }
+.action-btn.danger:active { border-color: rgba(201,79,58,0.3); color: var(--crit); }
+.action-icon { font-size: 18px; width: 24px; text-align: center; }
+.action-label { flex: 1; }
+.action-result {
+  font-size: 10px; letter-spacing: 0.15em; padding: 8px 12px;
+  border-radius: 4px; margin-top: 6px; display: none;
+}
+.action-result.ok   { background: rgba(122,170,138,0.1); color: var(--ok); display: block; }
+.action-result.fail { background: rgba(201,79,58,0.1);   color: var(--crit); display: block; }
+ 
+/* Bottom nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 10px 0 calc(var(--safe-bot) + 10px);
+  background: var(--bg); border-top: 1px solid var(--border);
+  display: none; justify-content: space-around; z-index: 50;
+}
+.bottom-nav.visible { display: flex; }
+.nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer; padding: 4px 20px;
+  color: var(--dim); transition: color 0.2s; font-family: var(--mono);
+}
+.nav-btn.active { color: var(--gold); }
+.nav-btn-icon  { font-size: 20px; }
+.nav-btn-label { font-size: 9px; letter-spacing: 0.18em; }
+ 
+/* Toast */
+.toast {
+  position: fixed; bottom: calc(var(--safe-bot) + 90px); left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 20px;
+  font-size: 11px; letter-spacing: 0.15em; color: var(--sub);
+  opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none;
+  white-space: nowrap; z-index: 200;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+ 
+/* Inline input (full width) */
+.full-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 14px; font-family: var(--mono);
+  font-size: 13px; color: var(--text); outline: none;
+  transition: border-color 0.2s; -webkit-appearance: none; margin-bottom: 8px;
+}
+.full-input:focus { border-color: rgba(200,169,110,0.4); }
+ 
+/* Save button (inline) */
+.save-btn {
+  background: var(--gold-dim); border: 1px solid rgba(200,169,110,0.25);
+  border-radius: 6px; padding: 10px 20px; font-family: var(--mono);
+  font-size: 11px; letter-spacing: 0.15em; color: var(--gold);
+  cursor: pointer; transition: background 0.2s; -webkit-appearance: none;
+}
+.save-btn:active { background: rgba(200,169,110,0.25); }
+ 
+/* Scene editor timeline items */
+.timeline-edit-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+}
+.tl-drag { color: var(--dim); font-size: 16px; cursor: grab; }
+.tl-edit-icon { font-size: 16px; }
+.tl-edit-label { flex: 1; font-family: var(--serif); font-size: 16px; font-weight: 300; }
+.tl-edit-time  { font-size: 11px; letter-spacing: 0.12em; color: var(--dim); }
+ 
+/* Select */
+select {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 14px; font-family: var(--mono);
+  font-size: 13px; color: var(--text); outline: none;
+  -webkit-appearance: none; appearance: none; margin-bottom: 8px;
+}
+</style>
+</head>
+<body>
+ 
+<!-- ══════════════════════════════════════
+     ONBOARDING
+══════════════════════════════════════ -->
+<div class="screen active" id="onboarding">
+  <button class="skip-btn" onclick="skipOnboarding()">Skip for now</button>
+ 
+  <!-- Logo SVG -->
+  <svg class="logo-mark" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="4" width="112" height="82" rx="10" stroke="#f0ede6" stroke-opacity="0.7" stroke-width="2"/>
+    <line x1="14" y1="74" x2="106" y2="74" stroke="#c8a96e" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="14" y="68" width="92" height="12" rx="4" fill="url(#glow)" opacity="0.4"/>
+    <defs>
+      <linearGradient id="glow" x1="14" y1="74" x2="106" y2="74" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#c8a96e" stop-opacity="0"/>
+        <stop offset="50%" stop-color="#c8a96e" stop-opacity="0.8"/>
+        <stop offset="100%" stop-color="#c8a96e" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+  </svg>
+ 
+  <div class="app-title">Fam Frame</div>
+  <div class="app-sub">Your family's living room dashboard.</div>
+  <div class="divider"></div>
+ 
+  <div class="setup-steps">
+ 
+    <!-- Step 1: GitHub PAT -->
+    <div class="step active" id="step1">
+      <div class="step-header" onclick="toggleStep(1)">
+        <div class="step-num">1</div>
+        <div class="step-title">GitHub personal access token</div>
+        <div class="step-chevron">▼</div>
+      </div>
+      <div class="step-body">
+        <div>
+          <div class="field-label">Token</div>
+          <div class="input-wrap">
+            <input type="password" id="patInput" placeholder="ghp_xxxxxxxxxxxx"
+              oninput="onPATInput(this.value)">
+            <button class="eye-btn" onclick="togglePATVisibility()">👁</button>
+          </div>
+          <div class="field-hint">Generate at github.com → Settings → Developer settings → Personal access tokens → Fine-grained. Needs Contents: read & write on your dashboard repo.</div>
+        </div>
+        <div>
+          <div class="field-label">Repository</div>
+          <input type="text" id="repoInput" placeholder="username/repo-name" class="full-input"
+            style="margin-bottom:4px" oninput="onRepoInput(this.value)">
+          <div class="field-hint">e.g. johnchromchak/fam-frame</div>
+        </div>
+        <div>
+          <div class="field-label">Config file path</div>
+          <input type="text" id="pathInput" placeholder="dashboard-config.js" class="full-input"
+            style="margin-bottom:4px" value="dashboard-config.js">
+        </div>
+        <button class="validate-btn" onclick="validateGitHub()">Verify connection →</button>
+        <div class="validate-result" id="patResult"></div>
+      </div>
+    </div>
+ 
+    <!-- Step 2: Repository confirmed (collapses after step 1) -->
+    <div class="step" id="step2">
+      <div class="step-header" onclick="toggleStep(2)">
+        <div class="step-num">2</div>
+        <div class="step-title">Your repository</div>
+        <div class="step-chevron">▼</div>
+      </div>
+      <div class="step-body">
+        <div class="field-label">Branch</div>
+        <select id="branchSelect">
+          <option value="main">main</option>
+          <option value="master">master</option>
+          <option value="gh-pages">gh-pages</option>
+        </select>
+        <div class="field-hint">The branch your GitHub Pages site deploys from.</div>
+        <div class="field-label" style="margin-top:8px">Google Calendar API key (optional)</div>
+        <input type="text" id="gcalInput" placeholder="AIza..." class="full-input">
+        <div class="field-hint">Enables calendar events on the dashboard. console.cloud.google.com → Calendar API.</div>
+      </div>
+    </div>
+ 
+    <!-- Step 3: Family -->
+    <div class="step" id="step3">
+      <div class="step-header" onclick="toggleStep(3)">
+        <div class="step-num">3</div>
+        <div class="step-title">Your family</div>
+        <div class="step-chevron">▼</div>
+      </div>
+      <div class="step-body">
+        <div class="field-label">Kids on the schedule</div>
+        <div class="kid-row" style="margin-bottom:8px">
+          <input type="text" id="kid1Name" placeholder="Kid 1 name" value="Joe">
+          <div class="kid-tag">ACTIVE</div>
+        </div>
+        <div class="kid-row" style="margin-bottom:8px">
+          <input type="text" id="kid2Name" placeholder="Kid 2 name" value="Jack">
+          <div class="kid-tag">ACTIVE</div>
+        </div>
+        <div class="kid-row" style="margin-bottom:8px">
+          <input type="text" id="kid3Name" placeholder="Kid 3 name" value="Sue">
+          <div class="kid-tag" style="background:var(--surface2);color:var(--dim);border-color:var(--border)">BABY</div>
+        </div>
+        <div class="field-label" style="margin-top:8px">Home city</div>
+        <input type="text" id="homeCity" placeholder="Mount Pleasant, SC" value="Mount Pleasant, SC" class="full-input">
+      </div>
+    </div>
+ 
+  </div>
+ 
+  <button class="cta-btn" onclick="completeOnboarding()" id="continueBtn">Continue →</button>
+</div>
+ 
+<!-- ══════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════ -->
+<div class="screen" id="app">
+ 
+  <div class="app-header">
+    <div class="app-header-title">Fam Frame</div>
+    <div class="sync-status">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">NOT SYNCED</span>
+    </div>
+  </div>
+ 
+  <!-- HOME -->
+  <div class="page active" id="pageHome">
+    <div class="nav-cards" style="padding:0">
+      <div class="nav-card" onclick="nav('family')">
+        <div class="nav-card-icon">👨‍👩‍👧‍👦</div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Family</div>
+          <div class="nav-card-desc">Manage family members<br>and their details</div>
+        </div>
+        <div class="nav-card-arrow">›</div>
+      </div>
+      <div class="nav-card" onclick="nav('scenes')">
+        <div class="nav-card-icon">☀️</div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Scenes</div>
+          <div class="nav-card-desc">Configure morning, evening<br>and special day scenes</div>
+        </div>
+        <div class="nav-card-arrow">›</div>
+      </div>
+      <div class="nav-card" onclick="nav('modules')">
+        <div class="nav-card-icon">⊞</div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Modules</div>
+          <div class="nav-card-desc">Enable and configure<br>dashboard modules</div>
+        </div>
+        <div class="nav-card-arrow">›</div>
+      </div>
+      <div class="nav-card" onclick="nav('actions')">
+        <div class="nav-card-icon">⚡</div>
+        <div class="nav-card-body">
+          <div class="nav-card-title">Quick Actions</div>
+          <div class="nav-card-desc">Sync, override scenes<br>and system actions</div>
+        </div>
+        <div class="nav-card-arrow">›</div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- FAMILY -->
+  <div class="page" id="pageFamily">
+    <button class="back-btn" onclick="nav('home')">← Back</button>
+    <div class="page-title">Family</div>
+    <div class="page-sub">WHO'S ON THE DASHBOARD</div>
+ 
+    <div class="section-label">Kids</div>
+    <div id="kidCards"></div>
+ 
+    <div class="section-label" style="margin-top:16px">Location</div>
+    <div class="field-label">Home city</div>
+    <input type="text" id="homeCityApp" class="full-input" placeholder="Mount Pleasant, SC">
+    <div class="field-label">School route description</div>
+    <input type="text" id="schoolRoute" class="full-input" placeholder="US-17 N to School">
+    <div class="field-label">Latitude</div>
+    <input type="text" id="homeLat" class="full-input" placeholder="32.83">
+    <div class="field-label">Longitude</div>
+    <input type="text" id="homeLon" class="full-input" placeholder="-79.83">
+ 
+    <div class="section-label" style="margin-top:16px">API Keys</div>
+    <div class="field-label">Google Calendar API key</div>
+    <div class="input-wrap" style="margin-bottom:8px">
+      <input type="password" id="gcalAppInput" class="full-input" style="margin-bottom:0" placeholder="AIza...">
+    </div>
+    <div class="field-label">GitHub PAT</div>
+    <div class="input-wrap" style="margin-bottom:8px">
+      <input type="password" id="patAppInput" class="full-input" style="margin-bottom:0" placeholder="ghp_...">
+    </div>
+ 
+    <button class="save-btn" onclick="saveFamily()">Save family settings</button>
+  </div>
+ 
+  <!-- SCENES -->
+  <div class="page" id="pageScenes">
+    <button class="back-btn" onclick="nav('home')">← Back</button>
+    <div class="page-title">Scenes</div>
+    <div class="page-sub">WHEN · WHAT · HOW</div>
+    <div id="sceneCards"></div>
+    <button class="save-btn" style="margin-top:8px" onclick="pushToGitHub()">Push to GitHub →</button>
+  </div>
+ 
+  <!-- MODULES -->
+  <div class="page" id="pageModules">
+    <button class="back-btn" onclick="nav('home')">← Back</button>
+    <div class="page-title">Modules</div>
+    <div class="page-sub">GLOBAL MODULE DEFAULTS</div>
+ 
+    <div class="section-label">Display modules</div>
+    <div id="moduleRows"></div>
+ 
+    <div class="section-label" style="margin-top:16px">Weather</div>
+    <div class="field-label">Default view</div>
+    <select id="weatherWhen">
+      <option value="now">Current conditions</option>
+      <option value="tomorrow">Tomorrow</option>
+      <option value="3day">3-day outlook</option>
+    </select>
+ 
+    <div class="section-label" style="margin-top:16px">Quote</div>
+    <div class="field-label">Source</div>
+    <select id="quoteSource">
+      <option value="stoic">Stoic (Quotable API)</option>
+      <option value="wisdom">Wisdom + life</option>
+      <option value="family">Family + love</option>
+      <option value="any">Any category</option>
+    </select>
+ 
+    <div class="section-label" style="margin-top:16px">Evening timeline</div>
+    <div id="timelineItems"></div>
+ 
+    <button class="save-btn" onclick="saveModules()">Save module settings</button>
+  </div>
+ 
+  <!-- QUICK ACTIONS -->
+  <div class="page" id="pageActions">
+    <button class="back-btn" onclick="nav('home')">← Back</button>
+    <div class="page-title">Quick Actions</div>
+    <div class="page-sub">RUN · SYNC · OVERRIDE</div>
+ 
+    <div class="section-label">GitHub sync</div>
+    <button class="action-btn" onclick="pushToGitHub()">
+      <span class="action-icon">↑</span>
+      <span class="action-label">Push config to GitHub</span>
+    </button>
+    <div class="action-result" id="pushResult"></div>
+ 
+    <button class="action-btn" onclick="pullFromGitHub()" style="margin-top:8px">
+      <span class="action-icon">↓</span>
+      <span class="action-label">Pull config from GitHub</span>
+    </button>
+    <div class="action-result" id="pullResult"></div>
+ 
+    <div class="section-label" style="margin-top:16px">Force scene</div>
+    <select id="forceSceneSelect" style="margin-bottom:10px">
+      <option value="">— Select a scene to force —</option>
+      <option value="weekday_morning">Weekday morning</option>
+      <option value="weekday_evening">Weekday evening</option>
+      <option value="saturday_soccer">Saturday soccer</option>
+      <option value="weekend_relaxed">Weekend relaxed</option>
+      <option value="no_school">No school</option>
+      <option value="art">Art / blank mode</option>
+    </select>
+    <button class="action-btn" onclick="forceScene()">
+      <span class="action-icon">▶</span>
+      <span class="action-label">Force this scene now</span>
+    </button>
+    <div class="action-result" id="forceResult"></div>
+ 
+    <div class="section-label" style="margin-top:16px">Tonight's timeline</div>
+    <div id="quickTimeline"></div>
+    <button class="action-btn" onclick="saveQuickTimeline()" style="margin-top:4px">
+      <span class="action-icon">✓</span>
+      <span class="action-label">Save tonight's overrides</span>
+    </button>
+ 
+    <div class="section-label" style="margin-top:16px">Feedback</div>
+    <div style="margin-bottom:10px">
+      <div class="field-label">Type</div>
+      <select id="feedbackType" style="margin-bottom:10px">
+        <option value="bug">🐛 Bug report</option>
+        <option value="feature">✨ Feature request</option>
+        <option value="general">💬 General feedback</option>
+        <option value="wtp">💰 What would you pay?</option>
+      </select>
+      <div class="field-label">Message</div>
+      <textarea id="feedbackBody" rows="4"
+        placeholder="Tell us what happened, what you'd love to see, or what you'd pay for this..."
+        style="width:100%;background:var(--surface);border:1px solid var(--border);
+               border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:13px;
+               color:var(--text);outline:none;resize:none;line-height:1.6;
+               -webkit-appearance:none;margin-bottom:8px"></textarea>
+      <div class="field-label" style="margin-bottom:6px">Your name (optional)</div>
+      <input type="text" id="feedbackName" class="full-input" placeholder="First name or leave blank">
+    </div>
+    <button class="action-btn" onclick="submitFeedback()">
+      <span class="action-icon">↑</span>
+      <span class="action-label">Submit feedback</span>
+    </button>
+    <div class="action-result" id="feedbackResult"></div>
+ 
+    <div class="section-label" style="margin-top:16px">Danger zone</div>
+    <button class="action-btn danger" onclick="clearAllData()">
+      <span class="action-icon">✕</span>
+      <span class="action-label">Clear all local data + reset</span>
+    </button>
+  </div>
+ 
+</div><!-- /app -->
+ 
+<!-- Bottom nav -->
+<div class="bottom-nav" id="bottomNav">
+  <button class="nav-btn active" id="navHome" onclick="nav('home')">
+    <span class="nav-btn-icon">⌂</span>
+    <span class="nav-btn-label">HOME</span>
+  </button>
+  <button class="nav-btn" id="navScenes" onclick="nav('scenes')">
+    <span class="nav-btn-icon">☀</span>
+    <span class="nav-btn-label">SCENES</span>
+  </button>
+  <button class="nav-btn" id="navModules" onclick="nav('modules')">
+    <span class="nav-btn-icon">⊞</span>
+    <span class="nav-btn-label">MODULES</span>
+  </button>
+  <button class="nav-btn" id="navActions" onclick="nav('actions')">
+    <span class="nav-btn-icon">⚡</span>
+    <span class="nav-btn-label">ACTIONS</span>
+  </button>
+</div>
+ 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+ 
+<script>
+// ══════════════════════════════════════════════════════
+// STORAGE KEYS
+// ══════════════════════════════════════════════════════
+const KEYS = {
+  pat:       'fam_frame_github_pat',
+  repo:      'fam_frame_config_repo',
+  path:      'fam_frame_config_path',
+  branch:    'fam_frame_config_branch',
+  gcal:      'fam_frame_gcal_key',
+  config:    'fam_frame_config',
+  onboarded: 'fam_frame_onboarded',
+};
+ 
+// ══════════════════════════════════════════════════════
+// DEFAULT CONFIG
+// ══════════════════════════════════════════════════════
+const DEFAULT_CONFIG = {
+  family: {
+    kids: [
+      { name: "Joe",  active: true,  note: "" },
+      { name: "Jack", active: true,  note: "" },
+      { name: "Sue",  active: false, note: "baby" },
+    ],
+    location: { city: "Mount Pleasant, SC", lat: 32.83, lon: -79.83, schoolRoute: "US-17 N to School" },
+  },
+  modules: {
+    clock:     { enabled: true },
+    countdown: { enabled: true },
+    checklist: { enabled: true },
+    weather:   { enabled: true,  when: "now" },
+    calendar:  { enabled: true,  when: "today" },
+    traffic:   { enabled: true },
+    timeline:  { enabled: true },
+    quote:     { enabled: true,  source: "stoic" },
+  },
+  scenes: [
+    {
+      id: "weekday_morning",
+      name: "Weekday Morning",
+      trigger: { days: [1,2,3,4,5], timeStart: "06:00", timeEnd: "08:30", priority: 10 },
+      layout: ["clock","countdown","checklist","weather","traffic","calendar"],
+      departure: { leaveHour:6, leaveMin:45, schoolHour:7, schoolMin:20, lateBellHour:7, lateBellMin:25, driveMin:22, carBuffer:5 },
+    },
+    {
+      id: "weekday_evening",
+      name: "Weekday Evening",
+      trigger: { days: [1,2,3,4,5], timeStart: "17:00", timeEnd: "21:00", priority: 10 },
+      layout: ["clock","timeline","weather","calendar","quote"],
+      weather: { when: "tomorrow" },
+      calendar: { when: "tomorrow" },
+    },
+    {
+      id: "saturday_soccer",
+      name: "Saturday · Soccer",
+      trigger: { days: [6], timeStart: "07:00", timeEnd: "11:00", calendarMatch: ["soccer","game","practice"], priority: 20 },
+      layout: ["clock","countdown","weather","traffic","quote"],
+      departure: { calendarDriven: true, bufferMin: 30, carBuffer: 5 },
+    },
+    {
+      id: "weekend_relaxed",
+      name: "Weekend · Relaxed",
+      trigger: { days: [0,6], timeStart: "07:00", timeEnd: "10:00", priority: 5 },
+      layout: ["clock","weather","quote"],
+      weather: { when: "3day" },
+    },
+    {
+      id: "no_school",
+      name: "No School",
+      trigger: { days: [1,2,3,4,5], timeStart: "06:00", timeEnd: "09:00", calendarMatch: ["no school","holiday","break","snow day"], priority: 30 },
+      layout: ["clock","weather","quote"],
+      message: "No school today.",
+    },
+  ],
+  eveningTimeline: [
+    { id:"home",     label:"Home & decompress", icon:"🏠", startHour:17, startMin:30, durationMin:30, note:"Snack, unwind" },
+    { id:"homework", label:"Homework",           icon:"📚", startHour:18, startMin:0,  durationMin:30, note:"Both kids" },
+    { id:"dinner",   label:"Dinner",             icon:"🍽", startHour:18, startMin:30, durationMin:30, note:"Together" },
+    { id:"baths",    label:"Baths",              icon:"🛁", startHour:19, startMin:15, durationMin:30, note:"" },
+    { id:"reading",  label:"Reading",            icon:"📖", startHour:19, startMin:45, durationMin:30, note:"30 min each" },
+    { id:"winddown", label:"Wind down",          icon:"🌙", startHour:20, startMin:15, durationMin:15, note:"No screens" },
+    { id:"bed",      label:"Lights out",         icon:"💤", startHour:20, startMin:30, durationMin:0,  note:"8:30 PM" },
+  ],
+  morningChecklist: [
+    { id:"breakfast", label:"Breakfast",      icon:"🥣", targetMin:-40 },
+    { id:"dressed",   label:"Get dressed",    icon:"👕", targetMin:-30 },
+    { id:"backpack",  label:"Backpacks",      icon:"🎒", targetMin:-20 },
+    { id:"teeth",     label:"Brush teeth",    icon:"🪥", targetMin:-15 },
+    { id:"shoes",     label:"Shoes on",       icon:"👟", targetMin:-5  },
+    { id:"car",       label:"Get in the car", icon:"🚗", targetMin:0   },
+  ],
+};
+ 
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let config = DEFAULT_CONFIG;
+ 
+function loadConfig() {
+  const saved = localStorage.getItem(KEYS.config);
+  if (saved) { try { config = JSON.parse(saved); } catch(e) {} }
+}
+ 
+function saveConfig() {
+  localStorage.setItem(KEYS.config, JSON.stringify(config));
+}
+ 
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  loadConfig();
+  const onboarded = localStorage.getItem(KEYS.onboarded);
+  if (onboarded) {
+    showApp();
+  } else {
+    // Pre-fill if PAT already exists
+    const pat = localStorage.getItem(KEYS.pat);
+    if (pat) document.getElementById('patInput').value = pat;
+    const repo = localStorage.getItem(KEYS.repo);
+    if (repo) document.getElementById('repoInput').value = repo;
+  }
+  updateSyncStatus();
+});
+ 
+// ══════════════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════════════
+function toggleStep(n) {
+  document.querySelectorAll('.step').forEach((s,i) => {
+    if (i+1 === n) s.classList.toggle('active');
+  });
+}
+ 
+function togglePATVisibility() {
+  const inp = document.getElementById('patInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+ 
+function onPATInput(val) {
+  localStorage.setItem(KEYS.pat, val.trim());
+}
+function onRepoInput(val) {
+  localStorage.setItem(KEYS.repo, val.trim());
+}
+ 
+async function validateGitHub() {
+  const pat    = document.getElementById('patInput').value.trim();
+  const repo   = document.getElementById('repoInput').value.trim();
+  const result = document.getElementById('patResult');
+ 
+  if (!pat || !repo) {
+    result.className = 'validate-result fail';
+    result.textContent = 'Enter your token and repo first.';
+    return;
+  }
+ 
+  result.className = 'validate-result';
+  result.textContent = 'Checking…';
+  result.style.display = 'block';
+ 
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }
+    });
+    if (res.ok) {
+      result.className = 'validate-result ok';
+      result.textContent = '✓ Connected. Repo found.';
+      localStorage.setItem(KEYS.pat, pat);
+      localStorage.setItem(KEYS.repo, repo);
+      // Auto-advance
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step1').classList.add('done');
+      document.getElementById('step2').classList.add('active');
+    } else {
+      result.className = 'validate-result fail';
+      result.textContent = `✕ Error ${res.status}. Check token + repo name.`;
+    }
+  } catch(e) {
+    result.className = 'validate-result fail';
+    result.textContent = '✕ Network error. Check connection.';
+  }
+}
+ 
+function completeOnboarding() {
+  // Save all onboarding values
+  const pat    = document.getElementById('patInput').value.trim();
+  const repo   = document.getElementById('repoInput').value.trim();
+  const path   = document.getElementById('pathInput').value.trim() || 'dashboard-config.js';
+  const branch = document.getElementById('branchSelect').value;
+  const gcal   = document.getElementById('gcalInput').value.trim();
+ 
+  if (pat)    localStorage.setItem(KEYS.pat,    pat);
+  if (repo)   localStorage.setItem(KEYS.repo,   repo);
+  if (path)   localStorage.setItem(KEYS.path,   path);
+  if (branch) localStorage.setItem(KEYS.branch, branch);
+  if (gcal)   localStorage.setItem(KEYS.gcal,   gcal);
+ 
+  // Save kid names
+  config.family.kids[0].name = document.getElementById('kid1Name').value || 'Joe';
+  config.family.kids[1].name = document.getElementById('kid2Name').value || 'Jack';
+  config.family.kids[2].name = document.getElementById('kid3Name').value || 'Sue';
+  config.family.location.city = document.getElementById('homeCity').value || 'Mount Pleasant, SC';
+  if (gcal) config.api = { googleCalendarKey: gcal };
+  saveConfig();
+ 
+  localStorage.setItem(KEYS.onboarded, '1');
+  showApp();
+}
+ 
+function skipOnboarding() {
+  localStorage.setItem(KEYS.onboarded, '1');
+  showApp();
+}
+ 
+// ══════════════════════════════════════════════════════
+// APP NAV
+// ══════════════════════════════════════════════════════
+function showApp() {
+  document.getElementById('onboarding').classList.remove('active');
+  document.getElementById('app').classList.add('active');
+  document.getElementById('bottomNav').classList.add('visible');
+  renderAll();
+  updateSyncStatus();
+}
+ 
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+  // Update bottom nav
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const map = { home:'navHome', scenes:'navScenes', modules:'navModules', actions:'navActions', family:'navHome' };
+  const active = map[page];
+  if (active) document.getElementById(active).classList.add('active');
+}
+ 
+// ══════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════
+function renderAll() {
+  renderKids();
+  renderScenes();
+  renderModules();
+  renderTimeline();
+  renderQuickTimeline();
+  populateFamilyForm();
+}
+ 
+function renderKids() {
+  const el = document.getElementById('kidCards');
+  el.innerHTML = config.family.kids.map(k => `
+    <div class="kid-card" style="margin-bottom:10px">
+      <div class="kid-avatar">${k.name.charAt(0)}</div>
+      <div class="kid-info">
+        <div class="kid-name">${k.name}</div>
+        <div class="kid-meta">${k.note ? k.note.toUpperCase() : (k.active ? 'ON SCHEDULE' : 'INACTIVE')}</div>
+      </div>
+      ${k.active ? '<div class="kid-active-badge">ACTIVE</div>' : '<div class="kid-inactive-badge">INACTIVE</div>'}
+    </div>`).join('');
+}
+ 
+function renderScenes() {
+  const now = new Date();
+  const el  = document.getElementById('sceneCards');
+  el.innerHTML = config.scenes.map(s => {
+    const isActive = isSceneActive(s, now);
+    const mods     = (s.layout||[]).map(m =>
+      `<div class="module-chip on">${m}</div>`).join('');
+    const days     = (s.trigger.days||[]).map(d =>
+      ['Su','Mo','Tu','We','Th','Fr','Sa'][d]).join(' ');
+    return `<div class="scene-card" style="margin-bottom:10px">
+      <div class="scene-card-header">
+        <div class="scene-name">${s.name}</div>
+        ${isActive
+          ? '<div class="scene-active-pill">ACTIVE NOW</div>'
+          : '<div class="scene-inactive-pill">INACTIVE</div>'}
+      </div>
+      <div class="scene-trigger">${days} · ${s.trigger.timeStart}–${s.trigger.timeEnd}${s.trigger.calendarMatch ? ' · calendar-driven' : ''}</div>
+      <div class="scene-modules">${mods}</div>
+    </div>`;
+  }).join('');
+ 
+  // Force scene select
+  const sel = document.getElementById('forceSceneSelect');
+  if (sel) {
+    sel.innerHTML = '<option value="">— Select a scene —</option>' +
+      config.scenes.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  }
+}
+ 
+function isSceneActive(scene, now) {
+  const day  = now.getDay();
+  const hhmm = now.getHours()*60 + now.getMinutes();
+  const [sh,sm] = (scene.trigger.timeStart||"00:00").split(':').map(Number);
+  const [eh,em] = (scene.trigger.timeEnd  ||"23:59").split(':').map(Number);
+  return (scene.trigger.days||[]).includes(day) &&
+    hhmm >= sh*60+sm && hhmm < eh*60+em;
+}
+ 
+const MODULE_META = {
+  clock:     { icon:'🕐', name:'Clock',     desc:'Current time display' },
+  countdown: { icon:'⏱', name:'Countdown', desc:'Time until departure' },
+  checklist: { icon:'✓',  name:'Checklist', desc:'Morning task reminders' },
+  weather:   { icon:'☁️', name:'Weather',   desc:'Current or forecast conditions' },
+  calendar:  { icon:'📅', name:'Calendar',  desc:'Today or tomorrow events' },
+  traffic:   { icon:'🚗', name:'Traffic',   desc:'Commute time + status dot' },
+  timeline:  { icon:'↓',  name:'Timeline',  desc:'Evening routine tracker' },
+  quote:     { icon:'❝',  name:'Quote',     desc:'Stoic or family quote' },
+};
+ 
+function renderModules() {
+  const el = document.getElementById('moduleRows');
+  el.innerHTML = Object.entries(MODULE_META).map(([key, m]) => {
+    const mod = config.modules[key] || { enabled: false };
+    return `<div class="module-row">
+      <div class="module-icon">${m.icon}</div>
+      <div class="module-info">
+        <div class="module-name">${m.name}</div>
+        <div class="module-desc">${m.desc}</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${mod.enabled ? 'checked' : ''}
+          onchange="toggleModule('${key}', this.checked)">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>`;
+  }).join('');
+ 
+  // Set weather/quote selects
+  const ww = document.getElementById('weatherWhen');
+  if (ww) ww.value = config.modules.weather?.when || 'now';
+  const qs = document.getElementById('quoteSource');
+  if (qs) qs.value = config.modules.quote?.source || 'stoic';
+}
+ 
+function toggleModule(key, val) {
+  if (!config.modules[key]) config.modules[key] = {};
+  config.modules[key].enabled = val;
+  saveConfig();
+}
+ 
+function renderTimeline() {
+  const el = document.getElementById('timelineItems');
+  if (!el) return;
+  el.innerHTML = (config.eveningTimeline||[]).map((item,i) => `
+    <div class="timeline-edit-item">
+      <div class="tl-drag">⠿</div>
+      <div class="tl-edit-icon">${item.icon}</div>
+      <div class="tl-edit-label">${item.label}</div>
+      <div class="tl-edit-time">${item.startHour}:${String(item.startMin).padStart(2,'0')}</div>
+    </div>`).join('');
+}
+ 
+function renderQuickTimeline() {
+  const el = document.getElementById('quickTimeline');
+  if (!el) return;
+  el.innerHTML = (config.eveningTimeline||[]).map((item,i) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="font-size:16px;width:24px;text-align:center">${item.icon}</div>
+      <div style="flex:1;font-family:var(--serif);font-size:16px;font-weight:300;color:var(--sub)">${item.label}</div>
+      <input type="time" value="${String(item.startHour).padStart(2,'0')}:${String(item.startMin).padStart(2,'0')}"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:4px;
+               padding:6px 8px;color:var(--text);font-family:var(--mono);font-size:12px;
+               outline:none;width:90px"
+        onchange="updateTimelineItem(${i}, this.value)">
+    </div>`).join('');
+}
+ 
+function updateTimelineItem(i, val) {
+  const [h,m] = val.split(':').map(Number);
+  config.eveningTimeline[i].startHour = h;
+  config.eveningTimeline[i].startMin  = m;
+}
+ 
+function populateFamilyForm() {
+  const loc = config.family.location || {};
+  const set = (id, val) => { const el=document.getElementById(id); if(el && val) el.value=val; };
+  set('homeCityApp',  loc.city);
+  set('schoolRoute',  loc.schoolRoute);
+  set('homeLat',      loc.lat);
+  set('homeLon',      loc.lon);
+  set('gcalAppInput', localStorage.getItem(KEYS.gcal));
+  set('patAppInput',  localStorage.getItem(KEYS.pat));
+}
+ 
+// ══════════════════════════════════════════════════════
+// SAVE ACTIONS
+// ══════════════════════════════════════════════════════
+function saveFamily() {
+  config.family.location.city        = document.getElementById('homeCityApp').value;
+  config.family.location.schoolRoute = document.getElementById('schoolRoute').value;
+  config.family.location.lat         = parseFloat(document.getElementById('homeLat').value) || 32.83;
+  config.family.location.lon         = parseFloat(document.getElementById('homeLon').value) || -79.83;
+  const gcal = document.getElementById('gcalAppInput').value.trim();
+  const pat  = document.getElementById('patAppInput').value.trim();
+  if (gcal) localStorage.setItem(KEYS.gcal, gcal);
+  if (pat)  localStorage.setItem(KEYS.pat,  pat);
+  saveConfig();
+  toast('Family settings saved');
+}
+ 
+function saveModules() {
+  config.modules.weather.when  = document.getElementById('weatherWhen').value;
+  config.modules.quote.source  = document.getElementById('quoteSource').value;
+  saveConfig();
+  toast('Module settings saved');
+}
+ 
+function saveQuickTimeline() {
+  saveConfig();
+  toast('Timeline saved — push to sync');
+}
+ 
+function forceScene() {
+  const id  = document.getElementById('forceSceneSelect').value;
+  const el  = document.getElementById('forceResult');
+  if (!id) { showResult(el, false, 'Select a scene first.'); return; }
+  localStorage.setItem('fam_frame_force_scene', id);
+  showResult(el, true, `Scene "${id}" forced. Clears on next auto-detect.`);
+  toast('Scene override set');
+}
+ 
+function clearAllData() {
+  if (!confirm('Clear all Fam Frame data and reset?')) return;
+  Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+  localStorage.removeItem('fam_frame_force_scene');
+  location.reload();
+}
+ 
+// ══════════════════════════════════════════════════════
+// GITHUB PUSH / PULL
+// ══════════════════════════════════════════════════════
+function configToJS() {
+  return `// Fam Frame — generated config\n// Last updated: ${new Date().toISOString()}\n\nconst DASHBOARD_CONFIG = ${JSON.stringify(config, null, 2)};\n\nif (typeof module !== 'undefined') module.exports = DASHBOARD_CONFIG;\n`;
+}
+ 
+async function pushToGitHub() {
+  const pat    = localStorage.getItem(KEYS.pat);
+  const repo   = localStorage.getItem(KEYS.repo);
+  const path   = localStorage.getItem(KEYS.path) || 'dashboard-config.js';
+  const branch = localStorage.getItem(KEYS.branch) || 'main';
+  const el     = document.getElementById('pushResult');
+ 
+  if (!pat || !repo) {
+    showResult(el, false, 'GitHub token or repo not set. Check settings.');
+    return;
+  }
+ 
+  setSyncStatus('syncing', 'SYNCING');
+ 
+  try {
+    // Get current SHA
+    const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }
+    });
+ 
+    let sha = null;
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+    }
+ 
+    const content = btoa(unescape(encodeURIComponent(configToJS())));
+    const body    = { message: `Fam Frame config update — ${new Date().toLocaleString()}`, content, branch };
+    if (sha) body.sha = sha;
+ 
+    const putRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+ 
+    if (putRes.ok) {
+      setSyncStatus('synced', 'SYNCED');
+      showResult(el, true, '✓ Config pushed to GitHub. Dashboard will update within 2 min.');
+      toast('Pushed to GitHub ✓');
+    } else {
+      const err = await putRes.json();
+      setSyncStatus('error', 'ERROR');
+      showResult(el, false, `✕ ${err.message || 'Push failed.'}`);
+    }
+  } catch(e) {
+    setSyncStatus('error', 'ERROR');
+    showResult(el, false, '✕ Network error.');
+  }
+}
+ 
+async function pullFromGitHub() {
+  const pat    = localStorage.getItem(KEYS.pat);
+  const repo   = localStorage.getItem(KEYS.repo);
+  const path   = localStorage.getItem(KEYS.path) || 'dashboard-config.js';
+  const branch = localStorage.getItem(KEYS.branch) || 'main';
+  const el     = document.getElementById('pullResult');
+ 
+  if (!pat || !repo) {
+    showResult(el, false, 'GitHub token or repo not set.');
+    return;
+  }
+ 
+  try {
+    const res  = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, {
+      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github+json' }
+    });
+    if (!res.ok) { showResult(el, false, `✕ Error ${res.status}`); return; }
+ 
+    const data    = await res.json();
+    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+ 
+    // Extract JSON from the JS file
+    const match = decoded.match(/const DASHBOARD_CONFIG = (\{[\s\S]*\});/);
+    if (match) {
+      config = JSON.parse(match[1]);
+      saveConfig();
+      renderAll();
+      showResult(el, true, '✓ Config pulled from GitHub.');
+      toast('Config pulled ✓');
+    } else {
+      showResult(el, false, '✕ Could not parse config file.');
+    }
+  } catch(e) {
+    showResult(el, false, '✕ Pull failed.');
+  }
+}
+ 
+// ══════════════════════════════════════════════════════
+// SYNC STATUS
+// ══════════════════════════════════════════════════════
+function updateSyncStatus() {
+  const pat  = localStorage.getItem(KEYS.pat);
+  const repo = localStorage.getItem(KEYS.repo);
+  if (pat && repo) setSyncStatus('synced', 'CONNECTED');
+  else setSyncStatus('', 'NOT SET');
+}
+ 
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if (!dot) return;
+  dot.className = 'sync-dot' + (state ? ' ' + state : '');
+  lbl.textContent = label;
+}
+ 
+// ══════════════════════════════════════════════════════
+// FEEDBACK
+// ══════════════════════════════════════════════════════
+// Set FEEDBACK_ENDPOINT to your Postgres API URL when ready.
+// Until then, submissions are logged locally + shown in UI.
+// Postgres schema (3 cols):
+//   id          uuid default gen_random_uuid()
+//   created_at  timestamptz default now()
+//   type        text   -- bug | feature | general | wtp
+//   message     text
+//   name        text
+//   repo        text   -- which user's repo (for identifying testers)
+const FEEDBACK_ENDPOINT = ""; // e.g. "https://your-api.famframe.io/feedback"
+ 
+async function submitFeedback() {
+  const type    = document.getElementById('feedbackType').value;
+  const message = document.getElementById('feedbackBody').value.trim();
+  const name    = document.getElementById('feedbackName').value.trim();
+  const repo    = localStorage.getItem(KEYS.repo) || "unknown";
+  const el      = document.getElementById('feedbackResult');
+ 
+  if (!message) {
+    showResult(el, false, 'Add a message before submitting.');
+    return;
+  }
+ 
+  const payload = {
+    type, message, name, repo,
+    created_at: new Date().toISOString(),
+    app_version: "0.1.0",
+  };
+ 
+  // Log locally always (useful for debugging early testers)
+  console.log('[Fam Frame Feedback]', payload);
+ 
+  if (FEEDBACK_ENDPOINT) {
+    try {
+      const res = await fetch(FEEDBACK_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        showResult(el, true, '✓ Feedback received. Thank you.');
+        document.getElementById('feedbackBody').value = '';
+        document.getElementById('feedbackName').value = '';
+        toast('Feedback sent ✓');
+      } else {
+        showResult(el, false, `✕ Server error ${res.status}. Logged locally.`);
+      }
+    } catch(e) {
+      showResult(el, false, '✕ Network error. Feedback logged locally.');
+    }
+  } else {
+    // No endpoint yet — still thank the user, log is captured above
+    showResult(el, true, '✓ Feedback noted. Endpoint not yet connected — logged locally.');
+    document.getElementById('feedbackBody').value = '';
+    document.getElementById('feedbackName').value = '';
+    toast('Feedback logged ✓');
+  }
+}
+ 
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+function showResult(el, ok, msg) {
+  if (!el) return;
+  el.className = 'action-result ' + (ok ? 'ok' : 'fail');
+  el.textContent = msg;
+}
+ 
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
+ 
