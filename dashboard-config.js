@@ -59,7 +59,7 @@ var DASHBOARD_CONFIG = {
   // ── DISPLAY MODES & SCHEDULE ──────────────────────────────────────
   // The dashboard auto-switches mode based on local time in time.timeZone.
   modes: {
-    morning: { start: "06:00", end: "12:30" },
+    morning: { start: "06:00", end: "15:30" },
     evening: { start: "17:00", end: "21:00" },
     // Outside these windows → blank/art mode
   },
