@@ -743,9 +743,9 @@ select {
     <div class="field-label">Display label</div>
     <input type="text" id="schoolRoute" class="full-input" placeholder="US-17 N to School">
     <div class="field-label">Origin</div>
-    <input type="text" id="commuteOrigin" class="full-input" placeholder="Home address or lat,lng">
+    <input type="text" id="commuteOrigin" class="full-input" placeholder="Home address or lat,lng" data-place-autocomplete data-place-role="commute-origin">
     <div class="field-label">Destination</div>
-    <input type="text" id="commuteDestination" class="full-input" placeholder="School address">
+    <input type="text" id="commuteDestination" class="full-input" placeholder="School address" data-place-autocomplete data-place-role="commute-destination">
     <div class="field-label">Stops before destination</div>
     <input type="number" id="commuteStopCount" class="full-input" min="0" step="1" placeholder="0">
     <div class="field-hint">Segments are itinerary blocks behind a routine. Addresses stay local to this admin device; the repo only receives safe labels and derived commute timing. Future segments will support multiple stops, per-stop buffers, and day-specific destinations.</div>
@@ -1079,7 +1079,6 @@ const DEFAULT_CONFIG = {
 let config = clone(DEFAULT_CONFIG);
 let lastRemoteSha = localStorage.getItem(KEYS.sha) || null;
 let mapsAdminPromise = null;
-let placesAttached = false;
 
 const CredentialStore = {
   getGitHubToken() { return localStorage.getItem(KEYS.pat) || ''; },
@@ -1448,7 +1447,6 @@ function populateFamilyForm() {
   setPlaceholder('gcalAppInput', CredentialStore.getGoogleCalendarKey() ? 'Calendar key saved locally' : 'AIza...');
   setPlaceholder('gmapsAppInput', CredentialStore.getGoogleMapsKey() ? 'Maps key saved locally' : 'AIza...');
   setPlaceholder('patAppInput', CredentialStore.getGitHubToken() ? 'GitHub connected - paste new token to replace' : 'ghp_...');
-  placesAttached = false;
   setupPlacesAutocomplete();
 }
 function saveFamily() {
@@ -1516,32 +1514,39 @@ function loadAdminMaps() {
   return mapsAdminPromise;
 }
 async function setupPlacesAutocomplete() {
-  if (placesAttached) return;
-  const originEl = document.getElementById('commuteOrigin');
-  const destEl = document.getElementById('commuteDestination');
-  if (!originEl || !destEl || !mapsKey()) return;
+  if (!mapsKey()) return;
   try {
     const maps = await loadAdminMaps();
     if (!maps.places || !maps.places.Autocomplete) return;
-    attachPlaceAutocomplete(maps, originEl, 'origin');
-    attachPlaceAutocomplete(maps, destEl, 'destination');
-    placesAttached = true;
+    const fields = Array.from(document.querySelectorAll('[data-place-autocomplete]'));
+    fields.forEach(el => attachPlaceAutocomplete(maps, el));
   } catch(e) {
     console.warn('Places autocomplete unavailable', e);
   }
 }
-function attachPlaceAutocomplete(maps, el, key) {
+function attachPlaceAutocomplete(maps, el) {
+  if (!el || el.dataset.placesAttached === '1') return;
   const ac = new maps.places.Autocomplete(el, {
     fields: ['formatted_address', 'geometry', 'name'],
     types: ['geocode'],
   });
+  el.dataset.placesAttached = '1';
   ac.addListener('place_changed', () => {
     const place = ac.getPlace();
     const value = place.formatted_address || place.name || el.value;
+    const role = el.dataset.placeRole || '';
     el.value = value;
-    if (key === 'origin') CredentialStore.setCommuteOrigin(value);
-    if (key === 'destination') CredentialStore.setCommuteDestination(value);
-    if (key === 'origin' && place.geometry && place.geometry.location) {
+    if (role === 'commute-origin') CredentialStore.setCommuteOrigin(value);
+    if (role === 'commute-destination') CredentialStore.setCommuteDestination(value);
+    if (role === 'routine-route') {
+      const routine = config.routines && config.routines[Number(el.dataset.routineIndex)];
+      if (routine) {
+        CredentialStore.setRouteField(routine.routeId || routine.id, el.dataset.routeField, value);
+        if (routine.id === 'school-morning' && el.dataset.routeField === 'origin') CredentialStore.setCommuteOrigin(value);
+        if (routine.id === 'school-morning' && el.dataset.routeField === 'destination') CredentialStore.setCommuteDestination(value);
+      }
+    }
+    if ((role === 'commute-origin' || (role === 'routine-route' && el.dataset.routeField === 'origin')) && place.geometry && place.geometry.location) {
       config.family.location.lat = place.geometry.location.lat();
       config.family.location.lon = place.geometry.location.lng();
       setVal('homeLat', config.family.location.lat);
@@ -1671,8 +1676,8 @@ function renderRoutineEditor() {
           </div>
           <div class="section-label" style="margin-top:12px">Local route lookup</div>
           <div class="form-grid">
-            <div><div class="field-label">Origin</div><input type="text" value="${html(routeOriginFor(routine))}" placeholder="Home address or lat,lng" onchange="updateRoutineRouteLocal(${i}, 'origin', this.value)"></div>
-            <div><div class="field-label">Destination</div><input type="text" value="${html(routeDestinationFor(routine))}" placeholder="School, pickup, field, etc." onchange="updateRoutineRouteLocal(${i}, 'destination', this.value)"></div>
+            <div><div class="field-label">Origin</div><input type="text" value="${html(routeOriginFor(routine))}" placeholder="Home address or lat,lng" data-place-autocomplete data-place-role="routine-route" data-routine-index="${i}" data-route-field="origin" onchange="updateRoutineRouteLocal(${i}, 'origin', this.value)"></div>
+            <div><div class="field-label">Destination</div><input type="text" value="${html(routeDestinationFor(routine))}" placeholder="School, pickup, field, etc." data-place-autocomplete data-place-role="routine-route" data-routine-index="${i}" data-route-field="destination" onchange="updateRoutineRouteLocal(${i}, 'destination', this.value)"></div>
           </div>
           <div class="field-hint">Origins and destinations stay local to this admin device. GitHub receives only safe derived route labels, durations, status, and timestamps.</div>
           <button class="action-btn" onclick="updateRoutineMapsStatus(${i})" style="margin-top:12px">
@@ -1699,6 +1704,7 @@ function renderRoutineEditor() {
         ` : '<div class="field-hint">Timeline routines currently use the Evening segments editor below. Full dynamic timeline editing will come after departure routines stabilize.</div>'}
       </div>`;
   }).join('');
+  setTimeout(setupPlacesAutocomplete, 0);
 }
 function addRoutine() {
   config.routines.push(normalizeRoutine({
