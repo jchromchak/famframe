@@ -929,6 +929,7 @@ const KEYS = {
   gmaps:     'fam_frame_gmaps_key',
   commuteOrigin: 'fam_frame_commute_origin',
   commuteDestination: 'fam_frame_commute_destination',
+  routeLocal: 'fam_frame_route_local_',
   config:    'fam_frame_config',
   sha:       'fam_frame_config_sha',
   onboarded: 'fam_frame_onboarded',
@@ -1092,6 +1093,9 @@ const CredentialStore = {
   setCommuteOrigin(value) { localStorage.setItem(KEYS.commuteOrigin, value || ''); },
   getCommuteDestination() { return localStorage.getItem(KEYS.commuteDestination) || ''; },
   setCommuteDestination(value) { localStorage.setItem(KEYS.commuteDestination, value || ''); },
+  routeKey(routeId, field) { return KEYS.routeLocal + slug(routeId || 'route', 'route') + '_' + field; },
+  getRouteField(routeId, field) { return localStorage.getItem(this.routeKey(routeId, field)) || ''; },
+  setRouteField(routeId, field, value) { localStorage.setItem(this.routeKey(routeId, field), value || ''); },
 };
 
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
@@ -1202,7 +1206,13 @@ function normalizeRoutine(routine) {
       bufferMin: Math.max(0, Math.floor(Number(seg.bufferMin || 0))),
       fallbackDriveMin: Math.max(0, Math.floor(Number(seg.fallbackDriveMin || 0))),
     }));
-    r.listItems = Array.isArray(r.listItems) ? r.listItems : [];
+    r.listItems = Array.isArray(r.listItems) ? r.listItems.map((item, i) => ({
+      id: slug(item.id || item.label, r.id + '-item-' + i),
+      label: item.label || 'List item',
+      icon: item.icon || '',
+      targetMin: Number(item.targetMin || 0),
+      assignee: item.assignee || '',
+    })) : [];
   }
   if (r.type === 'timeline') {
     r.timelineItems = Array.isArray(r.timelineItems) ? r.timelineItems : [];
@@ -1282,6 +1292,16 @@ function setVal(id, val) { const el = document.getElementById(id); if (el) el.va
 function setPlaceholder(id, val) { const el = document.getElementById(id); if (el) el.placeholder = val == null ? '' : val; }
 function getVal(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function getNum(id, fallback) { const n = Number(getVal(id)); return Number.isFinite(n) ? n : fallback; }
+function routeOriginFor(routine) {
+  const routeId = routine && (routine.routeId || routine.id);
+  return CredentialStore.getRouteField(routeId, 'origin') ||
+    (routine && routine.id === 'school-morning' ? CredentialStore.getCommuteOrigin() : '');
+}
+function routeDestinationFor(routine) {
+  const routeId = routine && (routine.routeId || routine.id);
+  return CredentialStore.getRouteField(routeId, 'destination') ||
+    (routine && routine.id === 'school-morning' ? CredentialStore.getCommuteDestination() : '');
+}
 function cleanToken(value) {
   return String(value || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
 }
@@ -1531,10 +1551,11 @@ function attachPlaceAutocomplete(maps, el, key) {
   });
 }
 
-async function updateDerivedCommute() {
+async function updateDerivedCommute(opts = {}) {
   const maps = await loadAdminMaps().catch(() => null);
-  const origin = CredentialStore.getCommuteOrigin();
-  const destination = CredentialStore.getCommuteDestination();
+  const routeId = opts.routeId || 'school-morning';
+  const origin = opts.origin || CredentialStore.getCommuteOrigin();
+  const destination = opts.destination || CredentialStore.getCommuteDestination();
   if (!maps || !origin || !destination) return false;
   try {
     const routes = maps.importLibrary ? await maps.importLibrary('routes') : maps;
@@ -1560,13 +1581,13 @@ async function updateDerivedCommute() {
     const duration = result.duration_in_traffic || result.duration;
     const now = new Date();
     const expires = new Date(now.getTime() + 15 * 60 * 1000);
-    const existingRoute = (config.commute.routes || {})['school-morning'] || {};
-    config.commute.activeRouteId = 'school-morning';
+    const existingRoute = (config.commute.routes || {})[routeId] || {};
+    config.commute.activeRouteId = routeId;
     config.commute.routes = config.commute.routes || {};
-    config.commute.routes['school-morning'] = {
+    config.commute.routes[routeId] = {
       provider: 'google-maps',
-      routeLabel: config.family.location.schoolRoute || config.family.location.school || 'to School',
-      stopCount: Number(existingRoute.stopCount || 0),
+      routeLabel: opts.routeLabel || existingRoute.routeLabel || config.family.location.schoolRoute || config.family.location.school || 'Route',
+      stopCount: Number(opts.stopCount != null ? opts.stopCount : existingRoute.stopCount || 0),
       durationMinutes: Math.max(1, Math.round(duration.value / 60)),
       trafficStatus: trafficStatus(duration.value, result.duration && result.duration.value),
       updatedAt: now.toISOString(),
@@ -1648,7 +1669,33 @@ function renderRoutineEditor() {
             <div><div class="field-label">Buffer min</div><input type="number" min="0" value="${Number(seg.bufferMin || 0)}" onchange="updateRoutineSegment(${i}, 'bufferMin', this.value)"></div>
             <div><div class="field-label">Fallback drive</div><input type="number" min="0" value="${Number(seg.fallbackDriveMin || 0)}" onchange="updateRoutineSegment(${i}, 'fallbackDriveMin', this.value)"></div>
           </div>
-          <div class="field-hint">This is safe display data. Actual addresses and Maps credentials remain local to the admin device.</div>
+          <div class="section-label" style="margin-top:12px">Local route lookup</div>
+          <div class="form-grid">
+            <div><div class="field-label">Origin</div><input type="text" value="${html(routeOriginFor(routine))}" placeholder="Home address or lat,lng" onchange="updateRoutineRouteLocal(${i}, 'origin', this.value)"></div>
+            <div><div class="field-label">Destination</div><input type="text" value="${html(routeDestinationFor(routine))}" placeholder="School, pickup, field, etc." onchange="updateRoutineRouteLocal(${i}, 'destination', this.value)"></div>
+          </div>
+          <div class="field-hint">Origins and destinations stay local to this admin device. GitHub receives only safe derived route labels, durations, status, and timestamps.</div>
+          <button class="action-btn" onclick="updateRoutineMapsStatus(${i})" style="margin-top:12px">
+            <span class="action-icon">↻</span>
+            <span class="action-label">Update maps status for this routine</span>
+          </button>
+          <div class="action-result" id="routineMapsResult${i}"></div>
+          <div class="section-label" style="margin-top:12px">Routine list</div>
+          ${(routine.listItems || []).map((item, itemIndex) => `
+            <div class="editor-card" style="padding:12px;margin-bottom:10px">
+              <div class="editor-card-head">
+                <div class="editor-card-title">${html(item.label || 'List item')}</div>
+                <button class="small-btn danger" onclick="removeRoutineListItem(${i}, ${itemIndex})">REMOVE</button>
+              </div>
+              <div class="form-grid">
+                <div><div class="field-label">Icon key</div><input type="text" value="${html(item.icon || '')}" onchange="updateRoutineListItem(${i}, ${itemIndex}, 'icon', this.value)"></div>
+                <div><div class="field-label">Label</div><input type="text" value="${html(item.label || '')}" onchange="updateRoutineListItem(${i}, ${itemIndex}, 'label', this.value)"></div>
+                <div><div class="field-label">Min from leave</div><input type="number" value="${Number(item.targetMin || 0)}" onchange="updateRoutineListItem(${i}, ${itemIndex}, 'targetMin', this.value)"></div>
+                <div><div class="field-label">Assigned to</div><select onchange="updateRoutineListItem(${i}, ${itemIndex}, 'assignee', this.value)">${memberOptions(item.assignee || '')}</select></div>
+              </div>
+            </div>
+          `).join('')}
+          <button class="small-btn" onclick="addRoutineListItem(${i})">+ ADD LIST ITEM</button>
         ` : '<div class="field-hint">Timeline routines currently use the Evening segments editor below. Full dynamic timeline editing will come after departure routines stabilize.</div>'}
       </div>`;
   }).join('');
@@ -1703,6 +1750,41 @@ function updateRoutineSegment(i, key, value) {
   config.routines[i] = normalizeRoutine(r);
   saveConfig();
   renderRoutineEditor();
+}
+function updateRoutineRouteLocal(i, field, value) {
+  const r = config.routines[i];
+  if (!r) return;
+  CredentialStore.setRouteField(r.routeId || r.id, field, value);
+  if (r.id === 'school-morning') {
+    if (field === 'origin') CredentialStore.setCommuteOrigin(value);
+    if (field === 'destination') CredentialStore.setCommuteDestination(value);
+  }
+}
+function addRoutineListItem(i) {
+  const r = config.routines[i];
+  if (!r) return;
+  r.listItems = Array.isArray(r.listItems) ? r.listItems : [];
+  r.listItems.push({ id:'new_item', label:'New item', icon:'', targetMin:-10, assignee:'' });
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function removeRoutineListItem(i, itemIndex) {
+  const r = config.routines[i];
+  if (!r || !Array.isArray(r.listItems)) return;
+  r.listItems.splice(itemIndex, 1);
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function updateRoutineListItem(i, itemIndex, key, value) {
+  const r = config.routines[i];
+  if (!r || !Array.isArray(r.listItems) || !r.listItems[itemIndex]) return;
+  const item = r.listItems[itemIndex];
+  item[key] = key === 'targetMin' ? Number(value) : value;
+  if (key === 'label') item.id = slug(value, item.id);
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
 }
 function toggleRoutineDay(i, day, on) {
   const r = config.routines[i];
@@ -2001,6 +2083,42 @@ async function updateActiveMapsStatus() {
     return;
   }
   const route = (config.commute.routes || {})['school-morning'] || {};
+  const updated = route.updatedAt ? new Date(route.updatedAt).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : 'now';
+  showResult(el, true, 'Maps status updated: ' + route.durationMinutes + ' min · ' + (route.trafficStatus || 'traffic unknown') + ' · ' + updated);
+  const pushed = await pushToGitHub({ resultEl: el });
+  if (pushed) showResult(el, true, 'Maps status updated and saved to GitHub.');
+}
+async function updateRoutineMapsStatus(i) {
+  const el = document.getElementById('routineMapsResult' + i);
+  const routine = config.routines && config.routines[i];
+  if (!routine || routine.type !== 'departure') {
+    showResult(el, false, 'This routine does not have a route to update.');
+    return;
+  }
+  const routeId = routine.routeId || routine.id;
+  const seg = (routine.segments || [])[0] || {};
+  const origin = routeOriginFor(routine);
+  const destination = routeDestinationFor(routine);
+  if (!origin || !destination) {
+    showResult(el, false, 'Add local origin and destination first.');
+    toast('Route needs origin and destination', 'fail');
+    return;
+  }
+  showResult(el, true, 'Updating Maps status for ' + routine.label + '...');
+  toast('Updating Maps status…');
+  const ok = await updateDerivedCommute({
+    routeId,
+    origin,
+    destination,
+    routeLabel: seg.routeLabel || routine.label,
+    stopCount: Number(seg.stopCount || 0),
+  });
+  if (!ok) {
+    showResult(el, false, 'Maps status unavailable. Check the Maps key, origin, and destination.');
+    toast('Maps status unavailable', 'fail');
+    return;
+  }
+  const route = (config.commute.routes || {})[routeId] || {};
   const updated = route.updatedAt ? new Date(route.updatedAt).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : 'now';
   showResult(el, true, 'Maps status updated: ' + route.durationMinutes + ' min · ' + (route.trafficStatus || 'traffic unknown') + ' · ' + updated);
   const pushed = await pushToGitHub({ resultEl: el });
