@@ -66,6 +66,138 @@ var DASHBOARD_CONFIG = {
     4,
     5
   ],
+  "routines": [
+    {
+      "id": "school-morning",
+      "label": "School morning",
+      "type": "departure",
+      "enabled": true,
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "window": {
+        "start": "06:00",
+        "end": "13:00"
+      },
+      "primaryTime": "06:45",
+      "targetTime": "07:20",
+      "deadline": "07:25",
+      "routeId": "school-morning",
+      "display": {
+        "scene": "departure",
+        "priority": 80
+      },
+      "segments": [
+        {
+          "id": "school-run",
+          "label": "Leave for school",
+          "routeLabel": "US-17 N to School",
+          "destinationLabel": "School",
+          "stopCount": 0,
+          "bufferMin": 5,
+          "fallbackDriveMin": 28
+        }
+      ],
+      "listItems": [
+        {
+          "id": "breakfast",
+          "label": "Breakfast",
+          "targetMin": -40,
+          "icon": "breakfast"
+        },
+        {
+          "id": "dressed",
+          "label": "Get dressed",
+          "targetMin": -30,
+          "icon": "dressed"
+        },
+        {
+          "id": "backpack",
+          "label": "Backpacks ready",
+          "targetMin": -20,
+          "icon": "backpack"
+        },
+        {
+          "id": "teeth",
+          "label": "Brush teeth",
+          "targetMin": -15,
+          "icon": "teeth"
+        },
+        {
+          "id": "shoes",
+          "label": "Shoes on",
+          "targetMin": -5,
+          "icon": "shoes"
+        },
+        {
+          "id": "car",
+          "label": "Get in the car",
+          "targetMin": 0,
+          "icon": "car"
+        }
+      ]
+    },
+    {
+      "id": "school-pickup",
+      "label": "School pickup",
+      "type": "departure",
+      "enabled": true,
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "window": {
+        "start": "14:15",
+        "end": "15:15"
+      },
+      "primaryTime": "14:35",
+      "targetTime": "14:45",
+      "deadline": "14:50",
+      "routeId": "school-pickup",
+      "display": {
+        "scene": "departure",
+        "priority": 70
+      },
+      "segments": [
+        {
+          "id": "pickup-run",
+          "label": "Leave for pickup",
+          "routeLabel": "Home to pickup",
+          "destinationLabel": "Pickup",
+          "stopCount": 1,
+          "bufferMin": 5,
+          "fallbackDriveMin": 18
+        }
+      ],
+      "listItems": [
+        {
+          "id": "keys",
+          "label": "Keys and wallet",
+          "targetMin": -10,
+          "icon": "backpack"
+        },
+        {
+          "id": "water",
+          "label": "Water bottles",
+          "targetMin": -8,
+          "icon": "breakfast"
+        },
+        {
+          "id": "car",
+          "label": "Get in the car",
+          "targetMin": 0,
+          "icon": "car"
+        }
+      ]
+    }
+  ],
   "scenarios": {
     "default": {
       "leave": "06:45",
@@ -240,6 +372,15 @@ var DASHBOARD_CONFIG = {
         "trafficStatus": "light",
         "updatedAt": "2026-05-06T15:24:15.859Z",
         "expiresAt": "2026-05-06T15:39:15.859Z"
+      },
+      "school-pickup": {
+        "provider": "",
+        "routeLabel": "Home to pickup",
+        "stopCount": 1,
+        "durationMinutes": null,
+        "trafficStatus": "",
+        "updatedAt": "",
+        "expiresAt": ""
       }
     },
     "defaultDriveMin": 12,

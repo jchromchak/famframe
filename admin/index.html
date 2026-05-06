@@ -725,6 +725,11 @@ select {
     <div class="section-label">Routine days</div>
     <div id="schoolDayToggles"></div>
 
+    <div class="section-label" style="margin-top:16px">Routine library</div>
+    <div class="field-hint">Routines are the dynamic model behind morning school run, pickup, evening wind-down, and future one-off or day-specific rhythms. This first pass keeps the old fields compatible while letting you add departure routines.</div>
+    <div id="routineEditor"></div>
+    <button class="small-btn" onclick="addRoutine()">+ ADD ROUTINE</button>
+
     <button class="save-btn" onclick="saveSchedule()">Save daily routine</button>
   </div>
  
@@ -961,6 +966,49 @@ const DEFAULT_CONFIG = {
     evening: { start: '17:00', end: '21:00' },
   },
   schoolDays: [1,2,3,4,5],
+  routines: [
+    {
+      id: 'school-morning',
+      label: 'School morning',
+      type: 'departure',
+      enabled: true,
+      days: [1,2,3,4,5],
+      window: { start: '06:00', end: '12:30' },
+      primaryTime: '12:45',
+      targetTime: '13:20',
+      deadline: '13:25',
+      routeId: 'school-morning',
+      display: { scene: 'departure', priority: 80 },
+      segments: [{ id:'school-run', label:'Leave for school', routeLabel:'US-17 N to School', destinationLabel:'School', stopCount:0, bufferMin:5, fallbackDriveMin:22 }],
+      listItems: [
+        { id:'breakfast', label:'Breakfast', icon:'breakfast', targetMin:-40 },
+        { id:'dressed', label:'Get dressed', icon:'dressed', targetMin:-30 },
+        { id:'backpack', label:'Backpacks ready', icon:'backpack', targetMin:-20 },
+        { id:'teeth', label:'Brush teeth', icon:'teeth', targetMin:-15 },
+        { id:'shoes', label:'Shoes on', icon:'shoes', targetMin:-5 },
+        { id:'car', label:'Get in the car', icon:'car', targetMin:0 },
+      ],
+    },
+    {
+      id: 'school-pickup',
+      label: 'School pickup',
+      type: 'departure',
+      enabled: true,
+      days: [1,2,3,4,5],
+      window: { start: '14:15', end: '15:15' },
+      primaryTime: '14:35',
+      targetTime: '14:45',
+      deadline: '14:50',
+      routeId: 'school-pickup',
+      display: { scene: 'departure', priority: 70 },
+      segments: [{ id:'pickup-run', label:'Leave for pickup', routeLabel:'Home to pickup', destinationLabel:'Pickup', stopCount:1, bufferMin:5, fallbackDriveMin:18 }],
+      listItems: [
+        { id:'keys', label:'Keys and wallet', icon:'backpack', targetMin:-10 },
+        { id:'water', label:'Water bottles', icon:'breakfast', targetMin:-8 },
+        { id:'car', label:'Get in the car', icon:'car', targetMin:0 },
+      ],
+    },
+  ],
   scenarios: {
     default: {
       leave: '12:45',
@@ -1057,6 +1105,7 @@ function deepMerge(base, override) {
   return out;
 }
 function ensureModel() {
+  const hadRoutines = Array.isArray((config || {}).routines);
   config = deepMerge(DEFAULT_CONFIG, config || {});
   config.family = config.family || clone(DEFAULT_CONFIG.family);
   config.family.kids = Array.isArray(config.family.kids) ? config.family.kids : [];
@@ -1074,12 +1123,124 @@ function ensureModel() {
   config.schoolDays = Array.isArray(config.schoolDays) ? config.schoolDays : [1,2,3,4,5];
   config.morningChecklist = Array.isArray(config.morningChecklist) ? config.morningChecklist : [];
   config.eveningTimeline = Array.isArray(config.eveningTimeline) ? config.eveningTimeline : [];
+  config.routines = hadRoutines && Array.isArray(config.routines) ? config.routines : defaultRoutinesFromLegacy();
+  config.routines = config.routines.map(normalizeRoutine);
   config.commute = deepMerge(DEFAULT_CONFIG.commute, config.commute || {});
   if (config.commute.origin) CredentialStore.setCommuteOrigin(config.commute.origin);
   if (config.commute.destination) CredentialStore.setCommuteDestination(config.commute.destination);
   delete config.commute.origin;
   delete config.commute.destination;
   config.commute.driveEstimates = Array.isArray(config.commute.driveEstimates) ? config.commute.driveEstimates : [];
+  syncLegacyFromRoutines();
+}
+function defaultRoutinesFromLegacy() {
+  const s = (config.scenarios && config.scenarios.default) || DEFAULT_CONFIG.scenarios.default;
+  const morningMode = (config.modes && config.modes.morning) || DEFAULT_CONFIG.modes.morning;
+  const eveningMode = (config.modes && config.modes.evening) || DEFAULT_CONFIG.modes.evening;
+  const schoolRoute = ((config.commute || {}).routes || {})['school-morning'] || {};
+  return [
+    normalizeRoutine({
+      id: 'school-morning',
+      label: 'School morning',
+      type: 'departure',
+      enabled: true,
+      days: Array.isArray(config.schoolDays) ? config.schoolDays : [1,2,3,4,5],
+      window: { start: timeFromParts(morningMode, 'start', 'startHour', 'startMin', '06:00'), end: timeFromParts(morningMode, 'end', 'endHour', 'endMin', '12:30') },
+      primaryTime: timeFromParts(s, 'leave', 'leaveHour', 'leaveMin', '07:00'),
+      targetTime: timeFromParts(s, 'school', 'schoolHour', 'schoolMin', '07:30'),
+      deadline: timeFromParts(s, 'lateBell', 'lateBellHour', 'lateBellMin', '07:35'),
+      routeId: 'school-morning',
+      display: { scene: 'departure', priority: 80 },
+      segments: [{
+        id: 'school-run',
+        label: 'Leave for school',
+        routeLabel: schoolRoute.routeLabel || config.family.location.schoolRoute || config.family.location.school || 'to School',
+        destinationLabel: 'School',
+        stopCount: Number(schoolRoute.stopCount || 0),
+        bufferMin: Number(s.carBufferMin || 5),
+        fallbackDriveMin: Number(s.driveMinEst || config.commute.defaultDriveMin || 0),
+      }],
+      listItems: clone(config.morningChecklist || []),
+    }),
+    normalizeRoutine({
+      id: 'evening',
+      label: 'Evening wind-down',
+      type: 'timeline',
+      enabled: true,
+      days: [0,1,2,3,4,5,6],
+      window: { start: timeFromParts(eveningMode, 'start', 'startHour', 'startMin', '17:00'), end: timeFromParts(eveningMode, 'end', 'endHour', 'endMin', '21:00') },
+      display: { scene: 'evening', priority: 40 },
+      timelineItems: clone(config.eveningTimeline || []),
+    }),
+  ];
+}
+function normalizeRoutine(routine) {
+  const r = routine && typeof routine === 'object' ? clone(routine) : {};
+  r.id = slug(r.id || r.label, 'routine_' + Date.now());
+  r.label = r.label || 'New routine';
+  r.type = r.type || 'departure';
+  r.enabled = r.enabled !== false;
+  r.days = Array.isArray(r.days) ? r.days.map(Number).filter(n => n >= 0 && n <= 6) : [1,2,3,4,5];
+  r.window = r.window || {};
+  r.window.start = toTime(r.window.start, '06:00');
+  r.window.end = toTime(r.window.end, '07:00');
+  r.display = r.display || {};
+  r.display.scene = r.display.scene || (r.type === 'timeline' ? 'evening' : 'departure');
+  r.display.priority = Number(r.display.priority == null ? 50 : r.display.priority);
+  if (r.type === 'departure') {
+    r.primaryTime = toTime(r.primaryTime, '07:00');
+    r.targetTime = toTime(r.targetTime, r.primaryTime);
+    r.deadline = toTime(r.deadline, r.targetTime);
+    r.routeId = slug(r.routeId || r.id, r.id);
+    r.segments = Array.isArray(r.segments) && r.segments.length ? r.segments : [{ id:r.id + '-segment', label:'Leave', routeLabel:'Route', destinationLabel:'Destination', stopCount:0, bufferMin:5, fallbackDriveMin:15 }];
+    r.segments = r.segments.map((seg, i) => ({
+      id: slug(seg.id || seg.label, r.id + '-segment-' + i),
+      label: seg.label || 'Leave',
+      routeLabel: seg.routeLabel || seg.destinationLabel || 'Route',
+      destinationLabel: seg.destinationLabel || 'Destination',
+      stopCount: Math.max(0, Math.floor(Number(seg.stopCount || 0))),
+      bufferMin: Math.max(0, Math.floor(Number(seg.bufferMin || 0))),
+      fallbackDriveMin: Math.max(0, Math.floor(Number(seg.fallbackDriveMin || 0))),
+    }));
+    r.listItems = Array.isArray(r.listItems) ? r.listItems : [];
+  }
+  if (r.type === 'timeline') {
+    r.timelineItems = Array.isArray(r.timelineItems) ? r.timelineItems : [];
+  }
+  return r;
+}
+function syncLegacyFromRoutines() {
+  const school = (config.routines || []).find(r => r.id === 'school-morning' && r.type === 'departure') || (config.routines || []).find(r => r.type === 'departure');
+  const evening = (config.routines || []).find(r => r.display && r.display.scene === 'evening') || (config.routines || []).find(r => r.type === 'timeline');
+  if (school) {
+    config.schoolDays = school.days || config.schoolDays;
+    config.modes.morning = clone(school.window || config.modes.morning);
+    config.scenarios.default.leave = school.primaryTime;
+    config.scenarios.default.school = school.targetTime;
+    config.scenarios.default.lateBell = school.deadline;
+    const seg = (school.segments || [])[0] || {};
+    config.scenarios.default.driveMinEst = Number(seg.fallbackDriveMin || config.scenarios.default.driveMinEst || 0);
+    config.scenarios.default.carBufferMin = Number(seg.bufferMin || config.scenarios.default.carBufferMin || 0);
+    config.morningChecklist = clone(school.listItems || config.morningChecklist || []);
+  }
+  if (evening) {
+    config.modes.evening = clone(evening.window || config.modes.evening);
+    if (Array.isArray(evening.timelineItems)) config.eveningTimeline = clone(evening.timelineItems);
+  }
+  config.commute.routes = config.commute.routes || {};
+  (config.routines || []).filter(r => r.type === 'departure').forEach(r => {
+    const seg = (r.segments || [])[0] || {};
+    config.commute.routes[r.routeId || r.id] = Object.assign({
+      provider: '',
+      durationMinutes: null,
+      trafficStatus: '',
+      updatedAt: '',
+      expiresAt: '',
+    }, config.commute.routes[r.routeId || r.id] || {}, {
+      routeLabel: seg.routeLabel || r.label,
+      stopCount: Number(seg.stopCount || 0),
+    });
+  });
 }
 function loadConfig() {
   const saved = localStorage.getItem(KEYS.config);
@@ -1224,6 +1385,7 @@ function renderAll() {
   renderKids();
   populateFamilyForm();
   renderSchedule();
+  renderRoutineEditor();
   renderChecklistEditor();
   renderTimeline();
   renderCommuteEditor();
@@ -1284,6 +1446,12 @@ function storeSegmentFields() {
   config.commute.routes['school-morning'] = config.commute.routes['school-morning'] || {};
   config.commute.routes['school-morning'].routeLabel = routeLabel;
   config.commute.routes['school-morning'].stopCount = stopCount;
+  const schoolRoutine = (config.routines || []).find(r => r.id === 'school-morning');
+  if (schoolRoutine) {
+    schoolRoutine.segments = schoolRoutine.segments || [{}];
+    schoolRoutine.segments[0].routeLabel = routeLabel;
+    schoolRoutine.segments[0].stopCount = stopCount;
+  }
   CredentialStore.setCommuteOrigin(getVal('commuteOrigin'));
   CredentialStore.setCommuteDestination(getVal('commuteDestination'));
 }
@@ -1439,6 +1607,113 @@ function toggleSchoolDay(day, on) {
   if (on) set.add(day); else set.delete(day);
   config.schoolDays = Array.from(set).sort(); saveConfig(); renderSchedule();
 }
+function renderRoutineEditor() {
+  const el = document.getElementById('routineEditor');
+  if (!el) return;
+  const dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  el.innerHTML = (config.routines || []).map((routine, i) => {
+    const seg = (routine.segments || [])[0] || {};
+    const days = new Set(routine.days || []);
+    return `
+      <div class="editor-card">
+        <div class="editor-card-head">
+          <div class="editor-card-title">${html(routine.label || 'Routine')}</div>
+          <button class="small-btn danger" onclick="removeRoutine(${i})">REMOVE</button>
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--sub);font-size:11px;letter-spacing:.12em">
+          <input type="checkbox" ${routine.enabled !== false ? 'checked' : ''} onchange="updateRoutine(${i}, 'enabled', this.checked)"> ENABLED
+        </label>
+        <div class="form-grid">
+          <div><div class="field-label">Label</div><input type="text" value="${html(routine.label || '')}" onchange="updateRoutine(${i}, 'label', this.value)"></div>
+          <div><div class="field-label">Type</div><select onchange="updateRoutine(${i}, 'type', this.value)">
+            <option value="departure" ${routine.type === 'departure' ? 'selected' : ''}>Departure / pickup</option>
+            <option value="timeline" ${routine.type === 'timeline' ? 'selected' : ''}>Timeline</option>
+          </select></div>
+          <div><div class="field-label">Window start</div><input type="time" value="${toTime((routine.window || {}).start,'06:00')}" onchange="updateRoutine(${i}, 'window.start', this.value)"></div>
+          <div><div class="field-label">Window end</div><input type="time" value="${toTime((routine.window || {}).end,'07:00')}" onchange="updateRoutine(${i}, 'window.end', this.value)"></div>
+          <div><div class="field-label">Leave / start</div><input type="time" value="${toTime(routine.primaryTime,'07:00')}" onchange="updateRoutine(${i}, 'primaryTime', this.value)"></div>
+          <div><div class="field-label">Arrive / target</div><input type="time" value="${toTime(routine.targetTime,'07:20')}" onchange="updateRoutine(${i}, 'targetTime', this.value)"></div>
+          <div><div class="field-label">Deadline</div><input type="time" value="${toTime(routine.deadline,'07:25')}" onchange="updateRoutine(${i}, 'deadline', this.value)"></div>
+          <div><div class="field-label">Route id</div><input type="text" value="${html(routine.routeId || routine.id)}" onchange="updateRoutine(${i}, 'routeId', this.value)"></div>
+        </div>
+        <div class="field-label">Days</div>
+        <div style="margin-bottom:12px">${dayLabels.map((d, day) => `<label style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 10px 0;color:var(--sub);font-size:11px;letter-spacing:.12em"><input type="checkbox" ${days.has(day) ? 'checked' : ''} onchange="toggleRoutineDay(${i}, ${day}, this.checked)">${d}</label>`).join('')}</div>
+        ${routine.type === 'departure' ? `
+          <div class="section-label" style="margin-top:12px">Primary segment</div>
+          <div class="form-grid">
+            <div><div class="field-label">Segment label</div><input type="text" value="${html(seg.label || '')}" onchange="updateRoutineSegment(${i}, 'label', this.value)"></div>
+            <div><div class="field-label">Route label</div><input type="text" value="${html(seg.routeLabel || '')}" onchange="updateRoutineSegment(${i}, 'routeLabel', this.value)"></div>
+            <div><div class="field-label">Destination</div><input type="text" value="${html(seg.destinationLabel || '')}" onchange="updateRoutineSegment(${i}, 'destinationLabel', this.value)"></div>
+            <div><div class="field-label">Stops</div><input type="number" min="0" value="${Number(seg.stopCount || 0)}" onchange="updateRoutineSegment(${i}, 'stopCount', this.value)"></div>
+            <div><div class="field-label">Buffer min</div><input type="number" min="0" value="${Number(seg.bufferMin || 0)}" onchange="updateRoutineSegment(${i}, 'bufferMin', this.value)"></div>
+            <div><div class="field-label">Fallback drive</div><input type="number" min="0" value="${Number(seg.fallbackDriveMin || 0)}" onchange="updateRoutineSegment(${i}, 'fallbackDriveMin', this.value)"></div>
+          </div>
+          <div class="field-hint">This is safe display data. Actual addresses and Maps credentials remain local to the admin device.</div>
+        ` : '<div class="field-hint">Timeline routines currently use the Evening segments editor below. Full dynamic timeline editing will come after departure routines stabilize.</div>'}
+      </div>`;
+  }).join('');
+}
+function addRoutine() {
+  config.routines.push(normalizeRoutine({
+    id: 'school-pickup-' + Date.now(),
+    label: 'Pickup',
+    type: 'departure',
+    enabled: true,
+    days: [1,2,3,4,5],
+    window: { start:'14:15', end:'15:15' },
+    primaryTime: '14:35',
+    targetTime: '14:45',
+    deadline: '14:50',
+    routeId: 'pickup-' + Date.now(),
+    display: { scene:'departure', priority: 60 },
+    segments: [{ id:'pickup-run', label:'Leave for pickup', routeLabel:'Home to pickup', destinationLabel:'Pickup', stopCount:1, bufferMin:5, fallbackDriveMin:18 }],
+    listItems: [
+      { id:'keys', label:'Keys and wallet', icon:'backpack', targetMin:-10 },
+      { id:'water', label:'Water bottles', icon:'breakfast', targetMin:-8 },
+      { id:'car', label:'Get in the car', icon:'car', targetMin:0 },
+    ],
+  }));
+  saveConfig();
+  renderAll();
+}
+function removeRoutine(i) {
+  config.routines.splice(i, 1);
+  saveConfig();
+  renderAll();
+}
+function updateRoutine(i, path, value) {
+  const r = config.routines[i];
+  if (!r) return;
+  if (path === 'enabled') r.enabled = Boolean(value);
+  else if (path === 'label') { r.label = value; r.id = slug(r.id || value, 'routine'); }
+  else if (path === 'type') r.type = value;
+  else if (path === 'window.start') { r.window = r.window || {}; r.window.start = value; }
+  else if (path === 'window.end') { r.window = r.window || {}; r.window.end = value; }
+  else if (path === 'routeId') r.routeId = slug(value, r.id);
+  else r[path] = value;
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function updateRoutineSegment(i, key, value) {
+  const r = config.routines[i];
+  if (!r) return;
+  r.segments = Array.isArray(r.segments) && r.segments.length ? r.segments : [{}];
+  r.segments[0][key] = ['stopCount','bufferMin','fallbackDriveMin'].includes(key) ? Number(value) : value;
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function toggleRoutineDay(i, day, on) {
+  const r = config.routines[i];
+  if (!r) return;
+  const set = new Set(r.days || []);
+  if (on) set.add(day); else set.delete(day);
+  r.days = Array.from(set).sort();
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
 function saveSchedule() {
   config.time.timeZone = getVal('timeZoneInput') || 'America/New_York';
   config.modes.morning = { start:getVal('morningStart'), end:getVal('morningEnd') };
@@ -1447,11 +1722,28 @@ function saveSchedule() {
   config.scenarios.default.school = getVal('defaultSchool');
   config.scenarios.default.lateBell = getVal('defaultLateBell');
   config.scenarios.default.driveMinEst = getNum('defaultDrive', 0);
+  const schoolRoutine = (config.routines || []).find(r => r.id === 'school-morning');
+  if (schoolRoutine) {
+    schoolRoutine.days = clone(config.schoolDays);
+    schoolRoutine.window = clone(config.modes.morning);
+    schoolRoutine.primaryTime = config.scenarios.default.leave;
+    schoolRoutine.targetTime = config.scenarios.default.school;
+    schoolRoutine.deadline = config.scenarios.default.lateBell;
+    schoolRoutine.listItems = clone(config.morningChecklist);
+    schoolRoutine.segments = schoolRoutine.segments || [{}];
+    schoolRoutine.segments[0].fallbackDriveMin = config.scenarios.default.driveMinEst;
+  }
+  const eveningRoutine = (config.routines || []).find(r => r.id === 'evening');
+  if (eveningRoutine) {
+    eveningRoutine.window = clone(config.modes.evening);
+    eveningRoutine.timelineItems = clone(config.eveningTimeline);
+  }
   const morningEnd = timeValueToMin(config.modes.morning.end);
   const leave = timeValueToMin(config.scenarios.default.leave);
   if (morningEnd != null && leave != null && morningEnd < leave) {
     toast('Morning standby is before leave time. Dashboard may switch away early.', 'fail');
   }
+  syncLegacyFromRoutines();
   saveConfig(); saveAndSync('Daily routine saved');
 }
 

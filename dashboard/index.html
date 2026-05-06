@@ -380,6 +380,7 @@ body{font-family:'DM Mono',monospace}
   var ConfigService = {
     getFamily: function () { return val(['family'], {}); },
     getScenes: function () { return val(['modes'], {}); },
+    getRoutines: function () { return arr(['routines']); },
     getMorningScenario: function (t) { return val(['scenarios', dayKey(t)], null) || val(['scenarios', 'default'], null); },
     getEveningTimeline: function () { return arr(['eveningTimeline']); },
     getMessages: function () { return val(['messages'], {}); },
@@ -486,6 +487,9 @@ body{font-family:'DM Mono',monospace}
   function cfgTime(obj, key, hourKey, minKey) {
     return timeToMin(obj && obj[key], obj && obj[hourKey], obj && obj[minKey]);
   }
+  function routineTime(r, key, fallback) {
+    return timeToMin(r && r[key], null, null) || fallback || 0;
+  }
   function fmtMin(total) {
     total = ((Number(total) % 1440) + 1440) % 1440;
     return fmt(Math.floor(total / 60), total % 60);
@@ -575,14 +579,55 @@ body{font-family:'DM Mono',monospace}
     if (s <= e) return n >= s && n < e;
     return n >= s || n < e;
   }
+  function routineActive(t, routine) {
+    if (!routine || routine.enabled === false) return false;
+    var days = Object.prototype.toString.call(routine.days) === '[object Array]' ? routine.days : [0,1,2,3,4,5,6];
+    var dayOk = false;
+    for (var i = 0; i < days.length; i++) if (Number(days[i]) === t.dayIndex) dayOk = true;
+    if (!dayOk) return false;
+    var win = routine.window || {};
+    var s = timeToMin(win.start, null, null);
+    var e = timeToMin(win.end, null, null);
+    var n = mins(t.hour, t.minute);
+    if (s <= e) return n >= s && n < e;
+    return n >= s || n < e;
+  }
+  function activeRoutine(t) {
+    var routines = ConfigService.getRoutines().filter(function (r) { return routineActive(t, r); });
+    routines.sort(function (a, b) {
+      var ap = a.display && a.display.priority != null ? Number(a.display.priority) : 50;
+      var bp = b.display && b.display.priority != null ? Number(b.display.priority) : 50;
+      return bp - ap;
+    });
+    return routines[0] || null;
+  }
+  var currentRoutine = null;
   function currentMode(t) {
     var forced = null;
+    var forcedRoutine = null;
     try {
-      forced = new URLSearchParams(window.location.search).get('scene') ||
-        new URLSearchParams(window.location.search).get('mode') ||
+      var params = new URLSearchParams(window.location.search);
+      forcedRoutine = params.get('routine');
+      forced = params.get('scene') ||
+        params.get('mode') ||
         window.localStorage.getItem('fam_frame_force_scene');
     } catch (e) {}
+    currentRoutine = null;
+    if (forcedRoutine) {
+      currentRoutine = ConfigService.getRoutines().filter(function (r) { return r.id === forcedRoutine; })[0] || null;
+      if (currentRoutine) {
+        var forcedScene = currentRoutine.display && currentRoutine.display.scene ? currentRoutine.display.scene : currentRoutine.type;
+        if (forcedScene === 'departure') return 'morning';
+        if (forcedScene === 'evening' || forcedScene === 'timeline') return 'evening';
+      }
+    }
     if (forced) return forced;
+    currentRoutine = activeRoutine(t);
+    if (currentRoutine) {
+      var scene = currentRoutine.display && currentRoutine.display.scene ? currentRoutine.display.scene : currentRoutine.type;
+      if (scene === 'departure') return 'morning';
+      if (scene === 'evening' || scene === 'timeline') return 'evening';
+    }
     if (inWindow(t, 'morning')) return isSchoolDay(t) ? 'morning' : 'weekend';
     if (inWindow(t, 'evening')) return 'evening';
     return 'art';
@@ -621,11 +666,11 @@ body{font-family:'DM Mono',monospace}
   var driveUpdatedText = '';
   var driveUnavailable = false;
   var footerMessageCache = { key: '', value: '' };
-  function updateDrive(t) {
+  function updateDrive(t, routeId, fallbackDriveMin) {
     t = t || zonedNow();
     var estimates = arr(['commute','driveEstimates']);
     var nowTotal = mins(t.hour, t.minute);
-    driveMin = Number(val(['commute','defaultDriveMin'], val(['scenarios','default','driveMinEst'], 0)));
+    driveMin = Number(fallbackDriveMin || val(['commute','defaultDriveMin'], val(['scenarios','default','driveMinEst'], 0)));
     driveSource = 'estimate';
     driveDistance = '';
     driveUpdatedText = '';
@@ -640,7 +685,7 @@ body{font-family:'DM Mono',monospace}
       }
     }
 
-    var route = ConfigService.getCommute();
+    var route = ConfigService.getCommute(routeId);
     var expires = route && route.expiresAt ? new Date(route.expiresAt) : null;
     var updated = route && route.updatedAt ? new Date(route.updatedAt) : null;
     var fresh = route && Number(route.durationMinutes) > 0 && expires && expires > new Date();
@@ -674,10 +719,12 @@ body{font-family:'DM Mono',monospace}
   function renderMorning(t) {
     var s = scenario(t);
     if (!s) return;
+    var routine = currentRoutine && currentRoutine.type === 'departure' ? currentRoutine : null;
+    var segment = routine && routine.segments && routine.segments.length ? routine.segments[0] : null;
 
-    var leaveTotal = cfgTime(s, 'leave', 'leaveHour', 'leaveMin');
-    var schoolTotal = cfgTime(s, 'school', 'schoolHour', 'schoolMin');
-    var lateBellTotal = cfgTime(s, 'lateBell', 'lateBellHour', 'lateBellMin');
+    var leaveTotal = routine ? routineTime(routine, 'primaryTime', cfgTime(s, 'leave', 'leaveHour', 'leaveMin')) : cfgTime(s, 'leave', 'leaveHour', 'leaveMin');
+    var schoolTotal = routine ? routineTime(routine, 'targetTime', cfgTime(s, 'school', 'schoolHour', 'schoolMin')) : cfgTime(s, 'school', 'schoolHour', 'schoolMin');
+    var lateBellTotal = routine ? routineTime(routine, 'deadline', cfgTime(s, 'lateBell', 'lateBellHour', 'lateBellMin')) : cfgTime(s, 'lateBell', 'lateBellHour', 'lateBellMin');
     var nowTotal = mins(t.hour, t.minute);
     var diff = leaveTotal - nowTotal;
     var diffS = diff >= 0 ? (60 - t.second) % 60 : 0;
@@ -692,18 +739,21 @@ body{font-family:'DM Mono',monospace}
     else if (diff >= 0) id('mCountdown').innerHTML = pad(diff) + ':' + pad(diffS);
     else                id('mCountdown').innerHTML = fmtMin(leaveTotal);
 
-    var commuteRoute = ConfigService.getCommute();
+    updateDrive(t, routine && routine.routeId, segment && segment.fallbackDriveMin);
+    var commuteRoute = ConfigService.getCommute(routine && routine.routeId);
     var stopCount = routeStopCount(commuteRoute);
+    if (segment && Number(segment.stopCount) > stopCount) stopCount = Number(segment.stopCount);
     var stopChip = id('mStopChip');
     if (stopChip) {
       stopChip.className = stopCount > 0 ? 'stop-chip active' : 'stop-chip';
       stopChip.innerHTML = stopCount > 0 ? stopCount + ' STOP' + (stopCount === 1 ? '' : 'S') : '';
     }
 
-    id('mCountdownLabel').innerHTML = 'UNTIL SCHOOL — LEAVE BY ' + fmtMin(leaveTotal);
+    var destination = segment && segment.destinationLabel ? segment.destinationLabel : (routine && routine.label ? routine.label : 'School');
+    id('mCountdownLabel').innerHTML = 'UNTIL ' + String(destination).toUpperCase() + ' — LEAVE BY ' + fmtMin(leaveTotal);
     id('mMeta').innerHTML =
-      'LATE BELL ' + fmtMin(lateBellTotal) +
-      ' · SCHOOL AT ' + fmtMin(schoolTotal);
+      'TARGET ' + fmtMin(schoolTotal) +
+      ' · DEADLINE ' + fmtMin(lateBellTotal);
 
     // Progress
     id('mProgress').style.width = Math.max(0, Math.min(100, ((progressWindow - diff) / progressWindow) * 100)) + '%';
@@ -724,7 +774,7 @@ body{font-family:'DM Mono',monospace}
     var fill       = id('depFill');
     var lbl        = id('depLabel');
     var sub        = id('depSub');
-    var route      = commuteRoute && commuteRoute.routeLabel ? commuteRoute.routeLabel : val(['family','location','schoolRoute'], val(['family','location','school'], 'to School'));
+    var route      = commuteRoute && commuteRoute.routeLabel ? commuteRoute.routeLabel : (segment && segment.routeLabel ? segment.routeLabel : val(['family','location','schoolRoute'], val(['family','location','school'], 'to School')));
     var depCrit    = Number(val(['time','departureUrgency','critMin'], 10));
     var depWarn    = Number(val(['time','departureUrgency','warnMin'], 20));
 
@@ -755,13 +805,13 @@ body{font-family:'DM Mono',monospace}
     }
 
     // Checklist
-    renderChecklist(t, s);
+    renderChecklist(t, s, routine);
   }
 
   // ── CHECKLIST ─────────────────────────────────────────────────────
-  function renderChecklist(t, s) {
-    var items      = arr(['morningChecklist']);
-    var leaveTotal = cfgTime(s, 'leave', 'leaveHour', 'leaveMin');
+  function renderChecklist(t, s, routine) {
+    var items      = routine && Object.prototype.toString.call(routine.listItems) === '[object Array]' ? routine.listItems : arr(['morningChecklist']);
+    var leaveTotal = routine ? routineTime(routine, 'primaryTime', cfgTime(s, 'leave', 'leaveHour', 'leaveMin')) : cfgTime(s, 'leave', 'leaveHour', 'leaveMin');
     var nowTotal   = mins(t.hour, t.minute);
     var activeBefore = Number(val(['time','checklistTiming','activeBeforeMin'], 8));
     var doneAfter = Number(val(['time','checklistTiming','doneAfterMin'], 2));
@@ -783,7 +833,7 @@ body{font-family:'DM Mono',monospace}
 
   // ── EVENING TIMELINE ──────────────────────────────────────────────
   function renderTimeline(t) {
-    var tl       = ConfigService.getEveningTimeline();
+    var tl       = currentRoutine && currentRoutine.timelineItems ? currentRoutine.timelineItems : ConfigService.getEveningTimeline();
     var n        = mins(t.hour, t.minute);
     var html     = '';
     var inserted = false;
@@ -817,9 +867,9 @@ body{font-family:'DM Mono',monospace}
     id('eTimeline').innerHTML = html;
 
     // Progress bar
-    var evening = val(['modes','evening'], {});
-    var evS = cfgTime(evening, 'start', 'startHour', 'startMin');
-    var evE = cfgTime(evening, 'end', 'endHour', 'endMin');
+    var evening = currentRoutine && currentRoutine.window ? currentRoutine.window : val(['modes','evening'], {});
+    var evS = timeToMin(evening.start, evening.startHour, evening.startMin);
+    var evE = timeToMin(evening.end, evening.endHour, evening.endMin);
     var evSpan = evE >= evS ? evE - evS : evE + 1440 - evS;
     var evElapsed = n >= evS ? n - evS : n + 1440 - evS;
     id('eProgress').style.width = Math.max(0, Math.min(100, (evElapsed / evSpan) * 100)) + '%';
