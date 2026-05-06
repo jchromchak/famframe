@@ -1,6 +1,14 @@
 # famframe
 your family's living room dashboard
 
+## Project memory
+
+This public repository contains the Fam Frame app code and safe sample/config data only.
+
+Private Dovetell context memory, planning notes, risks, decisions, and strategy live in the private companion repository:
+
+- `github.com/jchromchak/famframe-private`
+
 ## Security model
 
 Fam Frame uses a display-only TV dashboard and a privileged mobile config manager.
