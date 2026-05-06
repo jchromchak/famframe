@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-05T22:38:26.014Z
+// Last updated: 2026-05-06T10:20:19.472Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -39,7 +39,8 @@ var DASHBOARD_CONFIG = {
       "city": "Mount Pleasant, SC",
       "lat": 32.83,
       "lon": -79.83,
-      "school": "US-17 N to School"
+      "school": "US-17 N to School",
+      "schoolRoute": "US-17 N to School"
     }
   },
   "api": {},
@@ -51,7 +52,7 @@ var DASHBOARD_CONFIG = {
   "modes": {
     "morning": {
       "start": "06:00",
-      "end": "09:30"
+      "end": "09:00"
     },
     "evening": {
       "start": "17:00",
@@ -70,7 +71,7 @@ var DASHBOARD_CONFIG = {
       "leave": "06:45",
       "school": "07:20",
       "lateBell": "07:25",
-      "driveMinEst": 29,
+      "driveMinEst": 28,
       "carBufferMin": 5,
       "note": ""
     }
@@ -235,10 +236,10 @@ var DASHBOARD_CONFIG = {
         "provider": "google-maps",
         "routeLabel": "US-17 N to School",
         "stopCount": 0,
-        "durationMinutes": 29,
+        "durationMinutes": 27,
         "trafficStatus": "light",
-        "updatedAt": "2026-05-05T22:38:25.704Z",
-        "expiresAt": "2026-05-05T22:53:25.704Z"
+        "updatedAt": "2026-05-06T10:20:19.098Z",
+        "expiresAt": "2026-05-06T10:35:19.098Z"
       }
     },
     "defaultDriveMin": 12,
