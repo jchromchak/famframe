@@ -11,11 +11,11 @@
 <script src="./dashboard-config.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--app-width:100vw;--app-height:100dvh;--stage-scale:1}
+:root{--app-width:100vw;--app-height:100dvh;--stage-scale:1;--stage-width:1920px}
 html,body{width:100%;height:100%;overflow:hidden;background:#050504;color:#efe7d7;cursor:none}
 body{font-family:'DM Mono',monospace}
 .viewport{position:fixed;left:0;top:0;width:var(--app-width);height:var(--app-height);display:flex;align-items:center;justify-content:center;background:#050504}
-.stage{width:1920px;height:1080px;position:relative;overflow:hidden;background:#0b0b09;transform:scale(var(--stage-scale));transform-origin:center center;box-shadow:0 0 0 1px rgba(239,231,215,.11) inset}
+.stage{width:var(--stage-width);height:1080px;position:relative;overflow:hidden;background:#0b0b09;transform:scale(var(--stage-scale));transform-origin:center center;box-shadow:0 0 0 1px rgba(239,231,215,.11) inset}
 .stage:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E")}
 .layout{display:none;grid-template-columns:1fr 430px;grid-template-rows:1fr auto;width:100%;height:100%}
 .layout.active{display:grid}
@@ -24,6 +24,14 @@ body{font-family:'DM Mono',monospace}
 .date-line,.panel-label{font-size:18px;letter-spacing:.28em;text-transform:uppercase;color:rgba(239,231,215,.42)}
 .date-line{margin-bottom:56px}
 .panel-label{margin-bottom:34px}
+
+/* ── MORNING ── */
+.morning-main-panel{padding:74px 74px 42px 78px}
+.morning-board{display:grid;grid-template-columns:minmax(430px,520px) minmax(520px,760px);gap:68px;height:100%;min-height:0;justify-content:center}
+.morning-hero{display:flex;flex-direction:column;min-width:0}
+.morning-hero .date-line{margin-bottom:46px}
+.morning-routine{padding-top:248px;min-width:0}
+.morning-routine .checklist{max-width:none;margin-top:0}
 
 /* ── EVENING ── */
 .evening-title{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:136px;font-weight:300;line-height:.92;letter-spacing:0;color:#efe7d7}
@@ -165,15 +173,21 @@ body{font-family:'DM Mono',monospace}
 
   <!-- ═══ MORNING ═══ -->
   <div class="layout" id="morningLayout">
-    <main class="main-panel">
-      <div class="date-line" id="mDateLine">—</div>
-      <div class="countdown-wrap">
-        <div class="countdown" id="mCountdown">—<span class="unit">min</span></div>
-        <div class="stop-chip" id="mStopChip"></div>
+    <main class="main-panel morning-main-panel">
+      <div class="morning-board">
+        <div class="morning-hero">
+          <div class="date-line" id="mDateLine">—</div>
+          <div class="countdown-wrap">
+            <div class="countdown" id="mCountdown">—<span class="unit">min</span></div>
+            <div class="stop-chip" id="mStopChip"></div>
+          </div>
+          <div class="countdown-label" id="mCountdownLabel">until school</div>
+          <div class="meta" id="mMeta">—</div>
+        </div>
+        <div class="morning-routine">
+          <div class="checklist" id="mChecklist"></div>
+        </div>
       </div>
-      <div class="countdown-label" id="mCountdownLabel">until school</div>
-      <div class="meta" id="mMeta">—</div>
-      <div class="checklist" id="mChecklist"></div>
       <div class="progress-track"><div class="progress-fill" id="mProgress"></div></div>
     </main>
     <aside class="side-panel">
@@ -458,9 +472,15 @@ body{font-family:'DM Mono',monospace}
     var vv = window.visualViewport;
     var w = vv && vv.width ? vv.width : window.innerWidth;
     var h = vv && vv.height ? vv.height : window.innerHeight;
-    var scale = Math.min(w / 1920, h / 1080);
+    var baseW = 1920;
+    var baseH = 1080;
+    var baseAspect = baseW / baseH;
+    var viewportAspect = w / h;
+    var scale = viewportAspect > baseAspect ? h / baseH : w / baseW;
+    var stageWidth = viewportAspect > baseAspect ? Math.max(baseW, w / scale) : baseW;
     document.documentElement.style.setProperty('--app-width', Math.max(1, w) + 'px');
     document.documentElement.style.setProperty('--app-height', Math.max(1, h) + 'px');
+    document.documentElement.style.setProperty('--stage-width', Math.round(stageWidth) + 'px');
     document.documentElement.style.setProperty('--stage-scale', Math.max(0.1, scale));
   }
 
