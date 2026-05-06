@@ -51,11 +51,11 @@ var DASHBOARD_CONFIG = {
   "modes": {
     "morning": {
       "start": "06:00",
-      "end": "15:30"
+      "end": "09:30"
     },
     "evening": {
       "start": "17:00",
-      "end": "21:00"
+      "end": "22:00"
     }
   },
   "schoolDays": [
@@ -67,10 +67,10 @@ var DASHBOARD_CONFIG = {
   ],
   "scenarios": {
     "default": {
-      "leave": "15:45",
-      "school": "16:20",
-      "lateBell": "16:25",
-      "driveMinEst": 22,
+      "leave": "06:45",
+      "school": "07:20",
+      "lateBell": "07:25",
+      "driveMinEst": 29,
       "carBufferMin": 5,
       "note": ""
     }
