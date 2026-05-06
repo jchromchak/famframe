@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-06T10:20:19.472Z
+// Last updated: 2026-05-06T13:22:07.063Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -52,7 +52,7 @@ var DASHBOARD_CONFIG = {
   "modes": {
     "morning": {
       "start": "06:00",
-      "end": "09:00"
+      "end": "11:00"
     },
     "evening": {
       "start": "17:00",
@@ -236,10 +236,10 @@ var DASHBOARD_CONFIG = {
         "provider": "google-maps",
         "routeLabel": "US-17 N to School",
         "stopCount": 0,
-        "durationMinutes": 27,
+        "durationMinutes": 30,
         "trafficStatus": "light",
-        "updatedAt": "2026-05-06T10:20:19.098Z",
-        "expiresAt": "2026-05-06T10:35:19.098Z"
+        "updatedAt": "2026-05-06T13:22:06.764Z",
+        "expiresAt": "2026-05-06T13:37:06.764Z"
       }
     },
     "defaultDriveMin": 12,
