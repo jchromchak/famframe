@@ -1112,6 +1112,11 @@ function timeFromParts(obj, key, hourKey, minKey, fallback) {
   if (obj && obj[hourKey] != null) return String(obj[hourKey]).padStart(2,'0') + ':' + String(obj[minKey] || 0).padStart(2,'0');
   return fallback || '00:00';
 }
+function timeValueToMin(value) {
+  const match = String(value || '').match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
 function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val == null ? '' : val; }
 function setPlaceholder(id, val) { const el = document.getElementById(id); if (el) el.placeholder = val == null ? '' : val; }
 function getVal(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -1442,6 +1447,11 @@ function saveSchedule() {
   config.scenarios.default.school = getVal('defaultSchool');
   config.scenarios.default.lateBell = getVal('defaultLateBell');
   config.scenarios.default.driveMinEst = getNum('defaultDrive', 0);
+  const morningEnd = timeValueToMin(config.modes.morning.end);
+  const leave = timeValueToMin(config.scenarios.default.leave);
+  if (morningEnd != null && leave != null && morningEnd < leave) {
+    toast('Morning standby is before leave time. Dashboard may switch away early.', 'fail');
+  }
   saveConfig(); saveAndSync('Daily routine saved');
 }
 

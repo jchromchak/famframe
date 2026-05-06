@@ -126,6 +126,62 @@
   blocked-by:
     - task-fb53f89c
 
+- [ ] Establish a mature thin-line visual system
+  id: task-e52f7f26
+  priority: now
+  status: in-progress
+  revisionId: rev-ec86215b
+
+  owner: john
+
+  notes:
+    User likes the simpler mockup direction and wants the dashboard to feel less kiddish. Replace emoji-like visual language with thin-line icons, reduce decorative noise, and audit the morning/evening scenes for adult editorial restraint. First dashboard pass now maps weather, checklist, commute, and evening timeline symbols to inline line icons; second pass reduced accent glow.
+
+  blocked-by:
+    - none
+
+- [ ] Add schedule validation for contradictory routine windows
+  id: task-38f0b3cc
+  priority: now
+  status: in-progress
+  revisionId: rev-ec86215b
+
+  owner: john
+
+  notes:
+    Morning testing exposed a likely config bug: the display window can end before the configured leave time, causing the dashboard to switch away before the departure countdown finishes. First pass adds an admin toast warning when morning standby is before leave; future pass should make this a validation panel on the Daily Routines screen.
+
+  blocked-by:
+    - none
+
+- [ ] Move Dovetell context memory to a private repo
+  id: task-3e7343a8
+  priority: next
+  status: open
+  revisionId: rev-ec86215b
+
+  owner: john
+
+  notes:
+    User wants `.famframe-context` separated from the public Fam Frame repo and pushed to a private context-memory repo. Need connect the second repo, decide whether to keep a pointer/submodule/export workflow, and ensure public app code no longer exposes private planning context.
+
+  blocked-by:
+    - user will provide/choose the private repo target
+
+- [ ] Define a Dovetell global-template capture tag
+  id: task-1259062f
+  priority: next
+  status: open
+  revisionId: rev-ec86215b
+
+  owner: john
+
+  notes:
+    Dovetell is being iterated in real time. User wants a command or identifier for comments that should be promoted into the global template/model repo. Proposed starting tag: `dovetell:global` for lessons learned that should be reviewed and pushed upstream.
+
+  blocked-by:
+    - private/global Dovetell repo workflow not connected yet
+
 ---
 
 *tasks.md — Fam Frame — v0.1*

@@ -153,6 +153,22 @@
   action: updated
   summary: Rebalanced the evening scene around a wider timeline and added a segment-local Maps refresh action.
 
+- rev-ec86215b
+  date: 2026-05-06T13:00Z
+  user: john
+  origin: codex
+  codex-session: codex-568ea30f
+  objects:
+    - task-e52f7f26: updated
+    - task-38f0b3cc: created
+    - task-3e7343a8: created
+    - task-1259062f: created
+    - dashboard/index.html: updated
+    - admin/index.html: updated
+    - .famframe-context/session-handoff.md: updated
+  action: updated
+  summary: Continued visual maturity cleanup, added schedule-window validation warning, and queued Dovetell repo/global-tag work.
+
 ---
 
 *changelog.md — Fam Frame — v0.1*

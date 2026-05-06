@@ -7,25 +7,26 @@
 
 ## Current Handoff
 
-session: codex-45fdded5
-date: 2026-05-06T00:55Z
-scope: Evening hierarchy and segment-local Maps update pass.
+session: codex-568ea30f
+date: 2026-05-06T13:00Z
+scope: Ran the three-part follow-through: mature icon/polish pass, morning schedule bug check, and admin/context-management task logging.
 
 ### Files Touched
-- dashboard/index.html: Rebalanced evening mode so the title/time act as a quieter left header and the timeline gets a wide full-height lane with larger rows, clearer notes, and right-aligned times.
-- admin/index.html: Added an Update maps status button directly inside the Segments route card and factored segment field persistence so the button updates the active route before deriving commute data.
-- .famframe-context/tasks.md: Added task-ec87f32e for TV validation of the evening hierarchy and task-f54dedff for segment-local refresh actions.
-- .famframe-context/changelog.md: Logged this evening/admin iteration.
+- dashboard/index.html: Added inline SVG line icons for weather, checklist, commute, and evening timeline rendering; reduced accent glow on active timeline, commute bar, and progress elements.
+- admin/index.html: Added a warning toast when the morning display window ends before the configured leave time.
+- .famframe-context/tasks.md: Updated the thin-line visual task and added tasks for schedule validation, private context repo separation, and a Dovetell global-template capture tag.
+- .famframe-context/changelog.md: Logged this combined visual, validation, and context-management pass.
 - .famframe-context/session-handoff.md: Replaced handoff with current state.
 
 ### Decisions Made
-- Evening timeline should own more horizontal space; “Evening” remains as scene context, not the dominant content.
-- Admin route actions should live with the segment being edited, not only in global Sync & Advanced.
-- Continue using the current `school-morning` route compatibility object until the full routine/segment JSON model exists.
+- Keep current config/admin emoji-friendly values compatible for now, but have the TV dashboard render a mature thin-line icon vocabulary.
+- Treat `morning.end < default.leave` as a user-facing warning because it can make morning mode disappear before departure.
+- Proposed `dovetell:global` as the first grep-friendly identifier for lessons that should be reviewed for the global Dovetell template/model repo.
 
 ### Tasks Added
-- task-ec87f32e: Verify evening timeline hierarchy on the Frame TV.
-- task-f54dedff: Move route refresh actions onto the active segment card.
+- task-38f0b3cc: Add schedule validation for contradictory routine windows.
+- task-3e7343a8: Move Dovetell context memory to a private repo.
+- task-1259062f: Define a Dovetell global-template capture tag.
 
 ### Tasks Completed
 - none
@@ -37,18 +38,17 @@ scope: Evening hierarchy and segment-local Maps update pass.
 - none
 
 ### Boundary Conditions Triggered
-- Full multi-segment routing is still deferred; the new Maps button updates only the current default school segment.
+- The private context repo has not been connected yet; `.famframe-context` still lives in this public repo until the user provides/chooses the private repo target.
 
 ### Pending
-- Test evening mode on the actual Frame TV/browser chrome and tune row scale if it still feels cramped or too bright.
-- Continue task-fb53f89c: define the future JSON model for routines, day overrides, segments, stops, buffers, inherited list templates, and routine-specific destinations.
-- Expand Segments from `stopCount` into editable stop objects with safe labels, local private Places metadata, and per-stop buffer minutes.
-- Continue task-6e4af661: capture richer Places metadata for destinations/stops once the Maps key is added and verified.
-- Continue task-9f48ead6: improve PAT recovery flow and diagnose any phone save failures.
-- Verify the admin page in-browser on mobile/iPad widths before calling the flow polished.
+- Commit and push this pass after final checks.
+- Connect a second private repo for Dovetell context memory and move/split `.famframe-context`.
+- Decide whether `dovetell:global` is the final global-template capture tag or just the first working convention.
+- Continue task-e52f7f26: audit all dashboard scenes for mature editorial restraint against the simpler mockup.
+- Continue task-38f0b3cc: make schedule validation more visible than a toast, likely as an inline Daily Routines warning.
 
 ### Next Session Start Here
-Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The latest UX direction is object-local editing: the active route card owns route metadata and Maps refresh, while the evening dashboard should present the timeline as the main content and keep title/time calmer.
+Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. Current work is uncommitted unless the final message says otherwise. Next user-stated direction: connect another repo so context memory can be private, and add a Dovetell mechanism for promoting selected lessons to a global template repo.
 
 ---
 
