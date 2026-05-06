@@ -98,6 +98,34 @@
   blocked-by:
     - none
 
+- [ ] Verify evening timeline hierarchy on the Frame TV
+  id: task-ec87f32e
+  priority: now
+  status: in-progress
+  revisionId: rev-13777fec
+
+  owner: john
+
+  notes:
+    Evening was too title-heavy and the timeline was visually cramped. Test the wider timeline lane on the actual TV/browser-chrome viewport and tune title, time, row scale, and side-panel balance from the photo feedback.
+
+  blocked-by:
+    - none
+
+- [ ] Move route refresh actions onto the active segment card
+  id: task-f54dedff
+  priority: now
+  status: in-progress
+  revisionId: rev-13777fec
+
+  owner: john
+
+  notes:
+    Admin should increasingly work from the object being edited. First pass adds an Update maps status button to the current school segment; future pass should repeat this pattern for every routine segment card.
+
+  blocked-by:
+    - task-fb53f89c
+
 ---
 
 *tasks.md — Fam Frame — v0.1*

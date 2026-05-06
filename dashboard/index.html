@@ -29,10 +29,18 @@ body{font-family:'DM Mono',monospace}
 .evening-title{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:136px;font-weight:300;line-height:.92;letter-spacing:0;color:#efe7d7}
 .hero-time{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:104px;font-weight:200;line-height:.95;letter-spacing:0;color:#efe7d7;margin:8px 0 42px}
 .hero-time .ampm,.countdown .unit{font-family:'DM Mono',monospace;font-size:.26em;letter-spacing:.1em;color:rgba(239,231,215,.58);vertical-align:super;margin-left:12px}
+.evening-main-panel{padding:74px 74px 42px 78px}
+.evening-board{display:grid;grid-template-columns:390px 1fr;gap:70px;height:100%;min-height:0}
+.evening-hero{display:flex;flex-direction:column}
+.evening-hero .date-line{margin-bottom:44px}
+.evening-hero .evening-title{font-size:90px;line-height:1}
+.evening-hero .hero-time{font-size:68px;margin:10px 0 0;color:rgba(239,231,215,.78)}
 
 /* ── TIMELINE ── */
 .timeline{max-width:560px}
+.evening-timeline{max-width:none;padding-top:52px;padding-right:18px}
 .tl-item{display:flex;gap:24px;min-height:76px}
+.evening-timeline .tl-item{gap:34px;min-height:84px}
 .tl-left{width:32px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
 .tl-dot{width:14px;height:14px;border-radius:50%;border:1px solid rgba(239,231,215,.48);background:transparent;z-index:2}
 .tl-line{width:1px;flex:1;background:rgba(239,231,215,.2);margin-top:6px}
@@ -41,10 +49,15 @@ body{font-family:'DM Mono',monospace}
 .tl-done .tl-line{background:rgba(141,135,159,.32)}
 .tl-done .tl-label{color:rgba(239,231,215,.32)}
 .tl-content{padding-top:0}
+.evening-timeline .tl-content{display:grid;grid-template-columns:minmax(280px,1fr) 120px;grid-template-rows:auto auto;column-gap:36px;width:100%;padding-bottom:18px;border-bottom:1px solid rgba(239,231,215,.08)}
 .tl-label{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:27px;font-weight:300;line-height:1.1;color:rgba(239,231,215,.68);transition:color .5s}
+.evening-timeline .tl-label{font-size:34px;line-height:1.08;color:rgba(239,231,215,.76)}
 .tl-time{font-size:16px;letter-spacing:.14em;color:rgba(239,231,215,.34);margin-top:6px}
+.evening-timeline .tl-time{grid-column:2;grid-row:1 / span 2;margin-top:6px;text-align:right}
 .tl-note{font-size:14px;letter-spacing:.12em;color:rgba(239,231,215,.26);margin-top:4px}
+.evening-timeline .tl-note{grid-column:1;font-size:15px;letter-spacing:.14em;margin-top:8px;text-transform:uppercase}
 .tl-now{display:flex;align-items:center;gap:18px;margin:-6px 0 12px 9px}
+.evening-timeline .tl-now{margin:0 0 18px 5px}
 .tl-now-dot{width:21px;height:21px;border-radius:50%;background:#d99a3d;border:3px solid #f0c06d;box-shadow:0 0 12px rgba(217,154,61,.9),0 0 34px rgba(217,154,61,.48);animation:glowpulse 1.8s ease-in-out infinite}
 .tl-now-label{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:22px;font-weight:300;color:#d99a3d}
 @keyframes glowpulse{0%,100%{opacity:1}50%{opacity:.64}}
@@ -199,11 +212,15 @@ body{font-family:'DM Mono',monospace}
 
   <!-- ═══ EVENING ═══ -->
   <div class="layout" id="eveningLayout">
-    <main class="main-panel">
-      <div class="date-line" id="eDateLine">—</div>
-      <div class="evening-title">Evening</div>
-      <div class="hero-time" id="eClock">—</div>
-      <div class="timeline" id="eTimeline"></div>
+    <main class="main-panel evening-main-panel">
+      <div class="evening-board">
+        <div class="evening-hero">
+          <div class="date-line" id="eDateLine">—</div>
+          <div class="evening-title">Evening</div>
+          <div class="hero-time" id="eClock">—</div>
+        </div>
+        <div class="timeline evening-timeline" id="eTimeline"></div>
+      </div>
       <div class="progress-track"><div class="progress-fill" id="eProgress"></div></div>
     </main>
     <aside class="side-panel">

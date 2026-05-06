@@ -744,6 +744,11 @@ select {
     <div class="field-label">Stops before destination</div>
     <input type="number" id="commuteStopCount" class="full-input" min="0" step="1" placeholder="0">
     <div class="field-hint">Segments are itinerary blocks behind a routine. Addresses stay local to this admin device; the repo only receives safe labels and derived commute timing. Future segments will support multiple stops, per-stop buffers, and day-specific destinations.</div>
+    <button class="action-btn" onclick="updateActiveMapsStatus()" style="margin-top:12px">
+      <span class="action-icon">↻</span>
+      <span class="action-label">Update maps status for this segment</span>
+    </button>
+    <div class="action-result" id="mapsStatusResult"></div>
 
     <div class="section-label" style="margin-top:16px">Evening display segments</div>
     <div id="timelineItems"></div>
@@ -1265,7 +1270,7 @@ function saveFamily() {
   config.family.location.lon = getNum('homeLon', config.family.location.lon || 0);
   saveConfig(); saveAndSync('Family settings saved');
 }
-function saveSegments() {
+function storeSegmentFields() {
   const routeLabel = getVal('schoolRoute');
   const stopCount = Math.max(0, Math.floor(getNum('commuteStopCount', 0)));
   config.family.location.schoolRoute = routeLabel;
@@ -1276,6 +1281,9 @@ function saveSegments() {
   config.commute.routes['school-morning'].stopCount = stopCount;
   CredentialStore.setCommuteOrigin(getVal('commuteOrigin'));
   CredentialStore.setCommuteDestination(getVal('commuteDestination'));
+}
+function saveSegments() {
+  storeSegmentFields();
   saveConfig(); saveAndSync('Segments saved');
   setupPlacesAutocomplete();
 }
@@ -1677,6 +1685,24 @@ async function saveAndSync(localMessage) {
   toast(localMessage + '. Saving to GitHub…');
   await updateDerivedCommute();
   await pushToGitHub();
+}
+async function updateActiveMapsStatus() {
+  const el = document.getElementById('mapsStatusResult');
+  storeSegmentFields();
+  saveConfig();
+  showResult(el, true, 'Updating Maps status for this segment...');
+  toast('Updating Maps status…');
+  const ok = await updateDerivedCommute();
+  if (!ok) {
+    showResult(el, false, 'Maps status unavailable. Check the Maps key, origin, and destination.');
+    toast('Maps status unavailable', 'fail');
+    return;
+  }
+  const route = (config.commute.routes || {})['school-morning'] || {};
+  const updated = route.updatedAt ? new Date(route.updatedAt).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : 'now';
+  showResult(el, true, 'Maps status updated: ' + route.durationMinutes + ' min · ' + (route.trafficStatus || 'traffic unknown') + ' · ' + updated);
+  const pushed = await pushToGitHub({ resultEl: el });
+  if (pushed) showResult(el, true, 'Maps status updated and saved to GitHub.');
 }
 async function githubError(res, fallback) {
   const status = res.status;

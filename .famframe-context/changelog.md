@@ -139,6 +139,20 @@
   action: updated
   summary: Added the first route-segment design field, stopCount, and a subtle dashboard stops chip.
 
+- rev-13777fec
+  date: 2026-05-06T00:55Z
+  user: john
+  origin: codex
+  codex-session: codex-45fdded5
+  objects:
+    - task-ec87f32e: created
+    - task-f54dedff: created
+    - dashboard/index.html: updated
+    - admin/index.html: updated
+    - .famframe-context/session-handoff.md: updated
+  action: updated
+  summary: Rebalanced the evening scene around a wider timeline and added a segment-local Maps refresh action.
+
 ---
 
 *changelog.md — Fam Frame — v0.1*

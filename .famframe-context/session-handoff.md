@@ -7,26 +7,25 @@
 
 ## Current Handoff
 
-session: codex-514d38cb
-date: 2026-05-05T22:12Z
-scope: First route-segment design increment: safe stop counts flow from admin/config to a tasteful dashboard countdown chip.
+session: codex-45fdded5
+date: 2026-05-06T00:55Z
+scope: Evening hierarchy and segment-local Maps update pass.
 
 ### Files Touched
-- dashboard/index.html: Added a countdown-adjacent stops chip that renders only when the active commute route has one or more intermediate stops.
-- dashboard-config.js: Added safe `stopCount` to the derived commute route shape.
-- admin/index.html: Added a Segments field for stops before destination and preserves stopCount when refreshing derived commute data.
-- README.md: Added a short routine model direction note covering routines, segments, stops, buffers, and list templates.
-- .famframe-context/tasks.md: Updated the routine destination model task with this stopCount increment.
-- .famframe-context/changelog.md: Logged this route-segment design increment.
+- dashboard/index.html: Rebalanced evening mode so the title/time act as a quieter left header and the timeline gets a wide full-height lane with larger rows, clearer notes, and right-aligned times.
+- admin/index.html: Added an Update maps status button directly inside the Segments route card and factored segment field persistence so the button updates the active route before deriving commute data.
+- .famframe-context/tasks.md: Added task-ec87f32e for TV validation of the evening hierarchy and task-f54dedff for segment-local refresh actions.
+- .famframe-context/changelog.md: Logged this evening/admin iteration.
 - .famframe-context/session-handoff.md: Replaced handoff with current state.
 
 ### Decisions Made
-- Use `stopCount` as the current safe display field for intermediate stops.
-- A route with origin -> one stop -> final destination displays `1 STOP`; a direct route hides the chip.
-- Preserve the security boundary: private route addresses stay local to admin; the repo stores safe labels, stop counts, derived commute data, and timestamps only.
+- Evening timeline should own more horizontal space; “Evening” remains as scene context, not the dominant content.
+- Admin route actions should live with the segment being edited, not only in global Sync & Advanced.
+- Continue using the current `school-morning` route compatibility object until the full routine/segment JSON model exists.
 
 ### Tasks Added
-- none
+- task-ec87f32e: Verify evening timeline hierarchy on the Frame TV.
+- task-f54dedff: Move route refresh actions onto the active segment card.
 
 ### Tasks Completed
 - none
@@ -38,10 +37,10 @@ scope: First route-segment design increment: safe stop counts flow from admin/co
 - none
 
 ### Boundary Conditions Triggered
-- Full JSON routine migration was intentionally not completed in this pass.
+- Full multi-segment routing is still deferred; the new Maps button updates only the current default school segment.
 
 ### Pending
-- Finish task-1ec8cfcb: refine the iPhone flow after testing on phone, especially whether bottom nav should include Lists/Integrations directly or remain card-drill-in only.
+- Test evening mode on the actual Frame TV/browser chrome and tune row scale if it still feels cramped or too bright.
 - Continue task-fb53f89c: define the future JSON model for routines, day overrides, segments, stops, buffers, inherited list templates, and routine-specific destinations.
 - Expand Segments from `stopCount` into editable stop objects with safe labels, local private Places metadata, and per-stop buffer minutes.
 - Continue task-6e4af661: capture richer Places metadata for destinations/stops once the Maps key is added and verified.
@@ -49,7 +48,7 @@ scope: First route-segment design increment: safe stop counts flow from admin/co
 - Verify the admin page in-browser on mobile/iPad widths before calling the flow polished.
 
 ### Next Session Start Here
-Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The current code is still dashboard-config.js based. The newest route design field is `commute.routes[routeId].stopCount`; the dashboard renders it as a countdown chip only when greater than zero.
+Start by reading launcher.md, then .famframe-context/session-handoff.md and .famframe-context/seed.md. The latest UX direction is object-local editing: the active route card owns route metadata and Maps refresh, while the evening dashboard should present the timeline as the main content and keep title/time calmer.
 
 ---
 
