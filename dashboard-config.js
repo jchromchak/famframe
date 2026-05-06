@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-06T15:24:16.173Z
+// Last updated: 2026-05-06T19:57:40.618Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -37,8 +37,8 @@ var DASHBOARD_CONFIG = {
     ],
     "location": {
       "city": "Mount Pleasant, SC",
-      "lat": 32.83,
-      "lon": -79.83,
+      "lat": 32.9022832,
+      "lon": -79.78906090000001,
       "school": "US-17 N to School",
       "schoolRoute": "US-17 N to School"
     }
@@ -68,7 +68,7 @@ var DASHBOARD_CONFIG = {
   ],
   "routines": [
     {
-      "id": "school-morning",
+      "id": "school_morning",
       "label": "School morning",
       "type": "departure",
       "enabled": true,
@@ -86,14 +86,14 @@ var DASHBOARD_CONFIG = {
       "primaryTime": "06:45",
       "targetTime": "07:20",
       "deadline": "07:25",
-      "routeId": "school-morning",
+      "routeId": "school_morning",
       "display": {
         "scene": "departure",
         "priority": 80
       },
       "segments": [
         {
-          "id": "school-run",
+          "id": "school_run",
           "label": "Leave for school",
           "routeLabel": "US-17 N to School",
           "destinationLabel": "School",
@@ -106,44 +106,131 @@ var DASHBOARD_CONFIG = {
         {
           "id": "breakfast",
           "label": "Breakfast",
+          "icon": "🥣",
           "targetMin": -40,
-          "icon": "breakfast"
+          "assignee": ""
         },
         {
           "id": "dressed",
           "label": "Get dressed",
+          "icon": "👕",
           "targetMin": -30,
-          "icon": "dressed"
+          "assignee": ""
         },
         {
           "id": "backpack",
           "label": "Backpacks ready",
+          "icon": "🎒",
           "targetMin": -20,
-          "icon": "backpack"
+          "assignee": ""
         },
         {
           "id": "teeth",
           "label": "Brush teeth",
+          "icon": "🪥",
           "targetMin": -15,
-          "icon": "teeth"
+          "assignee": ""
         },
         {
           "id": "shoes",
           "label": "Shoes on",
+          "icon": "👟",
           "targetMin": -5,
-          "icon": "shoes"
+          "assignee": ""
         },
         {
           "id": "car",
           "label": "Get in the car",
+          "icon": "🚗",
           "targetMin": 0,
-          "icon": "car"
+          "assignee": ""
         }
       ]
     },
     {
-      "id": "school-pickup",
-      "label": "School pickup",
+      "id": "evening",
+      "label": "Evening wind-down",
+      "type": "timeline",
+      "enabled": true,
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "window": {
+        "start": "17:00",
+        "end": "22:00"
+      },
+      "display": {
+        "scene": "evening",
+        "priority": 40
+      },
+      "timelineItems": [
+        {
+          "id": "home",
+          "label": "Home & decompress",
+          "icon": "🏠",
+          "start": "17:30",
+          "durationMin": 30,
+          "note": "Snack, unwind"
+        },
+        {
+          "id": "homework",
+          "label": "Homework",
+          "icon": "📚",
+          "start": "18:00",
+          "durationMin": 30,
+          "note": "Both kids"
+        },
+        {
+          "id": "dinner",
+          "label": "Dinner",
+          "icon": "🍽",
+          "start": "18:30",
+          "durationMin": 30,
+          "note": "Together"
+        },
+        {
+          "id": "baths",
+          "label": "Baths",
+          "icon": "🛁",
+          "start": "19:15",
+          "durationMin": 30,
+          "note": ""
+        },
+        {
+          "id": "reading",
+          "label": "Reading",
+          "icon": "📖",
+          "start": "19:45",
+          "durationMin": 30,
+          "note": "30 min each"
+        },
+        {
+          "id": "winddown",
+          "label": "Wind down",
+          "icon": "🌙",
+          "start": "20:15",
+          "durationMin": 15,
+          "note": "No screens"
+        },
+        {
+          "id": "bed",
+          "label": "Lights out",
+          "icon": "💤",
+          "start": "20:30",
+          "durationMin": 0,
+          "note": "8:30 PM"
+        }
+      ]
+    },
+    {
+      "id": "school_pickup_1778097357000",
+      "label": "Pickup",
       "type": "departure",
       "enabled": true,
       "days": [
@@ -155,19 +242,19 @@ var DASHBOARD_CONFIG = {
       ],
       "window": {
         "start": "14:15",
-        "end": "15:15"
+        "end": "17:15"
       },
-      "primaryTime": "14:35",
-      "targetTime": "14:45",
-      "deadline": "14:50",
-      "routeId": "school-pickup",
+      "primaryTime": "15:35",
+      "targetTime": "16:15",
+      "deadline": "16:30",
+      "routeId": "pickup_1778097357000",
       "display": {
         "scene": "departure",
-        "priority": 70
+        "priority": 60
       },
       "segments": [
         {
-          "id": "pickup-run",
+          "id": "pickup_run",
           "label": "Leave for pickup",
           "routeLabel": "Home to pickup",
           "destinationLabel": "Pickup",
@@ -180,20 +267,23 @@ var DASHBOARD_CONFIG = {
         {
           "id": "keys",
           "label": "Keys and wallet",
+          "icon": "backpack",
           "targetMin": -10,
-          "icon": "backpack"
+          "assignee": ""
         },
         {
           "id": "water",
           "label": "Water bottles",
+          "icon": "breakfast",
           "targetMin": -8,
-          "icon": "breakfast"
+          "assignee": ""
         },
         {
           "id": "car",
           "label": "Get in the car",
+          "icon": "car",
           "targetMin": 0,
-          "icon": "car"
+          "assignee": ""
         }
       ]
     }
@@ -212,38 +302,44 @@ var DASHBOARD_CONFIG = {
     {
       "id": "breakfast",
       "label": "Breakfast",
+      "icon": "🥣",
       "targetMin": -40,
-      "icon": "🥣"
+      "assignee": ""
     },
     {
       "id": "dressed",
       "label": "Get dressed",
+      "icon": "👕",
       "targetMin": -30,
-      "icon": "👕"
+      "assignee": ""
     },
     {
       "id": "backpack",
       "label": "Backpacks ready",
+      "icon": "🎒",
       "targetMin": -20,
-      "icon": "🎒"
+      "assignee": ""
     },
     {
       "id": "teeth",
       "label": "Brush teeth",
+      "icon": "🪥",
       "targetMin": -15,
-      "icon": "🪥"
+      "assignee": ""
     },
     {
       "id": "shoes",
       "label": "Shoes on",
+      "icon": "👟",
       "targetMin": -5,
-      "icon": "👟"
+      "assignee": ""
     },
     {
       "id": "car",
       "label": "Get in the car",
+      "icon": "🚗",
       "targetMin": 0,
-      "icon": "🚗"
+      "assignee": ""
     }
   ],
   "eveningTimeline": [
@@ -362,7 +458,7 @@ var DASHBOARD_CONFIG = {
     "showWeather": true
   },
   "commute": {
-    "activeRouteId": "school-morning",
+    "activeRouteId": "pickup_1778097357000",
     "routes": {
       "school-morning": {
         "provider": "google-maps",
@@ -373,14 +469,23 @@ var DASHBOARD_CONFIG = {
         "updatedAt": "2026-05-06T15:24:15.859Z",
         "expiresAt": "2026-05-06T15:39:15.859Z"
       },
-      "school-pickup": {
+      "school_morning": {
         "provider": "",
-        "routeLabel": "Home to pickup",
-        "stopCount": 1,
         "durationMinutes": null,
         "trafficStatus": "",
         "updatedAt": "",
-        "expiresAt": ""
+        "expiresAt": "",
+        "routeLabel": "US-17 N to School",
+        "stopCount": 0
+      },
+      "pickup_1778097357000": {
+        "provider": "google-maps",
+        "durationMinutes": 28,
+        "trafficStatus": "moderate",
+        "updatedAt": "2026-05-06T19:57:40.329Z",
+        "expiresAt": "2026-05-06T20:12:40.329Z",
+        "routeLabel": "Home to pickup",
+        "stopCount": 1
       }
     },
     "defaultDriveMin": 12,
