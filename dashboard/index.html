@@ -12,13 +12,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--app-width:100vw;--app-height:100dvh;--stage-scale:1;--stage-width:1920px}
-html,body{width:100%;height:100%;overflow:hidden;background:#050504;color:#efe7d7;cursor:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0b09;color:#efe7d7;cursor:none}
 body{font-family:'DM Mono',monospace}
-.viewport{position:fixed;left:0;top:0;width:var(--app-width);height:var(--app-height);display:flex;align-items:center;justify-content:center;background:#050504}
-.stage{width:var(--stage-width);height:1080px;position:relative;overflow:hidden;background:#0b0b09;transform:scale(var(--stage-scale));transform-origin:center center;box-shadow:0 0 0 1px rgba(239,231,215,.11) inset}
+.viewport{position:fixed;left:0;top:0;width:var(--app-width);height:var(--app-height);overflow:hidden;background:#0b0b09}
+.stage{width:var(--stage-width);height:1080px;position:absolute;left:0;top:0;overflow:hidden;background:#0b0b09;transform:scale(var(--stage-scale));transform-origin:left top;box-shadow:0 0 0 1px rgba(239,231,215,.11) inset}
 .stage:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E")}
 .layout{display:none;grid-template-columns:1fr 430px;grid-template-rows:1fr auto;width:100%;height:100%}
 .layout.active{display:grid}
+.stage-compact .layout{grid-template-columns:1fr 390px}
 .main-panel{position:relative;padding:86px 90px 42px 90px;border-right:1px solid rgba(239,231,215,.14);display:flex;flex-direction:column}
 .side-panel{display:flex;flex-direction:column}
 .date-line,.panel-label{font-size:18px;letter-spacing:.28em;text-transform:uppercase;color:rgba(239,231,215,.42)}
@@ -32,6 +33,9 @@ body{font-family:'DM Mono',monospace}
 .morning-hero .date-line{margin-bottom:46px}
 .morning-routine{padding-top:248px;min-width:0}
 .morning-routine .checklist{max-width:none;margin-top:0}
+.stage-compact .morning-main-panel{padding:64px 54px 38px 58px}
+.stage-compact .morning-board{grid-template-columns:minmax(390px,500px) minmax(440px,1fr);gap:46px}
+.stage-compact .morning-routine{padding-top:222px}
 
 /* ── EVENING ── */
 .evening-title{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:136px;font-weight:300;line-height:.92;letter-spacing:0;color:#efe7d7}
@@ -74,18 +78,25 @@ body{font-family:'DM Mono',monospace}
 @keyframes glowpulse{0%,100%{opacity:1}50%{opacity:.64}}
 
 /* ── WEATHER / SIDE PANELS ── */
-.weather-panel,.cal-panel,.traffic-panel{padding:58px 46px;border-bottom:1px solid rgba(239,231,215,.14)}
+.weather-panel,.cal-panel,.traffic-panel{padding:46px 46px;border-bottom:1px solid rgba(239,231,215,.14)}
+.stage-compact .weather-panel,.stage-compact .cal-panel,.stage-compact .traffic-panel{padding:40px 34px}
 .cal-panel{border-bottom:0;flex:1}
 .weather-top{display:flex;align-items:flex-start;gap:28px}
-.weather-temp{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:106px;font-weight:200;line-height:.9}
+.weather-temp{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:96px;font-weight:200;line-height:.9}
 .weather-temp .deg{font-size:.38em;vertical-align:super;color:rgba(239,231,215,.58)}
-.weather-icon{width:74px;height:74px;margin-top:4px;color:#efe7d7}
+.weather-icon{width:66px;height:66px;margin-top:4px;color:#efe7d7}
 .weather-icon svg{width:100%;height:100%;overflow:visible}
 .weather-icon .sun-accent{stroke:#d99a3d}
-.weather-desc{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;font-weight:300;color:rgba(239,231,215,.68);margin:22px 0 34px}
-.details{display:grid;grid-template-columns:1fr 1fr;gap:22px 14px}
+.weather-desc{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;font-weight:300;color:rgba(239,231,215,.68);margin:18px 0 26px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:18px 14px}
 .detail-label,.cal-time,.badge,.author{font-size:14px;letter-spacing:.22em;text-transform:uppercase;color:rgba(239,231,215,.34)}
 .detail-value{font-size:20px;color:rgba(239,231,215,.68);margin-top:8px}
+.day-forecast{margin-top:26px;padding-top:22px;border-top:1px solid rgba(239,231,215,.12)}
+.forecast-row{display:flex;gap:22px;align-items:flex-start}
+.forecast-chip{flex:1;min-width:0}
+.forecast-label{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:rgba(239,231,215,.3)}
+.forecast-value{font-size:21px;color:rgba(239,231,215,.66);margin-top:8px;white-space:nowrap}
+.wear-note{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;font-weight:300;line-height:1.35;color:rgba(239,231,215,.62);margin-top:16px}
 
 /* ── CALENDAR ── */
 .cal-event{margin-bottom:24px}
@@ -128,6 +139,8 @@ body{font-family:'DM Mono',monospace}
 /* ── QUOTE BAR ── */
 .quote-bar{grid-column:1/3;border-top:1px solid rgba(239,231,215,.14);padding:20px 88px 24px;display:flex;align-items:center;gap:28px}
 .quote-text{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;font-weight:300;color:rgba(239,231,215,.54);text-align:center;flex:1;transition:opacity .6s}
+.quote-text.pulse{animation:quotePulse 1.8s ease-in-out}
+@keyframes quotePulse{0%,100%{opacity:1}50%{opacity:.45}}
 .author{white-space:nowrap}
 
 /* ── PROGRESS / COUNTDOWN / BOTTOM ── */
@@ -135,6 +148,7 @@ body{font-family:'DM Mono',monospace}
 .progress-fill{height:100%;width:0;background:#d99a3d;box-shadow:0 0 10px rgba(217,154,61,.42);transition:width 1s linear}
 .countdown-wrap{display:flex;align-items:flex-end;gap:26px}
 .countdown{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:210px;font-weight:200;line-height:.9;letter-spacing:0}
+.stage-compact .countdown{font-size:182px}
 .stop-chip{display:none;margin-bottom:24px;border:1px solid rgba(217,154,61,.5);color:#d99a3d;background:rgba(217,154,61,.045);padding:10px 14px;font-size:15px;letter-spacing:.2em;text-transform:uppercase;white-space:nowrap}
 .stop-chip.active{display:inline-flex}
 .countdown-label{font-size:24px;letter-spacing:.24em;text-transform:uppercase;color:rgba(239,231,215,.68);margin-top:24px}
@@ -203,6 +217,20 @@ body{font-family:'DM Mono',monospace}
           <div><div class="detail-label">Wind</div><div class="detail-value" id="mWind">—</div></div>
           <div><div class="detail-label">Rain chance</div><div class="detail-value" id="mRain">—</div></div>
           <div><div class="detail-label">UV index</div><div class="detail-value" id="mUV">—</div></div>
+        </div>
+        <div class="day-forecast">
+          <div class="panel-label" style="margin-bottom:20px">Today</div>
+          <div class="forecast-row">
+            <div class="forecast-chip">
+              <div class="forecast-label">High / Low</div>
+              <div class="forecast-value" id="mHighLow">—</div>
+            </div>
+            <div class="forecast-chip">
+              <div class="forecast-label">Rain</div>
+              <div class="forecast-value" id="mDayRain">—</div>
+            </div>
+          </div>
+          <div class="wear-note" id="mWearNote">—</div>
         </div>
       </section>
       <section class="traffic-panel departure-panel">
@@ -470,18 +498,27 @@ body{font-family:'DM Mono',monospace}
   }
   function fitStage() {
     var vv = window.visualViewport;
-    var w = vv && vv.width ? vv.width : window.innerWidth;
-    var h = vv && vv.height ? vv.height : window.innerHeight;
-    var baseW = 1920;
+    var doc = document.documentElement;
+    var w = Math.max(
+      1,
+      vv && vv.width ? vv.width : 0,
+      window.innerWidth || 0,
+      doc && doc.clientWidth ? doc.clientWidth : 0
+    );
+    var h = Math.max(
+      1,
+      vv && vv.height ? vv.height : 0,
+      window.innerHeight || 0,
+      doc && doc.clientHeight ? doc.clientHeight : 0
+    );
     var baseH = 1080;
-    var baseAspect = baseW / baseH;
-    var viewportAspect = w / h;
-    var scale = viewportAspect > baseAspect ? h / baseH : w / baseW;
-    var stageWidth = viewportAspect > baseAspect ? Math.max(baseW, w / scale) : baseW;
+    var scale = h / baseH;
+    var stageWidth = w / scale;
     document.documentElement.style.setProperty('--app-width', Math.max(1, w) + 'px');
     document.documentElement.style.setProperty('--app-height', Math.max(1, h) + 'px');
     document.documentElement.style.setProperty('--stage-width', Math.round(stageWidth) + 'px');
     document.documentElement.style.setProperty('--stage-scale', Math.max(0.1, scale));
+    document.documentElement.classList.toggle('stage-compact', stageWidth < 1800);
   }
 
   var WMO = {
@@ -540,7 +577,11 @@ body{font-family:'DM Mono',monospace}
   }
   function currentMode(t) {
     var forced = null;
-    try { forced = window.localStorage.getItem('fam_frame_force_scene'); } catch (e) {}
+    try {
+      forced = new URLSearchParams(window.location.search).get('scene') ||
+        new URLSearchParams(window.location.search).get('mode') ||
+        window.localStorage.getItem('fam_frame_force_scene');
+    } catch (e) {}
     if (forced) return forced;
     if (inWindow(t, 'morning')) return isSchoolDay(t) ? 'morning' : 'weekend';
     if (inWindow(t, 'evening')) return 'evening';
@@ -579,6 +620,7 @@ body{font-family:'DM Mono',monospace}
   var driveDistance = '';
   var driveUpdatedText = '';
   var driveUnavailable = false;
+  var footerMessageCache = { key: '', value: '' };
   function updateDrive(t) {
     t = t || zonedNow();
     var estimates = arr(['commute','driveEstimates']);
@@ -618,6 +660,14 @@ body{font-family:'DM Mono',monospace}
     if (min < 1) return 'JUST NOW';
     if (min < 60) return min + ' MIN';
     return Math.floor(min / 60) + ' HR';
+  }
+  function cachedFooterMessage(pool, fb, t, state) {
+    var key = [state || 'default', t.year, t.monthIndex, t.day, t.hour, t.minute].join(':');
+    if (footerMessageCache.key !== key) {
+      footerMessageCache.key = key;
+      footerMessageCache.value = pick(pool, fb);
+    }
+    return footerMessageCache.value;
   }
 
   // ── MORNING ───────────────────────────────────────────────────────
@@ -664,7 +714,8 @@ body{font-family:'DM Mono',monospace}
              : diff <= msgHot  ? arr(['messages','morning','hot'])
              : diff <= msgWarn ? arr(['messages','morning','warn'])
              :               arr(['messages','morning','calm']);
-    id('mMessage').innerHTML = pick(pool, 'Good morning');
+    var msgState = diff <= 0 ? 'gone' : diff <= msgCrit ? 'crit' : diff <= msgHot ? 'hot' : diff <= msgWarn ? 'warn' : 'calm';
+    id('mMessage').innerHTML = cachedFooterMessage(pool, 'Good morning', t, msgState);
 
     // Departure urgency bar
     var minsLeft   = leaveTotal - nowTotal;
@@ -781,6 +832,58 @@ body{font-family:'DM Mono',monospace}
     id('wMessage').innerHTML = val(['weekend','footerMessage'], 'Take it easy.');
   }
 
+  function todayForecastSummary(data, c) {
+    var daily = data.daily || {};
+    var high = daily.temperature_2m_max && daily.temperature_2m_max.length ? Math.round(daily.temperature_2m_max[0]) : Math.round(c.temperature_2m);
+    var low = daily.temperature_2m_min && daily.temperature_2m_min.length ? Math.round(daily.temperature_2m_min[0]) : Math.round(c.temperature_2m);
+    var rain = daily.precipitation_probability_max && daily.precipitation_probability_max.length ? Number(daily.precipitation_probability_max[0] || 0) : 0;
+    var wind = daily.wind_speed_10m_max && daily.wind_speed_10m_max.length ? Number(daily.wind_speed_10m_max[0] || 0) : Number(c.wind_speed_10m || 0);
+    var feelsHigh = high;
+    var uv = Number(c.uv_index || 0);
+    var hourly = data.hourly || {};
+    var today = String((data.current && data.current.time) || '').slice(0, 10);
+    if (hourly.time && hourly.time.length) {
+      var temps = [];
+      var feels = [];
+      var rains = [];
+      var uvs = [];
+      for (var i = 0; i < hourly.time.length; i++) {
+        if (String(hourly.time[i]).slice(0, 10) !== today) continue;
+        if (hourly.temperature_2m) temps.push(Number(hourly.temperature_2m[i]));
+        if (hourly.apparent_temperature) feels.push(Number(hourly.apparent_temperature[i]));
+        if (hourly.precipitation_probability) rains.push(Number(hourly.precipitation_probability[i] || 0));
+        if (hourly.uv_index) uvs.push(Number(hourly.uv_index[i] || 0));
+      }
+      if (temps.length) {
+        high = Math.round(Math.max.apply(Math, temps));
+        low = Math.round(Math.min.apply(Math, temps));
+      }
+      if (feels.length) feelsHigh = Math.round(Math.max.apply(Math, feels));
+      if (rains.length) rain = Math.max(rain, Math.round(Math.max.apply(Math, rains)));
+      if (uvs.length) uv = Math.max(uv, Math.round(Math.max.apply(Math, uvs) * 10) / 10);
+    }
+    return {
+      high: high,
+      low: low,
+      rain: rain,
+      wind: Math.round(wind),
+      uv: uv,
+      feelsHigh: feelsHigh
+    };
+  }
+  function wearNote(f) {
+    var parts = [];
+    if (f.feelsHigh >= 88) parts.push('breathable clothes');
+    else if (f.low < 52) parts.push('a jacket this morning');
+    else if (f.low < 64 || f.high < 72) parts.push('a light layer');
+    else parts.push('comfortable warm-weather clothes');
+    if (f.rain >= 55) parts.push('rain gear');
+    else if (f.rain >= 30) parts.push('an umbrella nearby');
+    if (f.uv >= 6) parts.push('sunscreen');
+    if (f.wind >= 18) parts.push('wind-friendly layers');
+    return 'Wear ' + parts.join(', ') + '.';
+  }
+
   // ── TICK ──────────────────────────────────────────────────────────
   function tick() {
     if (!cfg) { id('configError').className += ' active'; return; }
@@ -803,7 +906,7 @@ body{font-family:'DM Mono',monospace}
       var url = 'https://api.open-meteo.com/v1/forecast' +
         '?latitude=' + lat + '&longitude=' + lon +
         '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,uv_index' +
-        '&hourly=precipitation_probability' +
+        '&hourly=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation_probability,uv_index' +
         '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code' +
         '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=' + encodeURIComponent(timeZone()) + '&forecast_days=2';
       var data = await fetch(url).then(function (r) { return r.json(); });
@@ -830,6 +933,11 @@ body{font-family:'DM Mono',monospace}
       if (id('mRain')) id('mRain').innerHTML = rain + '%';
       if (id('wRain')) id('wRain').innerHTML = rain + '%';
 
+      var today = todayForecastSummary(data, c);
+      if (id('mHighLow')) id('mHighLow').innerHTML = today.high + '° / ' + today.low + '°';
+      if (id('mDayRain')) id('mDayRain').innerHTML = today.rain + '%';
+      if (id('mWearNote')) id('mWearNote').innerHTML = wearNote(today);
+
       if (data.daily && data.daily.time && data.daily.time.length > 1) {
         var d  = data.daily;
         var tw = wmo(d.weather_code[1]);
@@ -844,7 +952,7 @@ body{font-family:'DM Mono',monospace}
     } catch (e) { console.warn('Weather error', e); }
   }
 
-  // ── QUOTE (Quotable API — free, no key needed) ────────────────────
+  // ── QUOTE API (display-only, no secrets) ──────────────────────────
   async function fetchQuote() {
     var qEl = id('quoteText');
     var aEl = id('quoteAuthor');
@@ -853,12 +961,12 @@ body{font-family:'DM Mono',monospace}
     var source = val(['modules','quote','source'], 'stoic');
     var tagMap  = { stoic:'stoicism', wisdom:'wisdom', family:'family', any:'' };
     var tag     = tagMap[source] || 'stoicism';
+    var apiUrl  = val(['modules','quote','url'], 'https://api.quotable.io/random?tags=' + tag + '&maxLength=180');
 
     qEl.style.opacity = '0';
 
     try {
-      var url  = 'https://api.quotable.io/random?tags=' + tag + '&maxLength=180';
-      var data = await fetch(url).then(function (r) { return r.json(); });
+      var data = await fetch(apiUrl).then(function (r) { return r.json(); });
       if (data && data.content) {
         setTimeout(function () {
           qEl.innerHTML = data.content;
@@ -883,6 +991,13 @@ body{font-family:'DM Mono',monospace}
         qEl.style.opacity = '1';
       }, 500);
     }
+  }
+  function pulseQuote() {
+    var qEl = id('quoteText');
+    if (!qEl || !qEl.innerHTML || qEl.innerHTML === '—') return;
+    qEl.className = qEl.className.replace(/\s?pulse/g, '');
+    void qEl.offsetWidth;
+    qEl.className += ' pulse';
   }
 
   // ── CALENDAR ──────────────────────────────────────────────────────
@@ -927,6 +1042,7 @@ body{font-family:'DM Mono',monospace}
   setInterval(tick,         1000);
   setInterval(fetchWeather, 10 * 60 * 1000);
   setInterval(fetchQuote,   60 * 60 * 1000);
+  setInterval(pulseQuote,   60 * 1000);
   setInterval(function () {
     renderCalendar('today', 'mCalEvents');
     renderCalendar('tomorrow', 'eCalEvents');
