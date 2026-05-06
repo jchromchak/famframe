@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-06T19:57:40.618Z
+// Last updated: 2026-05-06T20:03:26.458Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -458,16 +458,16 @@ var DASHBOARD_CONFIG = {
     "showWeather": true
   },
   "commute": {
-    "activeRouteId": "pickup_1778097357000",
+    "activeRouteId": "school-morning",
     "routes": {
       "school-morning": {
         "provider": "google-maps",
         "routeLabel": "US-17 N to School",
         "stopCount": 0,
-        "durationMinutes": 31,
+        "durationMinutes": 33,
         "trafficStatus": "light",
-        "updatedAt": "2026-05-06T15:24:15.859Z",
-        "expiresAt": "2026-05-06T15:39:15.859Z"
+        "updatedAt": "2026-05-06T20:03:26.234Z",
+        "expiresAt": "2026-05-06T20:18:26.234Z"
       },
       "school_morning": {
         "provider": "",
