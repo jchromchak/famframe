@@ -1119,11 +1119,11 @@ const DEFAULT_CONFIG = {
   ],
   messages: {
     morning: {
-      calm: ['Morning is easy.', 'Plenty of time.', 'Take your time.'],
-      warn: ['Start getting ready.', 'Time to move.', 'Get going soon.'],
-      hot: ['Shoes on, please.', 'Almost time.', 'Wrap it up.'],
-      crit: ['Move it!', "Let's go!", 'Out the door!'],
-      gone: ['Have a great day. ☀︎', "Go get 'em.", 'See you this afternoon.'],
+      calm: [],
+      warn: [],
+      hot: [],
+      crit: [],
+      gone: [],
     },
     evening: {
       onTrack: ['On track. Nice work.', 'Looking good.', 'Good rhythm tonight.'],
@@ -1393,6 +1393,7 @@ function messagesMarkdownFromConfig(source) {
     ['Evening Late', messages.evening && messages.evening.late],
     ['Evening Done', messages.evening && messages.evening.done],
   ].forEach(([title, values]) => {
+    if (!values || !values.length) return;
     lines.push('## ' + title, '');
     (values || []).forEach(value => lines.push('- ' + value));
     lines.push('');

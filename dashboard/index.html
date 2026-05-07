@@ -290,8 +290,8 @@ body.sleep-active #artMode{filter:brightness(.76)}
     </aside>
     <footer class="bottom-bar">
       <div class="clock" id="mClock">—</div>
-      <div class="footer-quote" id="mQuoteText">He who is brave is free.</div>
-      <div class="message" id="mMessage">Good morning</div>
+      <div class="footer-quote" id="mQuoteText">The obstacle is the way.</div>
+      <div class="message" id="mMessage"></div>
     </footer>
   </div>
 
@@ -879,7 +879,7 @@ body.sleep-active #artMode{filter:brightness(.76)}
              : diff <= msgWarn ? arr(['messages','morning','warn'])
              :               arr(['messages','morning','calm']);
     var msgState = diff <= 0 ? 'gone' : diff <= msgCrit ? 'crit' : diff <= msgHot ? 'hot' : diff <= msgWarn ? 'warn' : 'calm';
-    id('mMessage').innerHTML = cachedFooterMessage(pool, 'Good morning', t, msgState);
+    id('mMessage').innerHTML = cachedFooterMessage(pool, '', t, msgState);
 
     // Departure urgency bar
     var minsLeft   = leaveTotal - nowTotal;
@@ -1136,11 +1136,6 @@ body.sleep-active #artMode{filter:brightness(.76)}
     var mqEl = id('mQuoteText');
     if (!qEl && !mqEl) return;
 
-    var source = val(['modules','quote','source'], 'stoic');
-    var tagMap  = { stoic:'stoicism', wisdom:'wisdom', family:'family', any:'' };
-    var tag     = tagMap[source] || 'stoicism';
-    var apiUrl  = val(['modules','quote','url'], 'https://api.quotable.io/random?tags=' + tag + '&maxLength=180');
-
     function setQuote(text, author) {
       if (qEl) qEl.innerHTML = text;
       if (aEl) aEl.innerHTML = '— ' + (author || '').toUpperCase();
@@ -1149,31 +1144,14 @@ body.sleep-active #artMode{filter:brightness(.76)}
       if (mqEl) mqEl.style.opacity = '1';
     }
     var fallbacks = [
+      { q:'The obstacle is the way.', a:'MARCUS AURELIUS' },
       { q:'Waste no more time arguing what a good man should be. Be one.', a:'MARCUS AURELIUS' },
       { q:'It is not what happens to you, but how you react to it that matters.', a:'EPICTETUS' },
-      { q:'The obstacle is the way.', a:'MARCUS AURELIUS' },
       { q:'He who is brave is free.', a:'SENECA' },
       { q:'Dwell on the beauty of life. Watch the stars, and see yourself running with them.', a:'MARCUS AURELIUS' },
     ];
-    var fb = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    var fb = fallbacks[0];
     setQuote(fb.q, fb.a);
-
-    if (qEl) qEl.style.opacity = '.45';
-
-    try {
-      var data = await fetch(apiUrl).then(function (r) { return r.json(); });
-      if (data && data.content) {
-        setTimeout(function () {
-          setQuote(data.content, data.author || '');
-        }, 500);
-        return;
-      }
-      throw new Error('empty');
-    } catch (e) {
-      setTimeout(function () {
-        setQuote(fb.q, fb.a);
-      }, 500);
-    }
   }
   function pulseQuote() {
     var qEl = id('quoteText');

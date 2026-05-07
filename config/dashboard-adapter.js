@@ -13,11 +13,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   var DEFAULT_MESSAGES = {
     morning: {
-      calm: ['Morning is easy.', 'Plenty of time.', 'Take your time.'],
-      warn: ['Start getting ready.', 'Time to move.', 'Get going soon.'],
-      hot: ['Shoes on, please.', 'Almost time.', 'Wrap it up.'],
-      crit: ['Move it!', "Let's go!", 'Out the door!'],
-      gone: ['Have a great day.', "Go get 'em.", 'See you this afternoon.'],
+      calm: [],
+      warn: [],
+      hot: [],
+      crit: [],
+      gone: [],
     },
     evening: {
       onTrack: ['On track. Nice work.', 'Looking good.', 'Good rhythm tonight.'],
