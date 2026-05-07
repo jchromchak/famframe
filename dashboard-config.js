@@ -52,7 +52,7 @@ var DASHBOARD_CONFIG = {
   "modes": {
     "morning": {
       "start": "06:00",
-      "end": "13:00"
+      "end": "12:35"
     },
     "evening": {
       "start": "17:00",
@@ -81,7 +81,7 @@ var DASHBOARD_CONFIG = {
       ],
       "window": {
         "start": "06:00",
-        "end": "13:00"
+        "end": "12:35"
       },
       "primaryTime": "06:45",
       "targetTime": "07:20",
@@ -365,7 +365,7 @@ var DASHBOARD_CONFIG = {
       ],
       "window": {
         "start": "11:15",
-        "end": "15:15"
+        "end": "12:35"
       },
       "primaryTime": "14:35",
       "targetTime": "14:45",
