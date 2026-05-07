@@ -37,6 +37,30 @@ Future phase:
 - Move from `dashboard-config.js` to JSON config files.
 - Consider Cloudflare Worker or another edge proxy for Maps and write operations.
 
+## JSON config foundation
+
+The first JSON model files live in:
+
+- `config/family.json`
+- `config/routines.json`
+- `config/routes.json`
+- `config/display.json`
+- `config/modules.json`
+- `content/messages.md`
+- `content/quotes.md`
+
+For now, `dashboard-config.js` remains the TV dashboard compatibility source. The JSON files are the cleaner admin/source model for the next migration pass.
+
+`config/family.json` includes a stable family primary key:
+
+```json
+{
+  "familyId": "fam-fe794623"
+}
+```
+
+See `docs/json-config-model.md` for the model boundary and migration plan.
+
 ## Routine model direction
 
 The admin app is moving toward a routine model built from:

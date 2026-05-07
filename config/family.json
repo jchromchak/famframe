@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "familyId": "fam-fe794623",
+  "displayName": "Fam Frame",
+  "members": [
+    {
+      "id": "member-adult-1",
+      "displayName": "Adult 1",
+      "role": "adult"
+    },
+    {
+      "id": "member-child-1",
+      "displayName": "Kid 1",
+      "role": "child"
+    }
+  ],
+  "home": {
+    "label": "Home",
+    "city": "Home city",
+    "timeZone": "America/New_York",
+    "coordinates": null
+  }
+}

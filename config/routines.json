@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "routines": [
+    {
+      "id": "routine-school-morning",
+      "label": "Off to school",
+      "type": "departure",
+      "enabled": true,
+      "layer": "baseline",
+      "appliesTo": {
+        "days": [1, 2, 3, 4, 5]
+      },
+      "window": {
+        "start": "06:00",
+        "end": "08:00"
+      },
+      "timing": {
+        "leaveAt": "07:15",
+        "arriveBy": "07:45",
+        "deadline": "07:50"
+      },
+      "routeId": "route-school-morning",
+      "listId": "list-school-morning",
+      "display": {
+        "scene": "departure",
+        "priority": 80
+      }
+    },
+    {
+      "id": "routine-school-pickup",
+      "label": "School pickup",
+      "type": "departure",
+      "enabled": true,
+      "layer": "pattern",
+      "appliesTo": {
+        "days": [1, 2, 3, 4, 5]
+      },
+      "window": {
+        "start": "14:15",
+        "end": "16:15"
+      },
+      "timing": {
+        "leaveAt": "14:45",
+        "arriveBy": "15:15",
+        "deadline": "15:20"
+      },
+      "routeId": "route-school-pickup",
+      "listId": "list-school-pickup",
+      "display": {
+        "scene": "departure",
+        "priority": 70
+      }
+    },
+    {
+      "id": "routine-evening",
+      "label": "Evening",
+      "type": "timeline",
+      "enabled": true,
+      "layer": "baseline",
+      "appliesTo": {
+        "days": [0, 1, 2, 3, 4, 5, 6]
+      },
+      "window": {
+        "start": "17:00",
+        "end": "21:30"
+      },
+      "timeline": [
+        {
+          "id": "home",
+          "label": "Home and decompress",
+          "start": "17:30",
+          "durationMinutes": 30,
+          "note": "Snack, unwind"
+        },
+        {
+          "id": "dinner",
+          "label": "Dinner",
+          "start": "18:30",
+          "durationMinutes": 30,
+          "note": "Together"
+        },
+        {
+          "id": "wind-down",
+          "label": "Wind down",
+          "start": "20:15",
+          "durationMinutes": 15,
+          "note": "No screens"
+        }
+      ],
+      "display": {
+        "scene": "evening",
+        "priority": 40
+      }
+    }
+  ],
+  "lists": [
+    {
+      "id": "list-school-morning",
+      "label": "School morning list",
+      "items": [
+        {
+          "id": "breakfast",
+          "label": "Breakfast",
+          "icon": "breakfast",
+          "targetOffsetMinutes": -40
+        },
+        {
+          "id": "backpack",
+          "label": "Backpack ready",
+          "icon": "backpack",
+          "targetOffsetMinutes": -20
+        },
+        {
+          "id": "car",
+          "label": "Get in the car",
+          "icon": "car",
+          "targetOffsetMinutes": 0
+        }
+      ]
+    },
+    {
+      "id": "list-school-pickup",
+      "label": "Pickup list",
+      "items": [
+        {
+          "id": "keys",
+          "label": "Keys and wallet",
+          "icon": "bag",
+          "targetOffsetMinutes": -10
+        },
+        {
+          "id": "car",
+          "label": "Get in the car",
+          "icon": "car",
+          "targetOffsetMinutes": 0
+        }
+      ]
+    }
+  ],
+  "layers": {
+    "baseline": {
+      "description": "Usually true recurring routines."
+    },
+    "pattern": {
+      "description": "Reusable variants such as sports days, pickup days, or late starts."
+    },
+    "override": {
+      "description": "Temporary week or day context."
+    },
+    "addon": {
+      "description": "Small temporary inserts such as library books or errands."
+    }
+  }
+}

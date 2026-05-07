@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "routes": [
+    {
+      "id": "route-school-morning",
+      "label": "Home to school",
+      "origin": {
+        "type": "home",
+        "label": "Home"
+      },
+      "destination": {
+        "type": "saved-place",
+        "placeId": "place-school",
+        "label": "School"
+      },
+      "stops": [],
+      "fallbackDriveMinutes": 22,
+      "derived": {
+        "provider": "",
+        "durationMinutes": null,
+        "trafficStatus": "",
+        "updatedAt": "",
+        "expiresAt": ""
+      }
+    },
+    {
+      "id": "route-school-pickup",
+      "label": "Home to pickup",
+      "origin": {
+        "type": "home",
+        "label": "Home"
+      },
+      "destination": {
+        "type": "saved-place",
+        "placeId": "place-school",
+        "label": "School pickup"
+      },
+      "stops": [
+        {
+          "id": "stop-pickup",
+          "label": "Pickup stop",
+          "bufferMinutes": 5
+        }
+      ],
+      "fallbackDriveMinutes": 18,
+      "derived": {
+        "provider": "",
+        "durationMinutes": null,
+        "trafficStatus": "",
+        "updatedAt": "",
+        "expiresAt": ""
+      }
+    }
+  ],
+  "places": [
+    {
+      "id": "place-school",
+      "label": "School",
+      "displayArea": "School area"
+    }
+  ]
+}

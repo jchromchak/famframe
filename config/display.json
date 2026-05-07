@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "time": {
+    "timeZone": "America/New_York",
+    "locale": "en-US",
+    "hour12": true
+  },
+  "runtime": {
+    "virtualCanvas": {
+      "width": 1920,
+      "height": 1080
+    },
+    "scaleMode": "contain",
+    "allowScroll": false,
+    "hideCursor": true
+  },
+  "scenes": {
+    "defaultIdle": "art",
+    "routineScene": "departure",
+    "eveningScene": "evening"
+  },
+  "theme": {
+    "id": "default-editorial",
+    "accent": "#d99a3d"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "weather": {
+    "enabled": true,
+    "provider": "open-meteo",
+    "showWearGuidance": true
+  },
+  "calendar": {
+    "enabled": false,
+    "provider": "google-calendar",
+    "maxItems": 4
+  },
+  "quotes": {
+    "enabled": true,
+    "source": "stoic",
+    "refreshMinutes": 60,
+    "pulseMinutes": 1
+  },
+  "commute": {
+    "enabled": true,
+    "freshnessMinutes": 15
+  }
+}
