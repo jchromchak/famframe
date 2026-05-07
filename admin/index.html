@@ -458,6 +458,32 @@ select {
 }
 .editor-card-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
 .editor-card-title { font-family: var(--serif); font-size: 18px; font-weight: 300; }
+.routine-card { padding: 0; overflow: hidden; }
+.routine-top { padding: 16px; border-bottom: 1px solid var(--border); }
+.routine-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.routine-title { font-family: var(--serif); font-size: 24px; font-weight: 300; line-height: 1.1; }
+.routine-sub { font-size: 10px; letter-spacing: .16em; color: var(--dim); text-transform: uppercase; margin-top: 4px; line-height: 1.5; }
+.routine-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.routine-switch { display:inline-flex; align-items:center; gap:8px; color:var(--sub); font-size:10px; letter-spacing:.14em; }
+.routine-summary { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+.routine-summary-item { background: rgba(255,255,255,.025); border:1px solid var(--border); border-radius:6px; padding:10px; min-width:0; }
+.routine-summary-label { font-size:9px; letter-spacing:.18em; color:var(--dim); text-transform:uppercase; margin-bottom:5px; }
+.routine-summary-value { font-family:var(--serif); font-size:17px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.routine-pill-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.routine-pill { font-size:9px; letter-spacing:.14em; color:var(--sub); border:1px solid var(--border); border-radius:999px; padding:5px 8px; text-transform:uppercase; }
+.routine-pill.on { color:var(--gold); border-color:rgba(200,169,110,.28); background:var(--gold-dim); }
+.routine-details { padding: 0 16px 16px; }
+.routine-details details { border-bottom:1px solid var(--border); padding:12px 0; }
+.routine-details details:last-of-type { border-bottom:0; }
+.routine-details summary { cursor:pointer; list-style:none; color:var(--sub); font-size:10px; letter-spacing:.22em; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center; }
+.routine-details summary::-webkit-details-marker { display:none; }
+.routine-details summary::after { content:'+'; color:var(--dim); font-size:14px; letter-spacing:0; }
+.routine-details details[open] summary { color:var(--gold); margin-bottom:12px; }
+.routine-details details[open] summary::after { content:'-'; color:var(--gold); }
+.routine-day-row { display:flex; flex-wrap:wrap; gap:7px; margin-top:2px; }
+.routine-day { display:inline-flex; align-items:center; gap:5px; font-size:10px; letter-spacing:.12em; color:var(--sub); border:1px solid var(--border); border-radius:999px; padding:6px 8px; }
+.routine-day input { margin:0; }
+.routine-list-card { background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
 .small-btn {
   background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
   color: var(--sub); font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
@@ -1633,6 +1659,35 @@ function toggleSchoolDay(day, on) {
   if (on) set.add(day); else set.delete(day);
   config.schoolDays = Array.from(set).sort(); saveConfig(); renderSchedule();
 }
+function routineSceneLabel(routine) {
+  if (!routine) return 'Routine';
+  if (routine.type === 'timeline') return 'Timeline';
+  const seg = (routine.segments || [])[0] || {};
+  return seg.destinationLabel ? 'To ' + seg.destinationLabel : 'Departure';
+}
+function routineTimeRange(routine) {
+  const w = routine && routine.window ? routine.window : {};
+  return `${toTime(w.start, '-')}-${toTime(w.end, '-')}`;
+}
+function routinePrimaryLine(routine) {
+  if (!routine) return '-';
+  if (routine.type === 'timeline') return `${toTime(routine.primaryTime, '-')} start`;
+  return `${toTime(routine.primaryTime, '-')} leave / ${toTime(routine.targetTime, '-')} target`;
+}
+function routineDaySummary(days) {
+  const labels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const set = new Set(days || []);
+  if (set.size === 7) return 'Every day';
+  if ([1,2,3,4,5].every(d => set.has(d)) && set.size === 5) return 'Weekdays';
+  if (!set.size) return 'No days';
+  return labels.filter((_, i) => set.has(i)).join(' ');
+}
+function routineRouteSummary(routine) {
+  if (!routine || routine.type !== 'departure') return 'Evening timeline';
+  const seg = (routine.segments || [])[0] || {};
+  const stops = Number(seg.stopCount || 0);
+  return `${seg.routeLabel || routine.label || 'Route'}${stops ? ' / ' + stops + ' stop' + (stops === 1 ? '' : 's') : ''}`;
+}
 function renderRoutineEditor() {
   const el = document.getElementById('routineEditor');
   if (!el) return;
@@ -1641,53 +1696,78 @@ function renderRoutineEditor() {
     const seg = (routine.segments || [])[0] || {};
     const days = new Set(routine.days || []);
     return `
-      <div class="editor-card">
-        <div class="editor-card-head">
-          <div class="editor-card-title">${html(routine.label || 'Routine')}</div>
-          <button class="small-btn danger" onclick="removeRoutine(${i})">REMOVE</button>
+      <div class="editor-card routine-card">
+        <div class="routine-top">
+          <div class="routine-head">
+            <div>
+              <div class="routine-title">${html(routine.label || 'Routine')}</div>
+              <div class="routine-sub">${html(routineSceneLabel(routine))}</div>
+            </div>
+            <div class="routine-actions">
+              <label class="routine-switch"><input type="checkbox" ${routine.enabled !== false ? 'checked' : ''} onchange="updateRoutine(${i}, 'enabled', this.checked)"> ON</label>
+              <button class="small-btn danger" onclick="removeRoutine(${i})">REMOVE</button>
+            </div>
+          </div>
+          <div class="routine-summary">
+            <div class="routine-summary-item"><div class="routine-summary-label">When</div><div class="routine-summary-value">${html(routinePrimaryLine(routine))}</div></div>
+            <div class="routine-summary-item"><div class="routine-summary-label">Window</div><div class="routine-summary-value">${html(routineTimeRange(routine))}</div></div>
+            <div class="routine-summary-item"><div class="routine-summary-label">Days</div><div class="routine-summary-value">${html(routineDaySummary(routine.days))}</div></div>
+            <div class="routine-summary-item"><div class="routine-summary-label">Route</div><div class="routine-summary-value">${html(routineRouteSummary(routine))}</div></div>
+          </div>
+          <div class="routine-pill-row">
+            <span class="routine-pill ${routine.enabled !== false ? 'on' : ''}">${routine.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+            <span class="routine-pill">${html(routine.type || 'routine')}</span>
+            <span class="routine-pill">${(routine.listItems || []).length} list items</span>
+          </div>
         </div>
-        <label style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--sub);font-size:11px;letter-spacing:.12em">
-          <input type="checkbox" ${routine.enabled !== false ? 'checked' : ''} onchange="updateRoutine(${i}, 'enabled', this.checked)"> ENABLED
-        </label>
-        <div class="form-grid">
-          <div><div class="field-label">Label</div><input type="text" value="${html(routine.label || '')}" onchange="updateRoutine(${i}, 'label', this.value)"></div>
-          <div><div class="field-label">Type</div><select onchange="updateRoutine(${i}, 'type', this.value)">
-            <option value="departure" ${routine.type === 'departure' ? 'selected' : ''}>Departure / pickup</option>
-            <option value="timeline" ${routine.type === 'timeline' ? 'selected' : ''}>Timeline</option>
-          </select></div>
-          <div><div class="field-label">Window start</div><input type="time" value="${toTime((routine.window || {}).start,'06:00')}" onchange="updateRoutine(${i}, 'window.start', this.value)"></div>
-          <div><div class="field-label">Window end</div><input type="time" value="${toTime((routine.window || {}).end,'07:00')}" onchange="updateRoutine(${i}, 'window.end', this.value)"></div>
-          <div><div class="field-label">Leave / start</div><input type="time" value="${toTime(routine.primaryTime,'07:00')}" onchange="updateRoutine(${i}, 'primaryTime', this.value)"></div>
-          <div><div class="field-label">Arrive / target</div><input type="time" value="${toTime(routine.targetTime,'07:20')}" onchange="updateRoutine(${i}, 'targetTime', this.value)"></div>
-          <div><div class="field-label">Deadline</div><input type="time" value="${toTime(routine.deadline,'07:25')}" onchange="updateRoutine(${i}, 'deadline', this.value)"></div>
-          <div><div class="field-label">Route id</div><input type="text" value="${html(routine.routeId || routine.id)}" onchange="updateRoutine(${i}, 'routeId', this.value)"></div>
-        </div>
-        <div class="field-label">Days</div>
-        <div style="margin-bottom:12px">${dayLabels.map((d, day) => `<label style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 10px 0;color:var(--sub);font-size:11px;letter-spacing:.12em"><input type="checkbox" ${days.has(day) ? 'checked' : ''} onchange="toggleRoutineDay(${i}, ${day}, this.checked)">${d}</label>`).join('')}</div>
+        <div class="routine-details">
+          <details>
+            <summary>Basics</summary>
+            <div class="form-grid">
+              <div><div class="field-label">Label</div><input type="text" value="${html(routine.label || '')}" onchange="updateRoutine(${i}, 'label', this.value)"></div>
+              <div><div class="field-label">Type</div><select onchange="updateRoutine(${i}, 'type', this.value)">
+                <option value="departure" ${routine.type === 'departure' ? 'selected' : ''}>Departure / pickup</option>
+                <option value="timeline" ${routine.type === 'timeline' ? 'selected' : ''}>Timeline</option>
+              </select></div>
+              <div><div class="field-label">Window start</div><input type="time" value="${toTime((routine.window || {}).start,'06:00')}" onchange="updateRoutine(${i}, 'window.start', this.value)"></div>
+              <div><div class="field-label">Window end</div><input type="time" value="${toTime((routine.window || {}).end,'07:00')}" onchange="updateRoutine(${i}, 'window.end', this.value)"></div>
+              <div><div class="field-label">Leave / start</div><input type="time" value="${toTime(routine.primaryTime,'07:00')}" onchange="updateRoutine(${i}, 'primaryTime', this.value)"></div>
+              <div><div class="field-label">Arrive / target</div><input type="time" value="${toTime(routine.targetTime,'07:20')}" onchange="updateRoutine(${i}, 'targetTime', this.value)"></div>
+              <div><div class="field-label">Deadline</div><input type="time" value="${toTime(routine.deadline,'07:25')}" onchange="updateRoutine(${i}, 'deadline', this.value)"></div>
+              <div><div class="field-label">Route id</div><input type="text" value="${html(routine.routeId || routine.id)}" onchange="updateRoutine(${i}, 'routeId', this.value)"></div>
+            </div>
+            <div class="field-label">Days</div>
+            <div class="routine-day-row">${dayLabels.map((d, day) => `<label class="routine-day"><input type="checkbox" ${days.has(day) ? 'checked' : ''} onchange="toggleRoutineDay(${i}, ${day}, this.checked)">${d}</label>`).join('')}</div>
+          </details>
         ${routine.type === 'departure' ? `
-          <div class="section-label" style="margin-top:12px">Primary segment</div>
-          <div class="form-grid">
-            <div><div class="field-label">Segment label</div><input type="text" value="${html(seg.label || '')}" onchange="updateRoutineSegment(${i}, 'label', this.value)"></div>
-            <div><div class="field-label">Route label</div><input type="text" value="${html(seg.routeLabel || '')}" onchange="updateRoutineSegment(${i}, 'routeLabel', this.value)"></div>
-            <div><div class="field-label">Destination</div><input type="text" value="${html(seg.destinationLabel || '')}" onchange="updateRoutineSegment(${i}, 'destinationLabel', this.value)"></div>
-            <div><div class="field-label">Stops</div><input type="number" min="0" value="${Number(seg.stopCount || 0)}" onchange="updateRoutineSegment(${i}, 'stopCount', this.value)"></div>
-            <div><div class="field-label">Buffer min</div><input type="number" min="0" value="${Number(seg.bufferMin || 0)}" onchange="updateRoutineSegment(${i}, 'bufferMin', this.value)"></div>
-            <div><div class="field-label">Fallback drive</div><input type="number" min="0" value="${Number(seg.fallbackDriveMin || 0)}" onchange="updateRoutineSegment(${i}, 'fallbackDriveMin', this.value)"></div>
-          </div>
-          <div class="section-label" style="margin-top:12px">Local route lookup</div>
-          <div class="form-grid">
-            <div><div class="field-label">Origin</div><input type="text" value="${html(routeOriginFor(routine))}" placeholder="Home address or lat,lng" data-place-autocomplete data-place-role="routine-route" data-routine-index="${i}" data-route-field="origin" onchange="updateRoutineRouteLocal(${i}, 'origin', this.value)"></div>
-            <div><div class="field-label">Destination</div><input type="text" value="${html(routeDestinationFor(routine))}" placeholder="School, pickup, field, etc." data-place-autocomplete data-place-role="routine-route" data-routine-index="${i}" data-route-field="destination" onchange="updateRoutineRouteLocal(${i}, 'destination', this.value)"></div>
-          </div>
-          <div class="field-hint">Origins and destinations stay local to this admin device. GitHub receives only safe derived route labels, durations, status, and timestamps.</div>
-          <button class="action-btn" onclick="updateRoutineMapsStatus(${i})" style="margin-top:12px">
-            <span class="action-icon">↻</span>
-            <span class="action-label">Update maps status for this routine</span>
-          </button>
-          <div class="action-result" id="routineMapsResult${i}"></div>
-          <div class="section-label" style="margin-top:12px">Routine list</div>
+          <details>
+            <summary>Route and timing</summary>
+            <div class="form-grid">
+              <div><div class="field-label">Segment label</div><input type="text" value="${html(seg.label || '')}" onchange="updateRoutineSegment(${i}, 'label', this.value)"></div>
+              <div><div class="field-label">Route label</div><input type="text" value="${html(seg.routeLabel || '')}" onchange="updateRoutineSegment(${i}, 'routeLabel', this.value)"></div>
+              <div><div class="field-label">Destination</div><input type="text" value="${html(seg.destinationLabel || '')}" onchange="updateRoutineSegment(${i}, 'destinationLabel', this.value)"></div>
+              <div><div class="field-label">Stops</div><input type="number" min="0" value="${Number(seg.stopCount || 0)}" onchange="updateRoutineSegment(${i}, 'stopCount', this.value)"></div>
+              <div><div class="field-label">Buffer min</div><input type="number" min="0" value="${Number(seg.bufferMin || 0)}" onchange="updateRoutineSegment(${i}, 'bufferMin', this.value)"></div>
+              <div><div class="field-label">Fallback drive</div><input type="number" min="0" value="${Number(seg.fallbackDriveMin || 0)}" onchange="updateRoutineSegment(${i}, 'fallbackDriveMin', this.value)"></div>
+            </div>
+          </details>
+          <details>
+            <summary>Local route lookup</summary>
+            <div class="form-grid">
+              <div><div class="field-label">Origin</div><input type="text" value="${html(routeOriginFor(routine))}" placeholder="Home address or lat,lng" data-place-autocomplete data-place-role="routine-route" data-routine-index="${i}" data-route-field="origin" onchange="updateRoutineRouteLocal(${i}, 'origin', this.value)"></div>
+              <div><div class="field-label">Destination</div><input type="text" value="${html(routeDestinationFor(routine))}" placeholder="School, pickup, field, etc." data-place-autocomplete data-place-role="routine-route" data-routine-index="${i}" data-route-field="destination" onchange="updateRoutineRouteLocal(${i}, 'destination', this.value)"></div>
+            </div>
+            <div class="field-hint">Origins and destinations stay local to this admin device. GitHub receives only safe derived route labels, durations, status, and timestamps.</div>
+            <button class="action-btn" onclick="updateRoutineMapsStatus(${i})" style="margin-top:12px">
+              <span class="action-icon">↻</span>
+              <span class="action-label">Update maps status for this routine</span>
+            </button>
+            <div class="action-result" id="routineMapsResult${i}"></div>
+          </details>
+          <details>
+            <summary>Routine list</summary>
           ${(routine.listItems || []).map((item, itemIndex) => `
-            <div class="editor-card" style="padding:12px;margin-bottom:10px">
+            <div class="routine-list-card">
               <div class="editor-card-head">
                 <div class="editor-card-title">${html(item.label || 'List item')}</div>
                 <button class="small-btn danger" onclick="removeRoutineListItem(${i}, ${itemIndex})">REMOVE</button>
@@ -1701,7 +1781,9 @@ function renderRoutineEditor() {
             </div>
           `).join('')}
           <button class="small-btn" onclick="addRoutineListItem(${i})">+ ADD LIST ITEM</button>
+          </details>
         ` : '<div class="field-hint">Timeline routines currently use the Evening segments editor below. Full dynamic timeline editing will come after departure routines stabilize.</div>'}
+        </div>
       </div>`;
   }).join('');
   setTimeout(setupPlacesAutocomplete, 0);
