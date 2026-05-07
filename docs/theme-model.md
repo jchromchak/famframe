@@ -33,6 +33,20 @@ Supported fields:
 
 The TV may receive an expanded safe theme object later, but JSON source should stay compact.
 
+Individual routines may override the global dashboard theme through their `display` object:
+
+```json
+{
+  "display": {
+    "scene": "evening",
+    "priority": 40,
+    "themeId": "ambient-evening"
+  }
+}
+```
+
+Use this for event-level feel, such as Evening using Ambient Evening while Morning inherits the dashboard default. Segments and lists should not own theme because they describe route and task details, not TV presentation.
+
 ## Token Contract
 
 Every resolved theme should provide these display tokens:

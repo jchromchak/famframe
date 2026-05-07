@@ -1139,7 +1139,7 @@ const DEFAULT_CONFIG = {
       targetTime: '13:20',
       deadline: '13:25',
       routeId: 'school-morning',
-      display: { scene: 'departure', priority: 80 },
+      display: { scene: 'departure', priority: 80, themeId: '' },
       segments: [{ id:'school-run', label:'Leave for school', routeLabel:'US-17 N to School', destinationLabel:'School', stops:[], stopCount:0, bufferMin:5, fallbackDriveMin:22 }],
       listItems: [
         { id:'breakfast', label:'Breakfast', icon:'breakfast', targetMin:-40 },
@@ -1161,7 +1161,7 @@ const DEFAULT_CONFIG = {
       targetTime: '14:45',
       deadline: '14:50',
       routeId: 'school-pickup',
-      display: { scene: 'departure', priority: 70 },
+      display: { scene: 'departure', priority: 70, themeId: '' },
       segments: [{ id:'pickup-run', label:'Leave for pickup', routeLabel:'Home to pickup', destinationLabel:'Pickup', stops:[{ id:'school-stop', label:'School pickup', bufferMin:5 }], stopCount:1, bufferMin:5, fallbackDriveMin:18 }],
       listItems: [
         { id:'keys', label:'Keys and wallet', icon:'backpack', targetMin:-10 },
@@ -1555,6 +1555,7 @@ function normalizeRoutine(routine) {
   r.display = r.display || {};
   r.display.scene = r.display.scene || (r.type === 'timeline' ? 'evening' : 'departure');
   r.display.priority = Number(r.display.priority == null ? 50 : r.display.priority);
+  r.display.themeId = ['default-editorial','ambient-evening'].includes(r.display.themeId) ? r.display.themeId : '';
   if (r.type === 'departure') {
     r.primaryTime = toTime(r.primaryTime, '07:00');
     r.targetTime = toTime(r.targetTime, r.primaryTime);
@@ -2270,6 +2271,7 @@ function renderRoutineEditor() {
               </select></div>
               <div><div class="field-label">Window start</div><input type="time" value="${toTime((routine.window || {}).start,'06:00')}" onchange="updateRoutine(${i}, 'window.start', this.value)"></div>
               <div><div class="field-label">Window end</div><input type="time" value="${toTime((routine.window || {}).end,'07:00')}" onchange="updateRoutine(${i}, 'window.end', this.value)"></div>
+              <div><div class="field-label">Theme</div><select onchange="updateRoutine(${i}, 'display.themeId', this.value)">${routineThemeOptions(routine.display && routine.display.themeId)}</select></div>
               ${routine.type === 'departure' ? `
                 <div><div class="field-label">Leave</div><input type="time" value="${toTime(routine.primaryTime,'07:00')}" onchange="updateRoutine(${i}, 'primaryTime', this.value)"></div>
                 <div><div class="field-label">Arrive / target</div><input type="time" value="${toTime(routine.targetTime,'07:20')}" onchange="updateRoutine(${i}, 'targetTime', this.value)"></div>
@@ -2405,6 +2407,7 @@ function updateRoutine(i, path, value) {
   else if (path === 'type') r.type = value;
   else if (path === 'window.start') { r.window = r.window || {}; r.window.start = value; }
   else if (path === 'window.end') { r.window = r.window || {}; r.window.end = value; }
+  else if (path === 'display.themeId') { r.display = r.display || {}; r.display.themeId = value; }
   else if (path === 'routeId') r.routeId = slug(value, r.id);
   else r[path] = value;
   config.routines[i] = normalizeRoutine(r);
@@ -2580,6 +2583,14 @@ function renderChecklistEditor() {
 function memberOptions(selected) {
   const opts = ['<option value="">Everyone</option>'].concat((config.family.kids || []).map(k => '<option value="' + html(k.name || '') + '"' + (selected === k.name ? ' selected' : '') + '>' + html(k.name || 'Member') + '</option>'));
   return opts.join('');
+}
+function routineThemeOptions(selected) {
+  const current = selected || '';
+  return [
+    `<option value="" ${current === '' ? 'selected' : ''}>Use dashboard theme</option>`,
+    `<option value="default-editorial" ${current === 'default-editorial' ? 'selected' : ''}>Default</option>`,
+    `<option value="ambient-evening" ${current === 'ambient-evening' ? 'selected' : ''}>Ambient Evening</option>`,
+  ].join('');
 }
 function addChecklistItem() { config.morningChecklist.push({ id:'new_item', label:'New item', icon:'✓', targetMin:-10, assignee:'' }); saveConfig(); renderChecklistEditor(); }
 function removeChecklistItem(i) { config.morningChecklist.splice(i,1); saveConfig(); renderChecklistEditor(); }

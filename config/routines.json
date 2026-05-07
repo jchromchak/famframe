@@ -22,7 +22,8 @@
       },
       "display": {
         "scene": "departure",
-        "priority": 80
+        "priority": 80,
+        "themeId": ""
       },
       "timing": {
         "leaveAt": "06:45",
@@ -55,7 +56,8 @@
       },
       "display": {
         "scene": "evening",
-        "priority": 40
+        "priority": 40,
+        "themeId": "ambient-evening"
       },
       "timeline": [
         {
@@ -130,7 +132,8 @@
       },
       "display": {
         "scene": "departure",
-        "priority": 60
+        "priority": 60,
+        "themeId": ""
       },
       "timing": {
         "leaveAt": "15:35",
@@ -161,7 +164,8 @@
       },
       "display": {
         "scene": "departure",
-        "priority": 60
+        "priority": 60,
+        "themeId": ""
       },
       "timing": {
         "leaveAt": "14:35",
@@ -188,7 +192,8 @@
       },
       "display": {
         "scene": "departure",
-        "priority": 60
+        "priority": 60,
+        "themeId": ""
       },
       "timing": {
         "leaveAt": "14:35",

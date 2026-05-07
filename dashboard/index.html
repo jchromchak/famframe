@@ -445,6 +445,9 @@ body.sleep-active #artMode{filter:brightness(.76)}
   function themeId() {
     var theme = val(['theme'], val(['display','theme'], {}));
     var selected = theme && theme.id ? String(theme.id) : 'default-editorial';
+    if (currentRoutine && currentRoutine.display && currentRoutine.display.themeId) {
+      selected = String(currentRoutine.display.themeId);
+    }
     try {
       var forced = new URLSearchParams(window.location.search).get('theme');
       if (forced) selected = forced;
@@ -1067,6 +1070,7 @@ body.sleep-active #artMode{filter:brightness(.76)}
     var now = zonedNow();
     updateDrive(now);
     var m   = currentMode(now);
+    applyTheme();
     show(m);
     clocks(now);
     if (m === 'morning') renderMorning(now);

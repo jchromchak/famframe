@@ -216,6 +216,7 @@
       display: {
         scene: (routine.display && routine.display.scene) || 'departure',
         priority: Number(routine.display && routine.display.priority == null ? 50 : routine.display.priority),
+        themeId: (routine.display && routine.display.themeId) || '',
       },
       segments: [{
         id: cleanId(key + '-run', 'route-run'),
@@ -242,6 +243,7 @@
       display: {
         scene: (routine.display && routine.display.scene) || 'evening',
         priority: Number(routine.display && routine.display.priority == null ? 40 : routine.display.priority),
+        themeId: (routine.display && routine.display.themeId) || '',
       },
       timelineItems: arr(routine.timeline).map(function (item, index) {
         return {
