@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-07T10:28:44.261Z
+// Last updated: 2026-05-07T15:06:59.364Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -354,6 +354,61 @@ var DASHBOARD_CONFIG = {
           "assignee": ""
         }
       ]
+    },
+    {
+      "id": "school_pickup_1778166294260",
+      "label": "Mothers Day Tea",
+      "type": "departure",
+      "enabled": true,
+      "days": [
+        4
+      ],
+      "window": {
+        "start": "13:15",
+        "end": "15:15"
+      },
+      "primaryTime": "14:35",
+      "targetTime": "14:45",
+      "deadline": "14:50",
+      "routeId": "pickup_1778166294260",
+      "display": {
+        "scene": "departure",
+        "priority": 60
+      },
+      "segments": [
+        {
+          "id": "pickup_run",
+          "label": "Leave for pickup",
+          "routeLabel": "Home to pickup",
+          "destinationLabel": "Pickup",
+          "stops": [
+            {
+              "id": "pickup_stop",
+              "label": "Pickup stop",
+              "bufferMin": 5
+            }
+          ],
+          "stopCount": 1,
+          "bufferMin": 5,
+          "fallbackDriveMin": 18
+        }
+      ],
+      "listItems": [
+        {
+          "id": "keys",
+          "label": "Keys and wallet",
+          "icon": "backpack",
+          "targetMin": -10,
+          "assignee": ""
+        },
+        {
+          "id": "car",
+          "label": "Get in the car",
+          "icon": "car",
+          "targetMin": 0,
+          "assignee": ""
+        }
+      ]
     }
   ],
   "scenarios": {
@@ -526,16 +581,16 @@ var DASHBOARD_CONFIG = {
     "showWeather": true
   },
   "commute": {
-    "activeRouteId": "school_morning",
+    "activeRouteId": "school-morning",
     "routes": {
       "school-morning": {
         "provider": "google-maps",
         "routeLabel": "US-17 N to School",
         "stopCount": 0,
-        "durationMinutes": 27,
+        "durationMinutes": 31,
         "trafficStatus": "light",
-        "updatedAt": "2026-05-07T03:23:56.711Z",
-        "expiresAt": "2026-05-07T03:38:56.711Z",
+        "updatedAt": "2026-05-07T15:06:59.030Z",
+        "expiresAt": "2026-05-07T15:21:59.030Z",
         "stops": [],
         "bufferMinutes": 0
       },
@@ -561,6 +616,22 @@ var DASHBOARD_CONFIG = {
         "stops": []
       },
       "pickup_1778124119125": {
+        "provider": "",
+        "durationMinutes": null,
+        "trafficStatus": "",
+        "updatedAt": "",
+        "expiresAt": "",
+        "routeLabel": "Home to pickup",
+        "stopCount": 1,
+        "stops": [
+          {
+            "id": "pickup_stop",
+            "label": "Pickup stop",
+            "bufferMin": 5
+          }
+        ]
+      },
+      "pickup_1778166294260": {
         "provider": "",
         "durationMinutes": null,
         "trafficStatus": "",
