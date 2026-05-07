@@ -3,74 +3,74 @@
   "routines": [
     {
       "id": "routine-school-morning",
-      "label": "Off to school",
+      "label": "School morning",
       "type": "departure",
       "enabled": true,
       "layer": "baseline",
       "appliesTo": {
-        "days": [1, 2, 3, 4, 5]
+        "days": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
       },
       "window": {
         "start": "06:00",
         "end": "12:35"
       },
-      "timing": {
-        "leaveAt": "07:15",
-        "arriveBy": "07:45",
-        "deadline": "07:50"
-      },
-      "routeId": "route-school-morning",
-      "listId": "list-school-morning",
       "display": {
         "scene": "departure",
         "priority": 80
-      }
-    },
-    {
-      "id": "routine-school-pickup",
-      "label": "School pickup",
-      "type": "departure",
-      "enabled": true,
-      "layer": "pattern",
-      "appliesTo": {
-        "days": [1, 2, 3, 4, 5]
-      },
-      "window": {
-        "start": "14:15",
-        "end": "16:15"
       },
       "timing": {
-        "leaveAt": "14:45",
-        "arriveBy": "15:15",
-        "deadline": "15:20"
+        "leaveAt": "06:45",
+        "arriveBy": "07:20",
+        "deadline": "07:25"
       },
-      "routeId": "route-school-pickup",
-      "listId": "list-school-pickup",
-      "display": {
-        "scene": "departure",
-        "priority": 70
-      }
+      "routeId": "route-school-morning",
+      "listId": "list-school-morning"
     },
     {
       "id": "routine-evening",
-      "label": "Evening",
+      "label": "Evening wind-down",
       "type": "timeline",
       "enabled": true,
       "layer": "baseline",
       "appliesTo": {
-        "days": [0, 1, 2, 3, 4, 5, 6]
+        "days": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
       },
       "window": {
         "start": "17:00",
-        "end": "21:30"
+        "end": "22:00"
+      },
+      "display": {
+        "scene": "evening",
+        "priority": 40
       },
       "timeline": [
         {
           "id": "home",
-          "label": "Home and decompress",
+          "label": "Home & decompress",
           "start": "17:30",
           "durationMinutes": 30,
           "note": "Snack, unwind"
+        },
+        {
+          "id": "homework",
+          "label": "Homework",
+          "start": "18:00",
+          "durationMinutes": 30,
+          "note": "Both kids"
         },
         {
           "id": "dinner",
@@ -80,17 +80,123 @@
           "note": "Together"
         },
         {
-          "id": "wind-down",
+          "id": "baths",
+          "label": "Baths",
+          "start": "19:15",
+          "durationMinutes": 30,
+          "note": ""
+        },
+        {
+          "id": "reading",
+          "label": "Reading",
+          "start": "19:45",
+          "durationMinutes": 30,
+          "note": "30 min each"
+        },
+        {
+          "id": "winddown",
           "label": "Wind down",
           "start": "20:15",
           "durationMinutes": 15,
           "note": "No screens"
+        },
+        {
+          "id": "bed",
+          "label": "Lights out",
+          "start": "20:30",
+          "durationMinutes": 0,
+          "note": "8:30 PM"
         }
-      ],
+      ]
+    },
+    {
+      "id": "routine-school-pickup-1778097357000",
+      "label": "Pickup",
+      "type": "departure",
+      "enabled": true,
+      "layer": "baseline",
+      "appliesTo": {
+        "days": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "window": {
+        "start": "14:15",
+        "end": "17:15"
+      },
       "display": {
-        "scene": "evening",
-        "priority": 40
-      }
+        "scene": "departure",
+        "priority": 60
+      },
+      "timing": {
+        "leaveAt": "15:35",
+        "arriveBy": "16:15",
+        "deadline": "16:30"
+      },
+      "routeId": "route-pickup-1778097357000",
+      "listId": "list-school-pickup-1778097357000"
+    },
+    {
+      "id": "routine-school-pickup-1778124119125",
+      "label": "Swimming",
+      "type": "departure",
+      "enabled": true,
+      "layer": "baseline",
+      "appliesTo": {
+        "days": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "window": {
+        "start": "14:15",
+        "end": "15:15"
+      },
+      "display": {
+        "scene": "departure",
+        "priority": 60
+      },
+      "timing": {
+        "leaveAt": "14:35",
+        "arriveBy": "14:45",
+        "deadline": "14:50"
+      },
+      "routeId": "route-pickup-1778124119125",
+      "listId": "list-school-pickup-1778124119125"
+    },
+    {
+      "id": "routine-school-pickup-1778166294260",
+      "label": "Mothers Day Tea",
+      "type": "departure",
+      "enabled": true,
+      "layer": "baseline",
+      "appliesTo": {
+        "days": [
+          4
+        ]
+      },
+      "window": {
+        "start": "11:15",
+        "end": "12:35"
+      },
+      "display": {
+        "scene": "departure",
+        "priority": 60
+      },
+      "timing": {
+        "leaveAt": "14:35",
+        "arriveBy": "14:45",
+        "deadline": "14:50"
+      },
+      "routeId": "route-pickup-1778166294260",
+      "listId": "list-school-pickup-1778166294260"
     }
   ],
   "lists": [
@@ -101,38 +207,118 @@
         {
           "id": "breakfast",
           "label": "Breakfast",
-          "icon": "breakfast",
-          "targetOffsetMinutes": -40
+          "icon": "🥣",
+          "targetOffsetMinutes": -40,
+          "assignee": ""
+        },
+        {
+          "id": "dressed",
+          "label": "Get dressed",
+          "icon": "👕",
+          "targetOffsetMinutes": -30,
+          "assignee": ""
         },
         {
           "id": "backpack",
-          "label": "Backpack ready",
-          "icon": "backpack",
-          "targetOffsetMinutes": -20
+          "label": "Backpacks ready",
+          "icon": "🎒",
+          "targetOffsetMinutes": -20,
+          "assignee": ""
+        },
+        {
+          "id": "teeth",
+          "label": "Brush teeth",
+          "icon": "🪥",
+          "targetOffsetMinutes": -15,
+          "assignee": ""
+        },
+        {
+          "id": "shoes",
+          "label": "Shoes on",
+          "icon": "👟",
+          "targetOffsetMinutes": -5,
+          "assignee": ""
         },
         {
           "id": "car",
           "label": "Get in the car",
-          "icon": "car",
-          "targetOffsetMinutes": 0
+          "icon": "🚗",
+          "targetOffsetMinutes": 0,
+          "assignee": ""
         }
       ]
     },
     {
-      "id": "list-school-pickup",
+      "id": "list-school-pickup-1778097357000",
       "label": "Pickup list",
       "items": [
         {
           "id": "keys",
           "label": "Keys and wallet",
-          "icon": "bag",
-          "targetOffsetMinutes": -10
+          "icon": "backpack",
+          "targetOffsetMinutes": -10,
+          "assignee": ""
+        },
+        {
+          "id": "water",
+          "label": "Water bottles",
+          "icon": "breakfast",
+          "targetOffsetMinutes": -8,
+          "assignee": ""
         },
         {
           "id": "car",
           "label": "Get in the car",
           "icon": "car",
-          "targetOffsetMinutes": 0
+          "targetOffsetMinutes": 0,
+          "assignee": ""
+        }
+      ]
+    },
+    {
+      "id": "list-school-pickup-1778124119125",
+      "label": "Swimming list",
+      "items": [
+        {
+          "id": "keys",
+          "label": "Keys and wallet",
+          "icon": "backpack",
+          "targetOffsetMinutes": -10,
+          "assignee": ""
+        },
+        {
+          "id": "water",
+          "label": "Water bottles",
+          "icon": "breakfast",
+          "targetOffsetMinutes": -8,
+          "assignee": ""
+        },
+        {
+          "id": "car",
+          "label": "Get in the car",
+          "icon": "car",
+          "targetOffsetMinutes": 0,
+          "assignee": ""
+        }
+      ]
+    },
+    {
+      "id": "list-school-pickup-1778166294260",
+      "label": "Mothers Day Tea list",
+      "items": [
+        {
+          "id": "keys",
+          "label": "Keys and wallet",
+          "icon": "backpack",
+          "targetOffsetMinutes": -10,
+          "assignee": ""
+        },
+        {
+          "id": "car",
+          "label": "Get in the car",
+          "icon": "car",
+          "targetOffsetMinutes": 0,
+          "assignee": ""
         }
       ]
     }

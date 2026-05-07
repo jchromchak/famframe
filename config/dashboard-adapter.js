@@ -194,6 +194,11 @@
     return Math.max(0, Math.floor(Number(route && (route.fallbackDriveMinutes == null ? route.fallbackDriveMin || 0 : route.fallbackDriveMinutes))));
   }
 
+  function routeBufferMinutes(route, stops) {
+    if (route && route.bufferMinutes != null) return Math.max(0, Math.floor(Number(route.bufferMinutes || 0)));
+    return arr(stops).reduce(function (sum, stop) { return sum + Number(stop.bufferMin || 0); }, 0);
+  }
+
   function mapDepartureRoutine(routine, route, list) {
     var stops = mapStops(route);
     var key = routeKey(routine.routeId || routine.id);
@@ -219,7 +224,7 @@
         destinationLabel: routeDestinationLabel(route),
         stops: stops,
         stopCount: stops.length,
-        bufferMin: stops.reduce(function (sum, stop) { return sum + Number(stop.bufferMin || 0); }, 0),
+        bufferMin: routeBufferMinutes(route, stops),
         fallbackDriveMin: routeFallbackDriveMin(route),
       }],
       listItems: mapListItems(list),
@@ -263,7 +268,7 @@
       updatedAt: derived.updatedAt || '',
       expiresAt: derived.expiresAt || '',
       stops: stops,
-      bufferMinutes: stops.reduce(function (sum, stop) { return sum + Number(stop.bufferMin || 0); }, 0),
+      bufferMinutes: routeBufferMinutes(route, stops),
     };
   }
 

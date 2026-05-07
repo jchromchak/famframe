@@ -1269,6 +1269,7 @@ function dashboardToJsonModel(source) {
       origin: { type: 'home', label: 'Home' },
       destination: { type: 'saved-place', placeId: 'place-' + slug(seg.destinationLabel || routine.label, 'destination').replace(/_/g, '-'), label: seg.destinationLabel || routine.label || 'Destination' },
       stops,
+      bufferMinutes: Math.max(0, Math.floor(Number(seg.bufferMin || 0))),
       fallbackDriveMinutes: Math.max(0, Math.floor(Number(seg.fallbackDriveMin || 0))),
       derived: {
         provider: routeData.provider || '',

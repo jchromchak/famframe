@@ -3,7 +3,7 @@
   "routes": [
     {
       "id": "route-school-morning",
-      "label": "Home to school",
+      "label": "US-17 N to School",
       "origin": {
         "type": "home",
         "label": "Home"
@@ -14,7 +14,60 @@
         "label": "School"
       },
       "stops": [],
-      "fallbackDriveMinutes": 22,
+      "bufferMinutes": 5,
+      "fallbackDriveMinutes": 28,
+      "derived": {
+        "provider": "google-maps",
+        "durationMinutes": 26,
+        "trafficStatus": "light",
+        "updatedAt": "2026-05-07T10:28:43.951Z",
+        "expiresAt": "2026-05-07T10:43:43.951Z"
+      }
+    },
+    {
+      "id": "route-pickup-1778097357000",
+      "label": "Home to pickup",
+      "origin": {
+        "type": "home",
+        "label": "Home"
+      },
+      "destination": {
+        "type": "saved-place",
+        "placeId": "place-pickup",
+        "label": "Pickup"
+      },
+      "stops": [],
+      "bufferMinutes": 5,
+      "fallbackDriveMinutes": 18,
+      "derived": {
+        "provider": "google-maps",
+        "durationMinutes": 28,
+        "trafficStatus": "moderate",
+        "updatedAt": "2026-05-06T19:57:40.329Z",
+        "expiresAt": "2026-05-06T20:12:40.329Z"
+      }
+    },
+    {
+      "id": "route-pickup-1778124119125",
+      "label": "Home to pickup",
+      "origin": {
+        "type": "home",
+        "label": "Home"
+      },
+      "destination": {
+        "type": "saved-place",
+        "placeId": "place-pickup",
+        "label": "Pickup"
+      },
+      "stops": [
+        {
+          "id": "pickup-stop",
+          "label": "Pickup stop",
+          "bufferMinutes": 5
+        }
+      ],
+      "bufferMinutes": 5,
+      "fallbackDriveMinutes": 18,
       "derived": {
         "provider": "",
         "durationMinutes": null,
@@ -24,7 +77,7 @@
       }
     },
     {
-      "id": "route-school-pickup",
+      "id": "route-pickup-1778166294260",
       "label": "Home to pickup",
       "origin": {
         "type": "home",
@@ -32,31 +85,26 @@
       },
       "destination": {
         "type": "saved-place",
-        "placeId": "place-school",
-        "label": "School pickup"
+        "placeId": "place-pickup",
+        "label": "Pickup"
       },
       "stops": [
         {
-          "id": "stop-pickup",
+          "id": "pickup-stop",
           "label": "Pickup stop",
           "bufferMinutes": 5
         }
       ],
+      "bufferMinutes": 5,
       "fallbackDriveMinutes": 18,
       "derived": {
-        "provider": "",
-        "durationMinutes": null,
-        "trafficStatus": "",
-        "updatedAt": "",
-        "expiresAt": ""
+        "provider": "google-maps",
+        "durationMinutes": 30,
+        "trafficStatus": "light",
+        "updatedAt": "2026-05-07T15:22:28.724Z",
+        "expiresAt": "2026-05-07T15:37:28.724Z"
       }
     }
   ],
-  "places": [
-    {
-      "id": "place-school",
-      "label": "School",
-      "displayArea": "School area"
-    }
-  ]
+  "places": []
 }
