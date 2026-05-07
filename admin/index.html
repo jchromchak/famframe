@@ -13,10 +13,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
- 
+
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
- 
+
 :root {
   --bg:       #0f0f0d;
   --surface:  #1a1a16;
@@ -34,7 +34,7 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bot: env(safe-area-inset-bottom, 0px);
 }
- 
+
 html, body {
   width: 100%; min-height: 100vh;
   background: var(--bg); color: var(--text);
@@ -235,7 +235,7 @@ input[type="time"], input[type="number"] {
 .nav-card {
   display: flex; align-items: center; gap: 16px;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 20px; cursor: pointer;
+  border-radius: 8px; padding: 16px; cursor: pointer;
   transition: border-color 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -248,10 +248,10 @@ input[type="time"], input[type="number"] {
  
 .nav-card-body { flex: 1; }
 .nav-card-title {
-  font-family: var(--serif); font-size: 22px; font-weight: 400; margin-bottom: 3px;
+  font-family: var(--serif); font-size: 20px; font-weight: 400; margin-bottom: 3px;
 }
 .nav-card-desc {
-  font-size: 11px; letter-spacing: 0.12em; color: var(--sub); line-height: 1.5;
+  font-size: 10px; letter-spacing: 0.12em; color: var(--sub); line-height: 1.45;
 }
  
 .nav-card-arrow { color: var(--dim); font-size: 14px; }
@@ -431,6 +431,54 @@ input[type="time"], input[type="number"] {
   cursor: pointer; transition: background 0.2s; -webkit-appearance: none;
 }
 .save-btn:active { background: rgba(200,169,110,0.25); }
+
+/* Progressive disclosure */
+.compact-details {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.018);
+  overflow: hidden;
+}
+.compact-details + .compact-details { margin-top: 8px; }
+.compact-details summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px;
+  color: var(--sub);
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.compact-details summary::-webkit-details-marker { display: none; }
+.compact-details summary::after {
+  content: '+';
+  color: var(--dim);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.compact-details[open] summary {
+  color: var(--gold);
+  border-bottom: 1px solid var(--border);
+}
+.compact-details[open] summary::after {
+  content: '-';
+  color: var(--gold);
+}
+.compact-body {
+  padding: 14px;
+}
+.save-row {
+  position: sticky;
+  bottom: calc(var(--safe-bot) + 70px);
+  z-index: 20;
+  padding-top: 4px;
+  background: linear-gradient(180deg, rgba(15,15,13,0), var(--bg) 38%);
+}
+.save-row .save-btn { width: 100%; padding: 13px 16px; }
  
 /* Scene editor timeline items */
 .timeline-edit-item {
@@ -650,7 +698,7 @@ select {
         <div class="nav-card-icon">👨‍👩‍👧‍👦</div>
         <div class="nav-card-body">
           <div class="nav-card-title">Family</div>
-          <div class="nav-card-desc">Manage family members<br>and their details</div>
+          <div class="nav-card-desc">Members and home base</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
@@ -658,7 +706,7 @@ select {
         <div class="nav-card-icon">↻</div>
         <div class="nav-card-body">
           <div class="nav-card-title">Daily Routines</div>
-          <div class="nav-card-desc">When the frame wakes,<br>rests, and switches modes</div>
+          <div class="nav-card-desc">Windows, days, theme</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
@@ -666,7 +714,7 @@ select {
         <div class="nav-card-icon">⇢</div>
         <div class="nav-card-body">
           <div class="nav-card-title">Segments</div>
-          <div class="nav-card-desc">Trips, stops, buffers<br>and destinations</div>
+          <div class="nav-card-desc">Trips, stops, destinations</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
@@ -674,7 +722,7 @@ select {
         <div class="nav-card-icon">☑</div>
         <div class="nav-card-body">
           <div class="nav-card-title">Lists</div>
-          <div class="nav-card-desc">Checklist templates,<br>tasks and assignments</div>
+          <div class="nav-card-desc">Checklist tasks</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
@@ -682,7 +730,7 @@ select {
         <div class="nav-card-icon">⌁</div>
         <div class="nav-card-body">
           <div class="nav-card-title">Integrations</div>
-          <div class="nav-card-desc">GitHub, Google Maps,<br>Calendar and quote source</div>
+          <div class="nav-card-desc">Keys and content sources</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
@@ -690,7 +738,7 @@ select {
         <div class="nav-card-icon">⚡</div>
         <div class="nav-card-body">
           <div class="nav-card-title">Sync & Advanced</div>
-          <div class="nav-card-desc">Push, pull, diagnose<br>and raw config tools</div>
+          <div class="nav-card-desc">Refresh, pull, save</div>
         </div>
         <div class="nav-card-arrow">›</div>
       </div>
@@ -709,12 +757,17 @@ select {
     <div class="section-label" style="margin-top:16px">Home</div>
     <div class="field-label">Home city</div>
     <input type="text" id="homeCityApp" class="full-input" placeholder="Mount Pleasant, SC">
-    <div class="field-label">Latitude</div>
-    <input type="text" id="homeLat" class="full-input" placeholder="32.83">
-    <div class="field-label">Longitude</div>
-    <input type="text" id="homeLon" class="full-input" placeholder="-79.83">
+    <details class="compact-details">
+      <summary>Coordinates</summary>
+      <div class="compact-body">
+        <div class="field-label">Latitude</div>
+        <input type="text" id="homeLat" class="full-input" placeholder="32.83">
+        <div class="field-label">Longitude</div>
+        <input type="text" id="homeLon" class="full-input" placeholder="-79.83">
+      </div>
+    </details>
  
-    <button class="save-btn" onclick="saveFamily()">Save family settings</button>
+    <div class="save-row"><button class="save-btn" onclick="saveFamily()">Save family settings</button></div>
   </div>
  
   <!-- DAILY ROUTINES -->
@@ -779,13 +832,16 @@ select {
     <div class="section-label">Routine days</div>
     <div id="schoolDayToggles"></div>
 
-    <div class="section-label" style="margin-top:16px">Routine library</div>
-    <div class="field-hint">Routines are the dynamic model behind morning school run, pickup, evening wind-down, and future one-off or day-specific rhythms. This first pass keeps the old fields compatible while letting you add departure routines.</div>
-    <div id="routineEditor"></div>
-    <button class="small-btn" onclick="addRoutine()">+ ADD ROUTINE</button>
-    <button class="small-btn" onclick="addTimelineRoutine()" style="margin-left:8px">+ ADD TIMELINE</button>
+    <details class="compact-details">
+      <summary>Routine library</summary>
+      <div class="compact-body">
+        <div id="routineEditor"></div>
+        <button class="small-btn" onclick="addRoutine()">+ ADD ROUTINE</button>
+        <button class="small-btn" onclick="addTimelineRoutine()" style="margin-left:8px">+ ADD TIMELINE</button>
+      </div>
+    </details>
 
-    <button class="save-btn" onclick="saveSchedule()">Save daily routine</button>
+    <div class="save-row"><button class="save-btn" onclick="saveSchedule()">Save daily routine</button></div>
   </div>
  
   <!-- SEGMENTS -->
@@ -803,22 +859,30 @@ select {
     <input type="text" id="commuteDestination" class="full-input" placeholder="School address" data-place-autocomplete data-place-role="commute-destination">
     <div class="field-label">Stops before destination</div>
     <input type="number" id="commuteStopCount" class="full-input" min="0" step="1" placeholder="0">
-    <div class="field-hint">Segments are itinerary blocks behind a routine. Addresses stay local to this admin device; the repo only receives safe labels and derived commute timing. Future segments will support multiple stops, per-stop buffers, and day-specific destinations.</div>
+    <div class="field-hint">Addresses stay on this admin device. GitHub receives only safe route labels and derived timing.</div>
     <button class="action-btn" onclick="updateActiveMapsStatus()" style="margin-top:12px">
       <span class="action-icon">↻</span>
       <span class="action-label">Update maps status for this segment</span>
     </button>
     <div class="action-result" id="mapsStatusResult"></div>
 
-    <div class="section-label" style="margin-top:16px">Evening display segments</div>
-    <div id="timelineItems"></div>
-    <button class="small-btn" onclick="addTimelineItem()">+ ADD SEGMENT</button>
+    <details class="compact-details" style="margin-top:16px">
+      <summary>Evening display segments</summary>
+      <div class="compact-body">
+        <div id="timelineItems"></div>
+        <button class="small-btn" onclick="addTimelineItem()">+ ADD SEGMENT</button>
+      </div>
+    </details>
 
-    <div class="section-label" style="margin-top:16px">Fallback drive windows</div>
-    <div id="commuteEditor"></div>
-    <button class="small-btn" onclick="addCommuteEstimate()">+ ADD DRIVE WINDOW</button>
+    <details class="compact-details">
+      <summary>Fallback drive windows</summary>
+      <div class="compact-body">
+        <div id="commuteEditor"></div>
+        <button class="small-btn" onclick="addCommuteEstimate()">+ ADD DRIVE WINDOW</button>
+      </div>
+    </details>
 
-    <button class="save-btn" onclick="saveSegments()">Save segments</button>
+    <div class="save-row"><button class="save-btn" onclick="saveSegments()">Save segments</button></div>
   </div>
 
   <!-- LISTS -->
@@ -831,7 +895,7 @@ select {
     <div id="checklistEditor"></div>
     <button class="small-btn" onclick="addChecklistItem()">+ ADD LIST ITEM</button>
 
-    <button class="save-btn" onclick="saveLists()">Save lists</button>
+    <div class="save-row"><button class="save-btn" onclick="saveLists()">Save lists</button></div>
   </div>
 
   <!-- INTEGRATIONS -->
@@ -864,7 +928,7 @@ select {
       <option value="any">Any category</option>
     </select>
 
-    <button class="save-btn" onclick="saveIntegrations()">Save integrations</button>
+    <div class="save-row"><button class="save-btn" onclick="saveIntegrations()">Save integrations</button></div>
   </div>
  
   <!-- QUICK ACTIONS -->
@@ -905,58 +969,74 @@ select {
     </button>
     <div class="action-result" id="githubResetResult"></div>
  
-    <div class="section-label" style="margin-top:16px">Raw config</div>
-    <textarea id="rawConfig" class="code-panel" spellcheck="false"></textarea>
-    <button class="action-btn" onclick="applyRawConfig()" style="margin-top:8px">
-      <span class="action-icon">✓</span>
-      <span class="action-label">Apply raw editor changes</span>
-    </button>
-    <div class="action-result" id="rawResult"></div>
- 
-    <div class="section-label" style="margin-top:16px">Force scene</div>
-    <select id="forceSceneSelect" style="margin-bottom:10px">
-      <option value="">— Select a scene to force —</option>
-      <option value="morning">Morning</option>
-      <option value="evening">Evening</option>
-      <option value="weekend">Weekend</option>
-      <option value="art">Art / blank mode</option>
-    </select>
-    <button class="action-btn" onclick="forceScene()">
-      <span class="action-icon">▶</span>
-      <span class="action-label">Force this scene now</span>
-    </button>
-    <div class="action-result" id="forceResult"></div>
- 
-    <div class="section-label" style="margin-top:16px">Feedback</div>
-    <div style="margin-bottom:10px">
-      <div class="field-label">Type</div>
-      <select id="feedbackType" style="margin-bottom:10px">
-        <option value="bug">🐛 Bug report</option>
-        <option value="feature">✨ Feature request</option>
-        <option value="general">💬 General feedback</option>
-        <option value="wtp">💰 What would you pay?</option>
-      </select>
-      <div class="field-label">Message</div>
-      <textarea id="feedbackBody" rows="4"
-        placeholder="Tell us what happened, what you'd love to see, or what you'd pay for this..."
-        style="width:100%;background:var(--surface);border:1px solid var(--border);
-               border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:13px;
-               color:var(--text);outline:none;resize:none;line-height:1.6;
-               -webkit-appearance:none;margin-bottom:8px"></textarea>
-      <div class="field-label" style="margin-bottom:6px">Your name (optional)</div>
-      <input type="text" id="feedbackName" class="full-input" placeholder="First name or leave blank">
-    </div>
-    <button class="action-btn" onclick="submitFeedback()">
-      <span class="action-icon">↑</span>
-      <span class="action-label">Submit feedback</span>
-    </button>
-    <div class="action-result" id="feedbackResult"></div>
- 
-    <div class="section-label" style="margin-top:16px">Danger zone</div>
-    <button class="action-btn danger" onclick="clearAllData()">
-      <span class="action-icon">✕</span>
-      <span class="action-label">Clear all local data + reset</span>
-    </button>
+    <details class="compact-details" style="margin-top:16px">
+      <summary>Raw config</summary>
+      <div class="compact-body">
+        <textarea id="rawConfig" class="code-panel" spellcheck="false"></textarea>
+        <button class="action-btn" onclick="applyRawConfig()" style="margin-top:8px">
+          <span class="action-icon">✓</span>
+          <span class="action-label">Apply raw editor changes</span>
+        </button>
+        <div class="action-result" id="rawResult"></div>
+      </div>
+    </details>
+
+    <details class="compact-details">
+      <summary>Force scene</summary>
+      <div class="compact-body">
+        <select id="forceSceneSelect" style="margin-bottom:10px">
+          <option value="">— Select a scene to force —</option>
+          <option value="morning">Morning</option>
+          <option value="evening">Evening</option>
+          <option value="weekend">Weekend</option>
+          <option value="art">Art / blank mode</option>
+        </select>
+        <button class="action-btn" onclick="forceScene()">
+          <span class="action-icon">▶</span>
+          <span class="action-label">Force this scene now</span>
+        </button>
+        <div class="action-result" id="forceResult"></div>
+      </div>
+    </details>
+
+    <details class="compact-details">
+      <summary>Feedback</summary>
+      <div class="compact-body">
+        <div style="margin-bottom:10px">
+          <div class="field-label">Type</div>
+          <select id="feedbackType" style="margin-bottom:10px">
+            <option value="bug">Bug report</option>
+            <option value="feature">Feature request</option>
+            <option value="general">General feedback</option>
+            <option value="wtp">What would you pay?</option>
+          </select>
+          <div class="field-label">Message</div>
+          <textarea id="feedbackBody" rows="4"
+            placeholder="Tell us what happened, what you'd love to see, or what you'd pay for this..."
+            style="width:100%;background:var(--surface);border:1px solid var(--border);
+                   border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:13px;
+                   color:var(--text);outline:none;resize:none;line-height:1.6;
+                   -webkit-appearance:none;margin-bottom:8px"></textarea>
+          <div class="field-label" style="margin-bottom:6px">Your name (optional)</div>
+          <input type="text" id="feedbackName" class="full-input" placeholder="First name or leave blank">
+        </div>
+        <button class="action-btn" onclick="submitFeedback()">
+          <span class="action-icon">↑</span>
+          <span class="action-label">Submit feedback</span>
+        </button>
+        <div class="action-result" id="feedbackResult"></div>
+      </div>
+    </details>
+
+    <details class="compact-details">
+      <summary>Danger zone</summary>
+      <div class="compact-body">
+        <button class="action-btn danger" onclick="clearAllData()">
+          <span class="action-icon">✕</span>
+          <span class="action-label">Clear all local data + reset</span>
+        </button>
+      </div>
+    </details>
   </div>
  
 </div><!-- /app -->
