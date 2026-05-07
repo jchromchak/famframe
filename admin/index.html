@@ -1049,7 +1049,7 @@ const DEFAULT_CONFIG = {
   },
   theme: { id: 'default-editorial', accent: '#d99a3d' },
   modes: {
-    morning: { start: '06:00', end: '12:30' },
+    morning: { start: '06:00', end: '12:35' },
     evening: { start: '17:00', end: '21:00' },
   },
   schoolDays: [1,2,3,4,5],
@@ -1060,7 +1060,7 @@ const DEFAULT_CONFIG = {
       type: 'departure',
       enabled: true,
       days: [1,2,3,4,5],
-      window: { start: '06:00', end: '12:30' },
+      window: { start: '06:00', end: '12:35' },
       primaryTime: '12:45',
       targetTime: '13:20',
       deadline: '13:25',
@@ -1427,7 +1427,7 @@ function defaultRoutinesFromLegacy() {
       type: 'departure',
       enabled: true,
       days: Array.isArray(config.schoolDays) ? config.schoolDays : [1,2,3,4,5],
-      window: { start: timeFromParts(morningMode, 'start', 'startHour', 'startMin', '06:00'), end: timeFromParts(morningMode, 'end', 'endHour', 'endMin', '12:30') },
+      window: { start: timeFromParts(morningMode, 'start', 'startHour', 'startMin', '06:00'), end: timeFromParts(morningMode, 'end', 'endHour', 'endMin', '12:35') },
       primaryTime: timeFromParts(s, 'leave', 'leaveHour', 'leaveMin', '07:00'),
       targetTime: timeFromParts(s, 'school', 'schoolHour', 'schoolMin', '07:30'),
       deadline: timeFromParts(s, 'lateBell', 'lateBellHour', 'lateBellMin', '07:35'),
@@ -1993,7 +1993,7 @@ function draftScheduleConfigFromFields() {
   draft.scenarios.default = draft.scenarios.default || {};
   draft.time.timeZone = getVal('timeZoneInput') || draft.time.timeZone || 'America/New_York';
   draft.theme = { id: getVal('themeSelect') || ((draft.theme || {}).id) || 'default-editorial', accent: ((draft.theme || {}).accent) || '#d99a3d' };
-  draft.modes.morning = { start:getVal('morningStart') || '06:00', end:getVal('morningEnd') || '10:30' };
+  draft.modes.morning = { start:getVal('morningStart') || '06:00', end:getVal('morningEnd') || '12:35' };
   draft.modes.evening = { start:getVal('eveningStart') || '17:00', end:getVal('eveningEnd') || '21:00' };
   draft.scenarios.default.leave = getVal('defaultLeave') || draft.scenarios.default.leave;
   draft.scenarios.default.school = getVal('defaultSchool') || draft.scenarios.default.school;
@@ -2028,7 +2028,7 @@ function renderSchedule() {
   setVal('timeZoneInput', config.time.timeZone);
   setVal('themeSelect', (config.theme && config.theme.id) || 'default-editorial');
   setVal('morningStart', timeFromParts(config.modes.morning, 'start', 'startHour', 'startMin', '06:00'));
-  setVal('morningEnd', timeFromParts(config.modes.morning, 'end', 'endHour', 'endMin', '10:30'));
+  setVal('morningEnd', timeFromParts(config.modes.morning, 'end', 'endHour', 'endMin', '12:35'));
   setVal('eveningStart', timeFromParts(config.modes.evening, 'start', 'startHour', 'startMin', '17:00'));
   setVal('eveningEnd', timeFromParts(config.modes.evening, 'end', 'endHour', 'endMin', '21:00'));
   const s = config.scenarios.default;
