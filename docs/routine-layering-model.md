@@ -21,7 +21,8 @@ The model has four layers:
 - Baseline routines remain easy to understand on their own.
 - Patterns reuse the same shape as baseline routines, but are narrower in scope.
 - Overrides are contextual and temporary. They should not rewrite the baseline object.
-- Add-ons are lightweight and high-frequency. They should be easy to approve, snooze, or remove.
+- Add-ons are lightweight and high-frequency. They should be easy to approve, snooze, expire, or remove.
+- Add-ons append to stable routines; they should not require editing the baseline routine each time temporary context appears.
 - Shared display output should receive only the resolved, safe routine result.
 
 ## Resolution Order
@@ -62,6 +63,22 @@ The current `config/routines.json` already has `layer`, `appliesTo`, and `displa
 
 Use `patch` for overrides. Use `insertions` for add-ons. Avoid duplicating a whole routine when only one field changes.
 
+## Dynamic Appends
+
+Most family coordination is a stable pattern plus a temporary contextual append. The admin should make additions like `library books tomorrow`, `pack soccer gear`, `spirit day shirt`, or `signed dentist form` feel lightweight.
+
+Dynamic appends should:
+
+- attach to an existing routine
+- appear only inside the relevant date/time context
+- expire automatically after use or after their active window
+- remain display-safe before reaching the TV
+- optionally become recurring pattern suggestions after repeated use
+
+This is context shaping, not manual planning. Future AI/voice flows should extract operational appends from notes, text dumps, email forwards, voice brain dumps, or quick checklist entry, then ask for approval before showing anything sensitive or shared.
+
+The feedback loop should stay calm. Suggestions such as `Create a Thursday soccer prep overlay?` are useful only when they reduce repeated household coordination without becoming nagging automation.
+
 ## Admin UX
 
 The default admin surface should show resolved routines, not raw inheritance mechanics.
@@ -71,6 +88,7 @@ Recommended disclosure:
 - Routine cards show the active resolved result.
 - A small source line can show `Baseline`, `Pattern`, `Override`, or `Add-on`.
 - Add-ons should be quick-capture first.
+- Temporary appends should be easier to add than permanent routine edits.
 - Advanced layer details should sit behind a details panel or future drill-in screen.
 
 ## Dashboard Boundary
