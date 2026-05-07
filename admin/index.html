@@ -484,6 +484,18 @@ select {
 .routine-day { display:inline-flex; align-items:center; gap:5px; font-size:10px; letter-spacing:.12em; color:var(--sub); border:1px solid var(--border); border-radius:999px; padding:6px 8px; }
 .routine-day input { margin:0; }
 .routine-list-card { background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+.validation-panel {
+  border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+  background: rgba(255,255,255,.02); margin: 12px 0 4px;
+}
+.validation-panel.ok { border-color: rgba(130,180,130,.22); }
+.validation-panel.warn { border-color: rgba(230,186,104,.28); background: rgba(230,186,104,.06); }
+.validation-title { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+.validation-panel.ok .validation-title { color: #9dbb99; }
+.validation-panel.warn .validation-title { color: var(--gold); }
+.validation-list { display:flex; flex-direction:column; gap:7px; }
+.validation-item { font-size: 12px; line-height: 1.45; color: var(--sub); }
+.validation-item strong { color: var(--text); font-weight: 400; }
 .route-line { position:relative; display:flex; flex-direction:column; gap:10px; margin-top:12px; }
 .route-line::before { content:""; position:absolute; left:15px; top:18px; bottom:18px; width:1px; background:var(--border); }
 .route-node { position:relative; display:grid; grid-template-columns:32px 1fr; gap:10px; align-items:start; }
@@ -720,23 +732,30 @@ select {
     <div class="field-label">IANA time zone</div>
     <input type="text" id="timeZoneInput" class="full-input" placeholder="America/New_York">
 
+    <div class="section-label">Theme</div>
+    <div class="field-label">Dashboard theme</div>
+    <select id="themeSelect" class="full-input">
+      <option value="default-editorial">Default</option>
+      <option value="ambient-evening">Ambient Evening</option>
+    </select>
+
     <div class="section-label">Display windows</div>
     <div class="form-grid">
       <div>
         <div class="field-label">Wake display</div>
-        <input type="time" id="morningStart">
+        <input type="time" id="morningStart" oninput="renderScheduleValidationFromFields()">
       </div>
       <div>
         <div class="field-label">Morning standby</div>
-        <input type="time" id="morningEnd">
+        <input type="time" id="morningEnd" oninput="renderScheduleValidationFromFields()">
       </div>
       <div>
         <div class="field-label">Evening display</div>
-        <input type="time" id="eveningStart">
+        <input type="time" id="eveningStart" oninput="renderScheduleValidationFromFields()">
       </div>
       <div>
         <div class="field-label">Evening standby</div>
-        <input type="time" id="eveningEnd">
+        <input type="time" id="eveningEnd" oninput="renderScheduleValidationFromFields()">
       </div>
     </div>
 
@@ -744,21 +763,23 @@ select {
     <div class="form-grid">
       <div>
         <div class="field-label">Leave home</div>
-        <input type="time" id="defaultLeave">
+        <input type="time" id="defaultLeave" oninput="renderScheduleValidationFromFields()">
       </div>
       <div>
         <div class="field-label">Arrive by</div>
-        <input type="time" id="defaultSchool">
+        <input type="time" id="defaultSchool" oninput="renderScheduleValidationFromFields()">
       </div>
       <div>
         <div class="field-label">Hard deadline</div>
-        <input type="time" id="defaultLateBell">
+        <input type="time" id="defaultLateBell" oninput="renderScheduleValidationFromFields()">
       </div>
       <div>
         <div class="field-label">Fallback drive</div>
         <input type="number" id="defaultDrive" min="0" step="1">
       </div>
     </div>
+
+    <div id="scheduleValidation"></div>
 
     <div class="section-label">Routine days</div>
     <div id="schoolDayToggles"></div>
@@ -767,6 +788,7 @@ select {
     <div class="field-hint">Routines are the dynamic model behind morning school run, pickup, evening wind-down, and future one-off or day-specific rhythms. This first pass keeps the old fields compatible while letting you add departure routines.</div>
     <div id="routineEditor"></div>
     <button class="small-btn" onclick="addRoutine()">+ ADD ROUTINE</button>
+    <button class="small-btn" onclick="addTimelineRoutine()" style="margin-left:8px">+ ADD TIMELINE</button>
 
     <button class="save-btn" onclick="saveSchedule()">Save daily routine</button>
   </div>
@@ -855,11 +877,18 @@ select {
     <button class="back-btn" onclick="nav('home')">← Back</button>
     <div class="page-title">Quick Actions</div>
     <div class="page-sub">RUN · SYNC · OVERRIDE</div>
+
+    <div class="section-label">Route status</div>
+    <button class="action-btn" onclick="refreshAllRouteStatuses()">
+      <span class="action-icon">↻</span>
+      <span class="action-label">Refresh all route maps</span>
+    </button>
+    <div class="action-result" id="allRoutesResult"></div>
  
     <div class="section-label">GitHub sync</div>
     <button class="action-btn" onclick="pullFromGitHub()">
       <span class="action-icon">↓</span>
-      <span class="action-label">Pull latest dashboard config</span>
+      <span class="action-label">Pull latest config</span>
     </button>
     <div class="action-result" id="pullResult"></div>
 
@@ -874,6 +903,12 @@ select {
       <span class="action-label">Check GitHub access</span>
     </button>
     <div class="action-result" id="githubDiagResult"></div>
+
+    <button class="action-btn danger" onclick="resetGitHubConnection()" style="margin-top:8px">
+      <span class="action-icon">✕</span>
+      <span class="action-label">Reset GitHub connection</span>
+    </button>
+    <div class="action-result" id="githubResetResult"></div>
  
     <div class="section-label" style="margin-top:16px">Raw config</div>
     <textarea id="rawConfig" class="code-panel" spellcheck="false"></textarea>
@@ -954,10 +989,10 @@ select {
 <!-- Toast -->
 <div class="toast" id="toast"></div>
  
+<script src="../config/dashboard-adapter.js"></script>
 <script>
-// Fam Frame admin: edits the dashboard-config.js model used by /dashboard/.
-// TODO(json-config): split this compatibility model into family, display,
-// routines, routes, modules, messages, and quotes JSON/content files.
+// Fam Frame admin: edits JSON-shaped local state and generates the
+// dashboard-config.js compatibility model used by /dashboard/.
 const KEYS = {
   pat:       'fam_frame_github_pat',
   repo:      'fam_frame_config_repo',
@@ -969,9 +1004,21 @@ const KEYS = {
   commuteDestination: 'fam_frame_commute_destination',
   routeLocal: 'fam_frame_route_local_',
   config:    'fam_frame_config',
+  jsonModel: 'fam_frame_json_model',
   sha:       'fam_frame_config_sha',
   onboarded: 'fam_frame_onboarded',
 };
+
+const JSON_SYNC_FILES = {
+  family: 'config/family.json',
+  routines: 'config/routines.json',
+  routes: 'config/routes.json',
+  display: 'config/display.json',
+  modules: 'config/modules.json',
+  messagesMarkdown: 'content/messages.md',
+  quotesMarkdown: 'content/quotes.md',
+};
+const REQUIRED_JSON_SYNC_KEYS = ['family', 'routines', 'routes', 'display', 'modules'];
 
 const DEFAULT_CONFIG = {
   time: {
@@ -1000,6 +1047,7 @@ const DEFAULT_CONFIG = {
   modules: {
     quote: { source: 'stoic' },
   },
+  theme: { id: 'default-editorial', accent: '#d99a3d' },
   modes: {
     morning: { start: '06:00', end: '12:30' },
     evening: { start: '17:00', end: '21:00' },
@@ -1115,6 +1163,7 @@ const DEFAULT_CONFIG = {
 };
 
 let config = clone(DEFAULT_CONFIG);
+let jsonModel = null;
 let lastRemoteSha = localStorage.getItem(KEYS.sha) || null;
 let mapsAdminPromise = null;
 
@@ -1160,6 +1209,7 @@ function ensureModel() {
   delete config.api.googleCalendarKey;
   delete config.api.googleMapsKey;
   config.modules = deepMerge(DEFAULT_CONFIG.modules, config.modules || {});
+  config.theme = deepMerge(DEFAULT_CONFIG.theme, config.theme || {});
   config.time = deepMerge(DEFAULT_CONFIG.time, config.time || {});
   config.modes = deepMerge(DEFAULT_CONFIG.modes, config.modes || {});
   config.scenarios = deepMerge(DEFAULT_CONFIG.scenarios, config.scenarios || {});
@@ -1176,6 +1226,194 @@ function ensureModel() {
   delete config.commute.destination;
   config.commute.driveEstimates = Array.isArray(config.commute.driveEstimates) ? config.commute.driveEstimates : [];
   syncLegacyFromRoutines();
+}
+function ensureJsonModel() {
+  if (!jsonModel || typeof jsonModel !== 'object') jsonModel = dashboardToJsonModel(config);
+}
+function jsonToDashboardConfig(model) {
+  const adapter = window.FamFrameDashboardAdapter;
+  if (!adapter || !adapter.toDashboardConfig) return null;
+  return adapter.toDashboardConfig({
+    family: model.family,
+    routines: model.routines,
+    routes: model.routes,
+    display: model.display,
+    modules: model.modules,
+    messagesMarkdown: model.messagesMarkdown || '',
+    quotesMarkdown: model.quotesMarkdown || '',
+  });
+}
+function dashboardToJsonModel(source) {
+  const cfg = clone(source || DEFAULT_CONFIG);
+  const kids = (((cfg.family || {}).kids) || []).map((kid, i) => ({
+    id: slug('member-child-' + (i + 1), 'member_child_' + (i + 1)),
+    displayName: kid.name || 'Kid ' + (i + 1),
+    role: 'child',
+    age: kid.age == null ? null : kid.age,
+  }));
+  const routes = [];
+  const lists = [];
+  (cfg.routines || []).forEach((routine) => {
+    if (!routine || routine.type !== 'departure') return;
+    const routeId = 'route-' + slug(routine.routeId || routine.id, routine.id || 'route').replace(/_/g, '-');
+    const routeData = (((cfg.commute || {}).routes) || {})[routine.routeId || routine.id] || {};
+    const seg = (routine.segments || [])[0] || {};
+    const stops = (seg.stops || routeData.stops || []).map((stop, i) => ({
+      id: slug(stop.id || stop.label, 'stop_' + (i + 1)).replace(/_/g, '-'),
+      label: stop.label || 'Stop ' + (i + 1),
+      bufferMinutes: Math.max(0, Math.floor(Number(stop.bufferMin || stop.bufferMinutes || 0))),
+    }));
+    routes.push({
+      id: routeId,
+      label: seg.routeLabel || routeData.routeLabel || routine.label || 'Route',
+      origin: { type: 'home', label: 'Home' },
+      destination: { type: 'saved-place', placeId: 'place-' + slug(seg.destinationLabel || routine.label, 'destination').replace(/_/g, '-'), label: seg.destinationLabel || routine.label || 'Destination' },
+      stops,
+      fallbackDriveMinutes: Math.max(0, Math.floor(Number(seg.fallbackDriveMin || 0))),
+      derived: {
+        provider: routeData.provider || '',
+        durationMinutes: routeData.durationMinutes == null ? null : Number(routeData.durationMinutes),
+        trafficStatus: routeData.trafficStatus || '',
+        updatedAt: routeData.updatedAt || '',
+        expiresAt: routeData.expiresAt || '',
+      },
+    });
+    lists.push({
+      id: 'list-' + slug(routine.id || routine.label, 'routine').replace(/_/g, '-'),
+      label: (routine.label || 'Routine') + ' list',
+      items: (routine.listItems || []).map((item, i) => ({
+        id: slug(item.id || item.label, 'item_' + i).replace(/_/g, '-'),
+        label: item.label || 'List item',
+        icon: item.icon || '',
+        targetOffsetMinutes: Number(item.targetMin || 0),
+        assignee: item.assignee || '',
+      })),
+    });
+  });
+  return {
+    family: {
+      schemaVersion: 1,
+      familyId: (jsonModel && jsonModel.family && jsonModel.family.familyId) || 'fam-fe794623',
+      displayName: (jsonModel && jsonModel.family && jsonModel.family.displayName) || 'Fam Frame',
+      members: kids,
+      home: {
+        label: 'Home',
+        city: (((cfg.family || {}).location || {}).city) || '',
+        timeZone: (cfg.time && cfg.time.timeZone) || 'America/New_York',
+        coordinates: ((cfg.family || {}).location || {}).lat || ((cfg.family || {}).location || {}).lon ? {
+          lat: Number(((cfg.family || {}).location || {}).lat || 0),
+          lon: Number(((cfg.family || {}).location || {}).lon || 0),
+        } : null,
+      },
+    },
+    display: {
+      schemaVersion: 1,
+      time: {
+        timeZone: (cfg.time && cfg.time.timeZone) || 'America/New_York',
+        locale: (cfg.time && cfg.time.locale) || 'en-US',
+        hour12: cfg.time ? cfg.time.hour12 !== false : true,
+      },
+      runtime: (jsonModel && jsonModel.display && jsonModel.display.runtime) || { virtualCanvas: { width: 1920, height: 1080 }, scaleMode: 'contain', allowScroll: false, hideCursor: true },
+      scenes: (jsonModel && jsonModel.display && jsonModel.display.scenes) || { defaultIdle: 'art', routineScene: 'departure', eveningScene: 'evening' },
+      theme: clone((cfg.theme && cfg.theme.id ? cfg.theme : null) || (jsonModel && jsonModel.display && jsonModel.display.theme) || { id: 'default-editorial', accent: '#d99a3d' }),
+    },
+    modules: {
+      schemaVersion: 1,
+      weather: (jsonModel && jsonModel.modules && jsonModel.modules.weather) || { enabled: true, provider: 'open-meteo', showWearGuidance: true },
+      calendar: (jsonModel && jsonModel.modules && jsonModel.modules.calendar) || { enabled: false, provider: 'google-calendar', maxItems: 4 },
+      quotes: { enabled: true, source: (((cfg.modules || {}).quote || {}).source) || 'stoic', refreshMinutes: 60, pulseMinutes: 1 },
+      commute: (jsonModel && jsonModel.modules && jsonModel.modules.commute) || { enabled: true, freshnessMinutes: 15 },
+    },
+    routines: {
+      schemaVersion: 1,
+      routines: (cfg.routines || []).map((routine) => {
+        const isTimeline = routine.type === 'timeline';
+        const id = 'routine-' + slug(routine.id || routine.label, 'routine').replace(/_/g, '-');
+        const base = {
+          id,
+          label: routine.label || 'Routine',
+          type: isTimeline ? 'timeline' : 'departure',
+          enabled: routine.enabled !== false,
+          layer: 'baseline',
+          appliesTo: { days: clone(routine.days || [1,2,3,4,5]) },
+          window: clone(routine.window || { start:'06:00', end:'07:00' }),
+          display: clone(routine.display || { scene: isTimeline ? 'evening' : 'departure', priority: isTimeline ? 40 : 50 }),
+        };
+        if (isTimeline) {
+          base.timeline = (routine.timelineItems || []).map((item, i) => ({
+            id: slug(item.id || item.label, 'timeline_' + i).replace(/_/g, '-'),
+            label: item.label || 'Timeline item',
+            start: item.start || '17:00',
+            durationMinutes: Number(item.durationMin || 0),
+            note: item.note || '',
+          }));
+        } else {
+          base.timing = {
+            leaveAt: routine.primaryTime || '07:00',
+            arriveBy: routine.targetTime || '07:30',
+            deadline: routine.deadline || routine.targetTime || '07:30',
+          };
+          base.routeId = 'route-' + slug(routine.routeId || routine.id, routine.id || 'route').replace(/_/g, '-');
+          base.listId = 'list-' + slug(routine.id || routine.label, 'routine').replace(/_/g, '-');
+        }
+        return base;
+      }),
+      lists,
+      layers: (jsonModel && jsonModel.routines && jsonModel.routines.layers) || {
+        baseline: { description: 'Usually true recurring routines.' },
+        pattern: { description: 'Reusable variants such as sports days, pickup days, or late starts.' },
+        override: { description: 'Temporary week or day context.' },
+        addon: { description: 'Small temporary inserts such as library books or errands.' },
+      },
+    },
+    routes: {
+      schemaVersion: 1,
+      routes,
+      places: (jsonModel && jsonModel.routes && jsonModel.routes.places) || [],
+    },
+    messagesMarkdown: messagesMarkdownFromConfig(cfg),
+    quotesMarkdown: (jsonModel && jsonModel.quotesMarkdown) || '# Quotes\n',
+  };
+}
+function messagesMarkdownFromConfig(source) {
+  const messages = (source && source.messages) || DEFAULT_CONFIG.messages;
+  const lines = ['# Messages', ''];
+  [
+    ['Morning Calm', messages.morning && messages.morning.calm],
+    ['Morning Tight', messages.morning && messages.morning.warn],
+    ['Morning Late', messages.morning && messages.morning.hot],
+    ['Morning Critical', messages.morning && messages.morning.crit],
+    ['Morning Gone', messages.morning && messages.morning.gone],
+    ['Evening On Track', messages.evening && messages.evening.onTrack],
+    ['Evening Behind', messages.evening && messages.evening.behind],
+    ['Evening Late', messages.evening && messages.evening.late],
+    ['Evening Done', messages.evening && messages.evening.done],
+  ].forEach(([title, values]) => {
+    lines.push('## ' + title, '');
+    (values || []).forEach(value => lines.push('- ' + value));
+    lines.push('');
+  });
+  return lines.join('\n').trim() + '\n';
+}
+function syncJsonFromDashboard() {
+  jsonModel = dashboardToJsonModel(config);
+  localStorage.setItem(KEYS.jsonModel, JSON.stringify(jsonModel));
+}
+function persistJsonModel() {
+  ensureJsonModel();
+  localStorage.setItem(KEYS.jsonModel, JSON.stringify(jsonModel));
+}
+function jsonModelToFiles(model) {
+  const safeModel = clone(model || {});
+  return [
+    { path: JSON_SYNC_FILES.family, content: JSON.stringify(safeModel.family || {}, null, 2) + '\n' },
+    { path: JSON_SYNC_FILES.routines, content: JSON.stringify(safeModel.routines || {}, null, 2) + '\n' },
+    { path: JSON_SYNC_FILES.routes, content: JSON.stringify(safeModel.routes || {}, null, 2) + '\n' },
+    { path: JSON_SYNC_FILES.display, content: JSON.stringify(safeModel.display || {}, null, 2) + '\n' },
+    { path: JSON_SYNC_FILES.modules, content: JSON.stringify(safeModel.modules || {}, null, 2) + '\n' },
+    { path: JSON_SYNC_FILES.messagesMarkdown, content: safeModel.messagesMarkdown || messagesMarkdownFromConfig(config) },
+    { path: JSON_SYNC_FILES.quotesMarkdown, content: safeModel.quotesMarkdown || '# Quotes\n' },
+  ];
 }
 function defaultRoutinesFromLegacy() {
   const s = (config.scenarios && config.scenarios.default) || DEFAULT_CONFIG.scenarios.default;
@@ -1318,12 +1556,22 @@ function syncLegacyFromRoutines() {
   });
 }
 function loadConfig() {
+  const savedJson = localStorage.getItem(KEYS.jsonModel);
+  if (savedJson) {
+    try {
+      jsonModel = JSON.parse(savedJson);
+      const adapted = jsonToDashboardConfig(jsonModel);
+      if (adapted) config = adapted;
+    } catch(e) {}
+  }
   const saved = localStorage.getItem(KEYS.config);
-  if (saved) { try { config = JSON.parse(saved); } catch(e) {} }
+  if (!jsonModel && saved) { try { config = JSON.parse(saved); } catch(e) {} }
   ensureModel();
+  ensureJsonModel();
 }
 function saveConfig() {
   ensureModel();
+  syncJsonFromDashboard();
   localStorage.setItem(KEYS.config, JSON.stringify(config));
   renderRawConfig();
   setSyncStatus('syncing', 'LOCAL');
@@ -1419,12 +1667,12 @@ async function validateGitHub() {
     const res = await fetch(`https://api.github.com/repos/${repo}`, { headers: githubHeaders(pat) });
     if (!res.ok) throw new Error('GitHub returned ' + res.status);
     const cfgRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`, { headers: githubHeaders(pat) });
-    if (!cfgRes.ok) throw new Error('Repo connected, but config file was not readable. GitHub returned ' + cfgRes.status + '.');
+    if (!cfgRes.ok && cfgRes.status !== 404) throw new Error('Repo connected, but config file was not readable. GitHub returned ' + cfgRes.status + '.');
     CredentialStore.setGitHubToken(pat);
     localStorage.setItem(KEYS.repo, repo);
     localStorage.setItem(KEYS.path, path);
     localStorage.setItem(KEYS.branch, branch);
-    result.className='validate-result ok'; result.textContent='✓ Connected. Config file readable. Saving requires Contents read/write permission.';
+    result.className='validate-result ok'; result.textContent='✓ Connected. Saving will write JSON config files plus dashboard-config.js. PAT needs Contents read/write permission.';
     document.getElementById('step1').classList.remove('active');
     document.getElementById('step1').classList.add('done');
     document.getElementById('step2').classList.add('active');
@@ -1698,8 +1946,87 @@ function trafficStatus(trafficSeconds, normalSeconds) {
   return 'light';
 }
 
+function scheduleValidationIssues(source) {
+  const cfg = source || config;
+  const issues = [];
+  (cfg.routines || []).forEach((routine) => {
+    if (!routine || routine.enabled === false) return;
+    const label = routine.label || routine.id || 'Routine';
+    const windowStart = timeValueToMin(routine.window && routine.window.start);
+    const windowEnd = timeValueToMin(routine.window && routine.window.end);
+    if (routine.type === 'departure') {
+      const leave = timeValueToMin(routine.primaryTime);
+      const target = timeValueToMin(routine.targetTime);
+      const deadline = timeValueToMin(routine.deadline);
+      if (windowEnd != null && leave != null && windowEnd < leave) {
+        issues.push({ label, text: 'display window ends before leave time, so the dashboard may switch away early.' });
+      }
+      if (windowStart != null && leave != null && windowStart > leave) {
+        issues.push({ label, text: 'display window starts after leave time.' });
+      }
+      if (target != null && leave != null && target < leave) {
+        issues.push({ label, text: 'arrival target is before leave time.' });
+      }
+      if (deadline != null && target != null && deadline < target) {
+        issues.push({ label, text: 'hard deadline is before the arrival target.' });
+      }
+    }
+    if (routine.type === 'timeline') {
+      (routine.timelineItems || []).forEach((item) => {
+        const start = timeValueToMin(item.start);
+        if (start != null && windowStart != null && start < windowStart) {
+          issues.push({ label, text: (item.label || 'timeline item') + ' starts before the display window.' });
+        }
+        if (start != null && windowEnd != null && start > windowEnd) {
+          issues.push({ label, text: (item.label || 'timeline item') + ' starts after the display window.' });
+        }
+      });
+    }
+  });
+  return issues;
+}
+function draftScheduleConfigFromFields() {
+  const draft = clone(config);
+  draft.time = draft.time || {};
+  draft.modes = draft.modes || {};
+  draft.scenarios = draft.scenarios || {};
+  draft.scenarios.default = draft.scenarios.default || {};
+  draft.time.timeZone = getVal('timeZoneInput') || draft.time.timeZone || 'America/New_York';
+  draft.theme = { id: getVal('themeSelect') || ((draft.theme || {}).id) || 'default-editorial', accent: ((draft.theme || {}).accent) || '#d99a3d' };
+  draft.modes.morning = { start:getVal('morningStart') || '06:00', end:getVal('morningEnd') || '10:30' };
+  draft.modes.evening = { start:getVal('eveningStart') || '17:00', end:getVal('eveningEnd') || '21:00' };
+  draft.scenarios.default.leave = getVal('defaultLeave') || draft.scenarios.default.leave;
+  draft.scenarios.default.school = getVal('defaultSchool') || draft.scenarios.default.school;
+  draft.scenarios.default.lateBell = getVal('defaultLateBell') || draft.scenarios.default.lateBell;
+  const schoolRoutine = (draft.routines || []).find(r => r.id === 'school-morning');
+  if (schoolRoutine) {
+    schoolRoutine.window = clone(draft.modes.morning);
+    schoolRoutine.primaryTime = draft.scenarios.default.leave;
+    schoolRoutine.targetTime = draft.scenarios.default.school;
+    schoolRoutine.deadline = draft.scenarios.default.lateBell;
+  }
+  const eveningRoutine = (draft.routines || []).find(r => r.id === 'evening');
+  if (eveningRoutine) eveningRoutine.window = clone(draft.modes.evening);
+  return draft;
+}
+function renderScheduleValidationFromFields() {
+  renderScheduleValidation(draftScheduleConfigFromFields());
+}
+function renderScheduleValidation(source) {
+  const el = document.getElementById('scheduleValidation');
+  if (!el) return;
+  const issues = scheduleValidationIssues(source || config);
+  if (!issues.length) {
+    el.innerHTML = '<div class="validation-panel ok"><div class="validation-title">Schedule check</div><div class="validation-list"><div class="validation-item">All routine windows line up with their timing.</div></div></div>';
+    return;
+  }
+  el.innerHTML = '<div class="validation-panel warn"><div class="validation-title">Schedule check</div><div class="validation-list">' +
+    issues.map(issue => '<div class="validation-item"><strong>' + html(issue.label) + ':</strong> ' + html(issue.text) + '</div>').join('') +
+    '</div></div>';
+}
 function renderSchedule() {
   setVal('timeZoneInput', config.time.timeZone);
+  setVal('themeSelect', (config.theme && config.theme.id) || 'default-editorial');
   setVal('morningStart', timeFromParts(config.modes.morning, 'start', 'startHour', 'startMin', '06:00'));
   setVal('morningEnd', timeFromParts(config.modes.morning, 'end', 'endHour', 'endMin', '10:30'));
   setVal('eveningStart', timeFromParts(config.modes.evening, 'start', 'startHour', 'startMin', '17:00'));
@@ -1712,6 +2039,7 @@ function renderSchedule() {
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const el = document.getElementById('schoolDayToggles');
   if (el) el.innerHTML = days.map((d,i) => `<label style="display:inline-flex;align-items:center;gap:6px;margin:0 10px 10px 0;color:var(--sub);font-size:11px;letter-spacing:.12em"><input type="checkbox" ${config.schoolDays.includes(i)?'checked':''} onchange="toggleSchoolDay(${i}, this.checked)">${d}</label>`).join('');
+  renderScheduleValidation();
 }
 function toggleSchoolDay(day, on) {
   const set = new Set(config.schoolDays || []);
@@ -1730,7 +2058,10 @@ function routineTimeRange(routine) {
 }
 function routinePrimaryLine(routine) {
   if (!routine) return '-';
-  if (routine.type === 'timeline') return `${toTime(routine.primaryTime, '-')} start`;
+  if (routine.type === 'timeline') {
+    const first = (routine.timelineItems || [])[0] || {};
+    return `${toTime(first.start, '-')} start / ${(routine.timelineItems || []).length} items`;
+  }
   return `${toTime(routine.primaryTime, '-')} leave / ${toTime(routine.targetTime, '-')} target`;
 }
 function routineDaySummary(days) {
@@ -1746,6 +2077,13 @@ function routineRouteSummary(routine) {
   const seg = (routine.segments || [])[0] || {};
   const stops = Number(seg.stopCount || 0);
   return `${seg.routeLabel || routine.label || 'Route'}${stops ? ' / ' + stops + ' stop' + (stops === 1 ? '' : 's') : ''}`;
+}
+function routineTimelineSummary(routine) {
+  const items = routine && Array.isArray(routine.timelineItems) ? routine.timelineItems : [];
+  if (!items.length) return 'No timeline items';
+  const first = items[0];
+  const last = items[items.length - 1];
+  return `${toTime(first.start, '-')}-${toTime(last.start, '-')} / ${items.length} items`;
 }
 function routineBufferSummary(routine) {
   const seg = routine && routine.segments && routine.segments[0] ? routine.segments[0] : {};
@@ -1771,6 +2109,24 @@ function routeStopRows(routine, routineIndex, seg) {
         </div>
         <div style="margin-top:8px"><div class="field-label">Local place / address</div><input type="text" value="${html(routeStopPlaceFor(routine, stop))}" placeholder="Pickup location, errand, field, etc." data-place-autocomplete data-place-role="routine-stop" data-routine-index="${routineIndex}" data-stop-id="${html(stop.id)}" onchange="updateRoutineStopLocal(${routineIndex}, '${html(stop.id)}', this.value)"></div>
       </div>
+    </div>
+  `).join('');
+}
+function routineTimelineRows(routine, routineIndex) {
+  const items = Array.isArray(routine.timelineItems) ? routine.timelineItems : [];
+  return items.map((item, itemIndex) => `
+    <div class="routine-list-card">
+      <div class="editor-card-head">
+        <div class="editor-card-title">${html(item.label || 'Timeline item')}</div>
+        <button class="small-btn danger" onclick="removeRoutineTimelineItem(${routineIndex}, ${itemIndex})">REMOVE</button>
+      </div>
+      <div class="form-grid">
+        <div><div class="field-label">Start</div><input type="time" value="${timeFromParts(item, 'start', 'startHour', 'startMin', '18:00')}" onchange="updateRoutineTimelineItem(${routineIndex}, ${itemIndex}, 'start', this.value)"></div>
+        <div><div class="field-label">Duration</div><input type="number" min="0" value="${Number(item.durationMin || 0)}" onchange="updateRoutineTimelineItem(${routineIndex}, ${itemIndex}, 'durationMin', this.value)"></div>
+        <div><div class="field-label">Icon key</div><input type="text" value="${html(item.icon || '')}" onchange="updateRoutineTimelineItem(${routineIndex}, ${itemIndex}, 'icon', this.value)"></div>
+        <div><div class="field-label">Label</div><input type="text" value="${html(item.label || '')}" onchange="updateRoutineTimelineItem(${routineIndex}, ${itemIndex}, 'label', this.value)"></div>
+      </div>
+      <div class="field-label">Note</div><input type="text" value="${html(item.note || '')}" onchange="updateRoutineTimelineItem(${routineIndex}, ${itemIndex}, 'note', this.value)">
     </div>
   `).join('');
 }
@@ -1803,7 +2159,7 @@ function renderRoutineEditor() {
           <div class="routine-pill-row">
             <span class="routine-pill ${routine.enabled !== false ? 'on' : ''}">${routine.enabled !== false ? 'Enabled' : 'Disabled'}</span>
             <span class="routine-pill">${html(routine.type || 'routine')}</span>
-            <span class="routine-pill">${(routine.listItems || []).length} list items</span>
+            <span class="routine-pill">${routine.type === 'timeline' ? html(routineTimelineSummary(routine)) : (routine.listItems || []).length + ' list items'}</span>
             ${routine.type === 'departure' ? `<span class="routine-pill">${html(routineBufferSummary(routine))}</span>` : ''}
           </div>
         </div>
@@ -1818,10 +2174,12 @@ function renderRoutineEditor() {
               </select></div>
               <div><div class="field-label">Window start</div><input type="time" value="${toTime((routine.window || {}).start,'06:00')}" onchange="updateRoutine(${i}, 'window.start', this.value)"></div>
               <div><div class="field-label">Window end</div><input type="time" value="${toTime((routine.window || {}).end,'07:00')}" onchange="updateRoutine(${i}, 'window.end', this.value)"></div>
-              <div><div class="field-label">Leave / start</div><input type="time" value="${toTime(routine.primaryTime,'07:00')}" onchange="updateRoutine(${i}, 'primaryTime', this.value)"></div>
-              <div><div class="field-label">Arrive / target</div><input type="time" value="${toTime(routine.targetTime,'07:20')}" onchange="updateRoutine(${i}, 'targetTime', this.value)"></div>
-              <div><div class="field-label">Deadline</div><input type="time" value="${toTime(routine.deadline,'07:25')}" onchange="updateRoutine(${i}, 'deadline', this.value)"></div>
-              <div><div class="field-label">Route id</div><input type="text" value="${html(routine.routeId || routine.id)}" onchange="updateRoutine(${i}, 'routeId', this.value)"></div>
+              ${routine.type === 'departure' ? `
+                <div><div class="field-label">Leave</div><input type="time" value="${toTime(routine.primaryTime,'07:00')}" onchange="updateRoutine(${i}, 'primaryTime', this.value)"></div>
+                <div><div class="field-label">Arrive / target</div><input type="time" value="${toTime(routine.targetTime,'07:20')}" onchange="updateRoutine(${i}, 'targetTime', this.value)"></div>
+                <div><div class="field-label">Deadline</div><input type="time" value="${toTime(routine.deadline,'07:25')}" onchange="updateRoutine(${i}, 'deadline', this.value)"></div>
+                <div><div class="field-label">Route id</div><input type="text" value="${html(routine.routeId || routine.id)}" onchange="updateRoutine(${i}, 'routeId', this.value)"></div>
+              ` : ''}
             </div>
             <div class="field-label">Days</div>
             <div class="routine-day-row">${dayLabels.map((d, day) => `<label class="routine-day"><input type="checkbox" ${days.has(day) ? 'checked' : ''} onchange="toggleRoutineDay(${i}, ${day}, this.checked)">${d}</label>`).join('')}</div>
@@ -1885,11 +2243,18 @@ function renderRoutineEditor() {
           `).join('')}
           <button class="small-btn" onclick="addRoutineListItem(${i})">+ ADD LIST ITEM</button>
           </details>
-        ` : '<div class="field-hint">Timeline routines currently use the Evening segments editor below. Full dynamic timeline editing will come after departure routines stabilize.</div>'}
+        ` : `
+          <details open>
+            <summary>Timeline items</summary>
+            ${routineTimelineRows(routine, i)}
+            <button class="small-btn" onclick="addRoutineTimelineItem(${i})">+ ADD TIMELINE ITEM</button>
+          </details>
+        `}
         </div>
       </div>`;
   }).join('');
   setTimeout(setupPlacesAutocomplete, 0);
+  renderScheduleValidation();
 }
 function addRoutine() {
   config.routines.push(normalizeRoutine({
@@ -1909,6 +2274,22 @@ function addRoutine() {
       { id:'keys', label:'Keys and wallet', icon:'backpack', targetMin:-10 },
       { id:'water', label:'Water bottles', icon:'breakfast', targetMin:-8 },
       { id:'car', label:'Get in the car', icon:'car', targetMin:0 },
+    ],
+  }));
+  saveConfig();
+  renderAll();
+}
+function addTimelineRoutine() {
+  config.routines.push(normalizeRoutine({
+    id: 'timeline-' + Date.now(),
+    label: 'Timeline',
+    type: 'timeline',
+    enabled: true,
+    days: [0,1,2,3,4,5,6],
+    window: { start:'17:00', end:'21:00' },
+    display: { scene:'evening', priority: 40 },
+    timelineItems: [
+      { id:'new-item', label:'New item', icon:'', start:'18:00', durationMin:15, note:'' },
     ],
   }));
   saveConfig();
@@ -2015,6 +2396,33 @@ function updateRoutineListItem(i, itemIndex, key, value) {
   config.routines[i] = normalizeRoutine(r);
   saveConfig();
 }
+function addRoutineTimelineItem(i) {
+  const r = config.routines[i];
+  if (!r) return;
+  r.timelineItems = Array.isArray(r.timelineItems) ? r.timelineItems : [];
+  r.timelineItems.push({ id:'new_item', label:'New item', icon:'', start:'18:00', durationMin:15, note:'' });
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function removeRoutineTimelineItem(i, itemIndex) {
+  const r = config.routines[i];
+  if (!r || !Array.isArray(r.timelineItems)) return;
+  r.timelineItems.splice(itemIndex, 1);
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function updateRoutineTimelineItem(i, itemIndex, key, value) {
+  const r = config.routines[i];
+  if (!r || !Array.isArray(r.timelineItems) || !r.timelineItems[itemIndex]) return;
+  const item = r.timelineItems[itemIndex];
+  item[key] = key === 'durationMin' ? Number(value) : value;
+  if (key === 'label') item.id = slug(value, item.id);
+  delete item.startHour; delete item.startMin;
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+}
 function toggleRoutineDay(i, day, on) {
   const r = config.routines[i];
   if (!r) return;
@@ -2027,6 +2435,7 @@ function toggleRoutineDay(i, day, on) {
 }
 function saveSchedule() {
   config.time.timeZone = getVal('timeZoneInput') || 'America/New_York';
+  config.theme = { id: getVal('themeSelect') || 'default-editorial', accent: ((config.theme || {}).accent) || '#d99a3d' };
   config.modes.morning = { start:getVal('morningStart'), end:getVal('morningEnd') };
   config.modes.evening = { start:getVal('eveningStart'), end:getVal('eveningEnd') };
   config.scenarios.default.leave = getVal('defaultLeave');
@@ -2047,7 +2456,6 @@ function saveSchedule() {
   const eveningRoutine = (config.routines || []).find(r => r.id === 'evening');
   if (eveningRoutine) {
     eveningRoutine.window = clone(config.modes.evening);
-    eveningRoutine.timelineItems = clone(config.eveningTimeline);
   }
   const morningEnd = timeValueToMin(config.modes.morning.end);
   const leave = timeValueToMin(config.scenarios.default.leave);
@@ -2088,7 +2496,9 @@ function updateChecklistItem(i, key, value) {
 function renderTimeline() {
   const el = document.getElementById('timelineItems');
   if (!el) return;
-  el.innerHTML = config.eveningTimeline.map((item,i) => `
+  const eveningRoutine = (config.routines || []).find(r => r.id === 'evening') || (config.routines || []).find(r => r.type === 'timeline');
+  const items = eveningRoutine && Array.isArray(eveningRoutine.timelineItems) ? eveningRoutine.timelineItems : config.eveningTimeline;
+  el.innerHTML = items.map((item,i) => `
     <div class="editor-card">
       <div class="editor-card-head"><div class="editor-card-title">${html(item.icon || '')} ${html(item.label || 'Timeline item')}</div><button class="small-btn danger" onclick="removeTimelineItem(${i})">REMOVE</button></div>
       <div class="form-grid">
@@ -2100,14 +2510,37 @@ function renderTimeline() {
       <div class="field-label">Note</div><input type="text" value="${html(item.note || '')}" onchange="updateTimelineItem(${i}, 'note', this.value)">
     </div>`).join('');
 }
-function addTimelineItem() { config.eveningTimeline.push({ id:'new_item', label:'New item', icon:'•', start:'18:00', durationMin:15, note:'' }); saveConfig(); renderTimeline(); }
-function removeTimelineItem(i) { config.eveningTimeline.splice(i,1); saveConfig(); renderTimeline(); }
+function syncLegacyTimelineEditor(items) {
+  config.eveningTimeline = clone(items || []);
+  const eveningRoutine = (config.routines || []).find(r => r.id === 'evening') || (config.routines || []).find(r => r.type === 'timeline');
+  if (eveningRoutine) eveningRoutine.timelineItems = clone(config.eveningTimeline);
+}
+function editableEveningTimeline() {
+  const eveningRoutine = (config.routines || []).find(r => r.id === 'evening') || (config.routines || []).find(r => r.type === 'timeline');
+  return eveningRoutine && Array.isArray(eveningRoutine.timelineItems) ? clone(eveningRoutine.timelineItems) : clone(config.eveningTimeline || []);
+}
+function addTimelineItem() {
+  const items = editableEveningTimeline();
+  items.push({ id:'new_item', label:'New item', icon:'', start:'18:00', durationMin:15, note:'' });
+  syncLegacyTimelineEditor(items);
+  saveConfig(); renderTimeline(); renderRoutineEditor();
+}
+function removeTimelineItem(i) {
+  const items = editableEveningTimeline();
+  items.splice(i,1);
+  syncLegacyTimelineEditor(items);
+  saveConfig(); renderTimeline(); renderRoutineEditor();
+}
 function updateTimelineItem(i, key, value) {
-  const item = config.eveningTimeline[i];
+  const items = editableEveningTimeline();
+  const item = items[i];
+  if (!item) return;
   item[key] = key === 'durationMin' ? Number(value) : value;
   if (key === 'label') item.id = slug(value, item.id);
   delete item.startHour; delete item.startMin;
+  syncLegacyTimelineEditor(items);
   saveConfig();
+  renderRoutineEditor();
 }
 
 function renderCommuteEditor() {
@@ -2165,8 +2598,110 @@ function connection() {
     branch: localStorage.getItem(KEYS.branch) || getVal('branchSelect') || 'main',
   };
 }
+function encodeGitHubContent(text) {
+  return btoa(unescape(encodeURIComponent(text)));
+}
+function decodeGitHubContent(content) {
+  return decodeURIComponent(escape(atob(String(content || '').replace(/\n/g,''))));
+}
+async function fetchGitHubFile(c, path, options) {
+  options = options || {};
+  const res = await fetch(`https://api.github.com/repos/${c.repo}/contents/${path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
+  if (res.status === 404 && options.optional) return null;
+  if (!res.ok) throw new Error(await githubError(res, 'Could not read ' + path + '.'));
+  const data = await res.json();
+  return {
+    path,
+    sha: data.sha,
+    content: decodeGitHubContent(data.content),
+  };
+}
+async function putGitHubFile(c, path, content, message) {
+  let sha = null;
+  const getRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
+  if (getRes.ok) {
+    const data = await getRes.json();
+    sha = data.sha;
+  } else if (getRes.status !== 404) {
+    throw new Error(await githubError(getRes, 'Could not read ' + path + ' before saving.'));
+  }
+  const body = { message, content: encodeGitHubContent(content), branch: c.branch };
+  if (sha) body.sha = sha;
+  const putRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${path}`, {
+    method:'PUT',
+    headers:{ ...githubHeaders(c.pat), 'Content-Type':'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!putRes.ok) throw new Error(await githubError(putRes, 'Save failed for ' + path + '.'));
+  return putRes.json();
+}
+async function commitGitHubFiles(c, files, message) {
+  const refPath = 'heads/' + c.branch;
+  const refRes = await fetch(`https://api.github.com/repos/${c.repo}/git/ref/${refPath}`, { headers: githubHeaders(c.pat) });
+  if (!refRes.ok) throw new Error(await githubError(refRes, 'Could not read branch ref before saving.'));
+  const ref = await refRes.json();
+  const parentSha = ref.object && ref.object.sha;
+  if (!parentSha) throw new Error('GitHub branch ref did not include a commit SHA.');
+
+  const commitRes = await fetch(`https://api.github.com/repos/${c.repo}/git/commits/${parentSha}`, { headers: githubHeaders(c.pat) });
+  if (!commitRes.ok) throw new Error(await githubError(commitRes, 'Could not read current commit before saving.'));
+  const currentCommit = await commitRes.json();
+  const baseTreeSha = currentCommit.tree && currentCommit.tree.sha;
+  if (!baseTreeSha) throw new Error('GitHub commit did not include a tree SHA.');
+
+  const tree = [];
+  for (const file of files) {
+    const blobRes = await fetch(`https://api.github.com/repos/${c.repo}/git/blobs`, {
+      method: 'POST',
+      headers: { ...githubHeaders(c.pat), 'Content-Type':'application/json' },
+      body: JSON.stringify({ content: file.content, encoding: 'utf-8' }),
+    });
+    if (!blobRes.ok) throw new Error(await githubError(blobRes, 'Could not stage ' + file.path + '.'));
+    const blob = await blobRes.json();
+    tree.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
+  }
+
+  const treeRes = await fetch(`https://api.github.com/repos/${c.repo}/git/trees`, {
+    method: 'POST',
+    headers: { ...githubHeaders(c.pat), 'Content-Type':'application/json' },
+    body: JSON.stringify({ base_tree: baseTreeSha, tree }),
+  });
+  if (!treeRes.ok) throw new Error(await githubError(treeRes, 'Could not create config tree.'));
+  const newTree = await treeRes.json();
+
+  const newCommitRes = await fetch(`https://api.github.com/repos/${c.repo}/git/commits`, {
+    method: 'POST',
+    headers: { ...githubHeaders(c.pat), 'Content-Type':'application/json' },
+    body: JSON.stringify({ message, tree: newTree.sha, parents: [parentSha] }),
+  });
+  if (!newCommitRes.ok) throw new Error(await githubError(newCommitRes, 'Could not create config commit.'));
+  const newCommit = await newCommitRes.json();
+
+  const updateRes = await fetch(`https://api.github.com/repos/${c.repo}/git/refs/${refPath}`, {
+    method: 'PATCH',
+    headers: { ...githubHeaders(c.pat), 'Content-Type':'application/json' },
+    body: JSON.stringify({ sha: newCommit.sha, force: false }),
+  });
+  if (!updateRes.ok) throw new Error(await githubError(updateRes, 'Could not update branch. Pull latest config, then save again.'));
+  return newCommit;
+}
+async function pullJsonModelFromGitHub(c) {
+  const pulled = {};
+  for (const key of REQUIRED_JSON_SYNC_KEYS) {
+    const file = await fetchGitHubFile(c, JSON_SYNC_FILES[key]);
+    pulled[key] = JSON.parse(file.content);
+  }
+  const messages = await fetchGitHubFile(c, JSON_SYNC_FILES.messagesMarkdown, { optional:true });
+  const quotes = await fetchGitHubFile(c, JSON_SYNC_FILES.quotesMarkdown, { optional:true });
+  pulled.messagesMarkdown = messages ? messages.content : messagesMarkdownFromConfig(DEFAULT_CONFIG);
+  pulled.quotesMarkdown = quotes ? quotes.content : '# Quotes\n';
+  return pulled;
+}
 function configToJS() {
-  return `// ═══════════════════════════════════════════════════════════════════\n// DASHBOARD CONFIG — safe display data only; no secrets\n// Last updated: ${new Date().toISOString()}\n// ═══════════════════════════════════════════════════════════════════\n\nvar DASHBOARD_CONFIG = ${JSON.stringify(safeConfigForRepo(config), null, 2)};\n\nif (typeof module !== "undefined") module.exports = DASHBOARD_CONFIG;\n`;
+  ensureJsonModel();
+  const adapted = jsonToDashboardConfig(jsonModel);
+  const output = adapted ? safeConfigForRepo(adapted) : safeConfigForRepo(config);
+  return `// ═══════════════════════════════════════════════════════════════════\n// DASHBOARD CONFIG — safe display data only; no secrets\n// Last updated: ${new Date().toISOString()}\n// Generated from JSON admin source via config/dashboard-adapter.js\n// ═══════════════════════════════════════════════════════════════════\n\nvar DASHBOARD_CONFIG = ${JSON.stringify(output, null, 2)};\n\nif (typeof module !== "undefined") module.exports = DASHBOARD_CONFIG;\n`;
 }
 function safeConfigForRepo(source) {
   const out = clone(source || {});
@@ -2201,14 +2736,28 @@ async function pullFromGitHub() {
   if (!c.pat || !c.repo) { showResult(el, false, 'GitHub token or repo not set.'); toast('GitHub token or repo not set', 'fail'); return; }
   setSyncStatus('syncing', 'PULLING');
   try {
-    const res = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
-    if (!res.ok) throw new Error(await githubError(res, 'GitHub returned ' + res.status));
-    const data = await res.json();
-    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
-    config = parseConfigJS(decoded);
-    lastRemoteSha = data.sha;
-    localStorage.setItem(KEYS.sha, data.sha);
-    saveConfig(); renderAll(); setSyncStatus('synced', 'PULLED'); showResult(el, true, '✓ Pulled latest config.'); toast('Config pulled ✓');
+    try {
+      jsonModel = await pullJsonModelFromGitHub(c);
+      const adapted = jsonToDashboardConfig(jsonModel);
+      if (!adapted) throw new Error('JSON adapter unavailable.');
+      config = adapted;
+      ensureModel();
+      persistJsonModel();
+      localStorage.setItem(KEYS.config, JSON.stringify(config));
+      renderAll();
+      setSyncStatus('synced', 'PULLED');
+      showResult(el, true, '✓ Pulled JSON config files and regenerated dashboard compatibility locally.');
+      toast('JSON config pulled ✓');
+      return;
+    } catch(jsonErr) {
+      console.warn('JSON pull unavailable, falling back to dashboard-config.js', jsonErr);
+    }
+
+    const file = await fetchGitHubFile(c, c.path);
+    config = parseConfigJS(file.content);
+    lastRemoteSha = file.sha;
+    localStorage.setItem(KEYS.sha, file.sha);
+    saveConfig(); renderAll(); setSyncStatus('synced', 'PULLED'); showResult(el, true, '✓ Pulled latest dashboard-config.js.'); toast('Config pulled ✓');
   } catch(e) { setSyncStatus('error', 'ERROR'); showResult(el, false, '✕ Pull failed: ' + e.message); toast('Pull failed: ' + shortError(e.message), 'fail'); }
 }
 async function pushToGitHub(options) {
@@ -2222,25 +2771,14 @@ async function pushToGitHub(options) {
   }
   setSyncStatus('syncing', 'SAVING');
   try {
-    let sha = lastRemoteSha;
-    const getRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
-    if (getRes.ok) {
-      const data = await getRes.json();
-      sha = data.sha;
-    } else if (getRes.status !== 404) {
-      throw new Error(await githubError(getRes, 'Could not read current config before saving.'));
-    }
-    const content = btoa(unescape(encodeURIComponent(configToJS())));
-    const body = { message: `Update Fam Frame dashboard config`, content, branch: c.branch };
-    if (sha) body.sha = sha;
-    const putRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}`, {
-      method:'PUT', headers:{ ...githubHeaders(c.pat), 'Content-Type':'application/json' }, body: JSON.stringify(body)
-    });
-    if (!putRes.ok) throw new Error(await githubError(putRes, 'Save failed.'));
-    const data = await putRes.json();
-    lastRemoteSha = data.content && data.content.sha;
+    ensureJsonModel();
+    persistJsonModel();
+    const files = jsonModelToFiles(jsonModel).concat([{ path: c.path, content: configToJS() }]);
+    const messagePrefix = options.messagePrefix || 'Update Fam Frame';
+    const data = await commitGitHubFiles(c, files, messagePrefix + ' config');
+    lastRemoteSha = data.sha;
     if (lastRemoteSha) localStorage.setItem(KEYS.sha, lastRemoteSha);
-    setSyncStatus('synced', 'SAVED'); showResult(el, true, '✓ Saved to GitHub. Refresh the dashboard after Pages updates.'); toast('Saved to GitHub ✓');
+    setSyncStatus('synced', 'SAVED'); showResult(el, true, '✓ Saved JSON config files and generated dashboard-config.js in one GitHub commit. Refresh the dashboard after Pages updates.'); toast('Saved JSON + dashboard config ✓');
     return true;
   } catch(e) {
     setSyncStatus('error', 'ERROR');
@@ -2266,11 +2804,26 @@ async function checkGitHubAccess() {
     if (!repoRes.ok) throw new Error(await githubError(repoRes, 'Repo check failed.'));
     const repo = await repoRes.json();
 
-    const fileRes = await fetch(`https://api.github.com/repos/${c.repo}/contents/${c.path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
-    if (!fileRes.ok) throw new Error(await githubError(fileRes, 'Config file check failed.'));
-    const file = await fileRes.json();
-    lastRemoteSha = file.sha;
-    localStorage.setItem(KEYS.sha, file.sha);
+    const branchRes = await fetch(`https://api.github.com/repos/${c.repo}/git/ref/heads/${c.branch}`, { headers: githubHeaders(c.pat) });
+    if (!branchRes.ok) throw new Error(await githubError(branchRes, 'Branch check failed.'));
+    const branchRef = await branchRes.json();
+    if (branchRef.object && branchRef.object.sha) {
+      lastRemoteSha = branchRef.object.sha;
+      localStorage.setItem(KEYS.sha, lastRemoteSha);
+    }
+
+    const fileChecks = await Promise.all(
+      Object.values(JSON_SYNC_FILES).concat([c.path]).map(async (path) => {
+        const res = await fetch(`https://api.github.com/repos/${c.repo}/contents/${path}?ref=${c.branch}`, { headers: githubHeaders(c.pat) });
+        if (res.ok) return { path, status: 'readable' };
+        if (res.status === 404) return { path, status: 'will be created' };
+        return { path, status: 'blocked: ' + res.status };
+      })
+    );
+    const blocked = fileChecks.filter(item => /^blocked/.test(item.status));
+    if (blocked.length) {
+      throw new Error('Some config paths are blocked: ' + blocked.map(item => item.path + ' (' + item.status + ')').join(', ') + '.');
+    }
 
     const permission = repo.permissions
       ? 'permissions: admin=' + !!repo.permissions.admin + ', push=' + !!repo.permissions.push + ', pull=' + !!repo.permissions.pull
@@ -2279,8 +2832,9 @@ async function checkGitHubAccess() {
       '✓ GitHub access looks good. User: ' + (user.login || 'unknown') +
       ' · repo: ' + c.repo +
       ' · branch: ' + c.branch +
-      ' · file sha saved · ' + permission +
-      '. If saving still fails, the PAT needs Contents read/write.'
+      ' · config files: ' + fileChecks.filter(item => item.status === 'readable').length + ' readable, ' + fileChecks.filter(item => item.status === 'will be created').length + ' will be created' +
+      ' · ' + permission +
+      '. Save uses one Git commit. If saving fails, recreate the PAT with Contents read/write and access to this repo.'
     );
     toast('GitHub access looks good ✓');
   } catch(e) {
@@ -2289,6 +2843,19 @@ async function checkGitHubAccess() {
     toast('GitHub check failed: ' + shortError(e.message), 'fail');
   }
 }
+function resetGitHubConnection() {
+  const el = document.getElementById('githubResetResult');
+  CredentialStore.clearGitHubToken();
+  localStorage.removeItem(KEYS.repo);
+  localStorage.removeItem(KEYS.path);
+  localStorage.removeItem(KEYS.branch);
+  localStorage.removeItem(KEYS.sha);
+  lastRemoteSha = null;
+  prefillConnectionFields();
+  updateSyncStatus();
+  showResult(el, true, 'GitHub connection cleared on this device. Paste a new PAT, repo, branch, and config path to reconnect.');
+  toast('GitHub connection reset');
+}
 async function saveAndSync(localMessage) {
   const c = connection();
   if (!c.pat || !c.repo) {
@@ -2296,8 +2863,75 @@ async function saveAndSync(localMessage) {
     return;
   }
   toast(localMessage + '. Saving to GitHub…');
-  await updateDerivedCommute();
   await pushToGitHub();
+}
+function routeRefreshPlan() {
+  const ready = [];
+  const skipped = [];
+  (config.routines || []).forEach((routine, index) => {
+    if (!routine || routine.type !== 'departure' || routine.enabled === false) return;
+    const routeId = routine.routeId || routine.id;
+    const seg = (routine.segments || [])[0] || {};
+    const origin = routeOriginFor(routine);
+    const destination = routeDestinationFor(routine);
+    const stops = (seg.stops || []).map(stop => ({
+      id: stop.id,
+      label: stop.label,
+      bufferMin: Number(stop.bufferMin || 0),
+      place: routeStopPlaceFor(routine, stop),
+    }));
+    const missingStop = stops.find(stop => !stop.place);
+    if (!origin || !destination || missingStop) {
+      skipped.push({
+        label: routine.label || routeId,
+        reason: !origin ? 'missing origin' : (!destination ? 'missing destination' : 'missing place for ' + missingStop.label),
+      });
+      return;
+    }
+    ready.push({
+      index,
+      routine,
+      routeId,
+      origin,
+      destination,
+      routeLabel: seg.routeLabel || routine.label,
+      stops,
+    });
+  });
+  return { ready, skipped };
+}
+async function refreshAllRouteStatuses() {
+  const el = document.getElementById('allRoutesResult');
+  const plan = routeRefreshPlan();
+  if (!plan.ready.length) {
+    const msg = plan.skipped.length
+      ? 'No routes are ready. Add local origin, destination, and stop places first.'
+      : 'No departure routes to refresh.';
+    showResult(el, false, msg);
+    toast(msg, 'fail');
+    return;
+  }
+  showResult(el, true, 'Refreshing ' + plan.ready.length + ' route' + (plan.ready.length === 1 ? '' : 's') + '...');
+  toast('Refreshing route maps…');
+  const refreshed = [];
+  const failed = [];
+  for (const item of plan.ready) {
+    const ok = await updateDerivedCommute(item);
+    if (ok) refreshed.push(item);
+    else failed.push(item);
+  }
+  if (!refreshed.length) {
+    showResult(el, false, 'Route refresh failed. Check the Maps key and local route fields.');
+    toast('Route refresh failed', 'fail');
+    return;
+  }
+  const skipText = plan.skipped.length ? ' Skipped ' + plan.skipped.length + ' incomplete.' : '';
+  const failText = failed.length ? ' Failed ' + failed.length + '.' : '';
+  showResult(el, true, 'Refreshed ' + refreshed.length + ' route' + (refreshed.length === 1 ? '' : 's') + '.' + skipText + failText + ' Saving once to GitHub...');
+  const pushed = await pushToGitHub({ resultEl: el, messagePrefix: 'Refresh Fam Frame routes' });
+  if (pushed) {
+    showResult(el, true, 'Refreshed ' + refreshed.length + ' route' + (refreshed.length === 1 ? '' : 's') + ' and saved one consolidated update.' + skipText + failText);
+  }
 }
 async function updateActiveMapsStatus() {
   const el = document.getElementById('mapsStatusResult');
@@ -2377,7 +3011,8 @@ async function githubError(res, fallback) {
   if (status === 401) return 'GitHub rejected the token. Re-enter the PAT.';
   if (status === 403) return 'GitHub denied the request. The PAT likely needs Contents: read/write permission, or SSO approval if this is an org repo.' + (detail ? ' GitHub says: ' + detail : '');
   if (status === 404) return 'GitHub could not find the repo, branch, or config path.';
-  if (status === 409) return 'GitHub reported a conflict. Pull latest config, then save again.';
+  if (status === 409) return 'GitHub reported a conflict. Pull latest config, review your local edits, then save again.';
+  if (status === 422) return 'GitHub rejected the commit update. Pull latest config and try again; if it repeats, reset the GitHub connection and re-enter repo/branch.';
   return (fallback || 'GitHub error') + (detail ? ' GitHub says: ' + detail : ' GitHub returned ' + status + '.') + (docs ? ' Docs: ' + docs : '');
 }
 function shortError(msg) {
