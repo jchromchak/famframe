@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-07T15:06:59.364Z
+// Last updated: 2026-05-07T15:20:57.742Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -364,7 +364,7 @@ var DASHBOARD_CONFIG = {
         4
       ],
       "window": {
-        "start": "13:15",
+        "start": "11:15",
         "end": "15:15"
       },
       "primaryTime": "14:35",
@@ -589,8 +589,8 @@ var DASHBOARD_CONFIG = {
         "stopCount": 0,
         "durationMinutes": 31,
         "trafficStatus": "light",
-        "updatedAt": "2026-05-07T15:06:59.030Z",
-        "expiresAt": "2026-05-07T15:21:59.030Z",
+        "updatedAt": "2026-05-07T15:20:57.485Z",
+        "expiresAt": "2026-05-07T15:35:57.485Z",
         "stops": [],
         "bufferMinutes": 0
       },
