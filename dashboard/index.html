@@ -7,8 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
-<script src="../dashboard-config.js"></script>
-<script src="./dashboard-config.js"></script>
+<script src="../config/dashboard-adapter.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--app-width:100vw;--app-height:100dvh;--stage-scale:1;--stage-width:1920px;--ff-bg:#0b0b09;--ff-text:#efe7d7;--ff-text-rgb:239,231,215;--ff-accent:#d99a3d;--ff-accent-rgb:217,154,61;--ff-accent-hot:#f0c06d;--ff-done:#7aaa8a;--ff-warn:#d4845a;--ff-warn-rgb:212,132,90;--ff-crit:#c94f3a;--ff-crit-rgb:201,79,58;--ff-timeline-done:#8d879f;--ff-timeline-done-rgb:141,135,159}
@@ -205,7 +204,7 @@ body.sleep-active #artMode{filter:brightness(.76)}
 
   <div class="config-error" id="configError">
     <h1>Config missing.</h1>
-    <p>Fam Frame needs <strong>dashboard-config.js</strong> loaded before rendering. Place it one folder above <code>/dashboard/</code> and use <strong>var DASHBOARD_CONFIG = {…}</strong> (not const).</p>
+    <p>Fam Frame needs safe JSON config files in <strong>/config</strong> and content files in <strong>/content</strong>. Refresh after the latest config save, or check that GitHub Pages is serving those files.</p>
   </div>
 
   <div id="artMode">
@@ -302,7 +301,7 @@ body.sleep-active #artMode{filter:brightness(.76)}
       <div class="evening-board">
         <div class="evening-hero">
           <div class="date-line" id="eDateLine">—</div>
-          <div class="evening-title">Evening</div>
+          <div class="evening-title" id="eTitle">Evening</div>
           <div class="hero-time" id="eClock">—</div>
         </div>
         <div class="timeline evening-timeline" id="eTimeline"></div>
@@ -368,8 +367,8 @@ body.sleep-active #artMode{filter:brightness(.76)}
 <script>
 (function () {
   // ── CONFIG ────────────────────────────────────────────────────────
-  var cfg = window.DASHBOARD_CONFIG ||
-    (typeof DASHBOARD_CONFIG !== 'undefined' ? DASHBOARD_CONFIG : null);
+  var cfg = null;
+  var configLoadError = null;
 
   // ── ELEMENT CACHE ─────────────────────────────────────────────────
   var els = {};
@@ -404,7 +403,44 @@ body.sleep-active #artMode{filter:brightness(.76)}
       }
     });
   }
-  tvSecretWarnings(cfg, '');
+
+  async function fetchRequiredText(path) {
+    var res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) throw new Error(path + ' returned ' + res.status);
+    return res.text();
+  }
+  async function fetchRequiredJson(path) {
+    return JSON.parse(await fetchRequiredText(path));
+  }
+  async function loadJsonConfig() {
+    var adapter = window.FamFrameDashboardAdapter;
+    if (!adapter || !adapter.toDashboardConfig) throw new Error('JSON adapter unavailable.');
+    var payload = {
+      family: await fetchRequiredJson('../config/family.json'),
+      routines: await fetchRequiredJson('../config/routines.json'),
+      routes: await fetchRequiredJson('../config/routes.json'),
+      display: await fetchRequiredJson('../config/display.json'),
+      modules: await fetchRequiredJson('../config/modules.json'),
+      messagesMarkdown: await fetchRequiredText('../content/messages.md'),
+      quotesMarkdown: await fetchRequiredText('../content/quotes.md')
+    };
+    var adapted = adapter.toDashboardConfig(payload);
+    if (!adapted) throw new Error('JSON adapter returned no config.');
+    adapted.__source = 'json';
+    return adapted;
+  }
+  async function loadConfig() {
+    try {
+      cfg = await loadJsonConfig();
+    } catch (e) {
+      configLoadError = e;
+      console.warn('Fam Frame JSON config unavailable', e);
+      cfg = null;
+    }
+    tvSecretWarnings(cfg, '');
+    applyTheme();
+    return cfg;
+  }
 
   function themeId() {
     var theme = val(['theme'], val(['display','theme'], {}));
@@ -418,10 +454,9 @@ body.sleep-active #artMode{filter:brightness(.76)}
   function applyTheme() {
     if (document.body) document.body.setAttribute('data-theme', themeId());
   }
-  applyTheme();
 
-  // ConfigService is the boundary for the future JSON migration.
-  // TODO: replace DASHBOARD_CONFIG reads with /config/*.json and /content/*.md.
+  // ConfigService reads the safe dashboard shape generated from /config/*.json
+  // and /content/*.md by config/dashboard-adapter.js.
   var ConfigService = {
     getFamily: function () { return val(['family'], {}); },
     getScenes: function () { return val(['modes'], {}); },
@@ -919,6 +954,8 @@ body.sleep-active #artMode{filter:brightness(.76)}
 
   // ── EVENING TIMELINE ──────────────────────────────────────────────
   function renderTimeline(t) {
+    var routineLabel = currentRoutine && currentRoutine.label ? currentRoutine.label : 'Evening';
+    if (id('eTitle')) id('eTitle').innerHTML = routineLabel;
     var tl       = currentRoutine && currentRoutine.timelineItems ? currentRoutine.timelineItems : ConfigService.getEveningTimeline();
     var n        = mins(t.hour, t.minute);
     var html     = '';
@@ -1022,7 +1059,11 @@ body.sleep-active #artMode{filter:brightness(.76)}
 
   // ── TICK ──────────────────────────────────────────────────────────
   function tick() {
-    if (!cfg) { id('configError').className += ' active'; return; }
+    if (!cfg) {
+      id('configError').className += ' active';
+      if (configLoadError) console.warn('Config load failed', configLoadError);
+      return;
+    }
     var now = zonedNow();
     updateDrive(now);
     var m   = currentMode(now);
@@ -1167,29 +1208,34 @@ body.sleep-active #artMode{filter:brightness(.76)}
   }
 
   // ── INIT ──────────────────────────────────────────────────────────
-  fitStage();
-  window.addEventListener('resize', fitStage);
-  window.addEventListener('orientationchange', fitStage);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', fitStage);
-    window.visualViewport.addEventListener('scroll', fitStage);
-  }
+  async function init() {
+    fitStage();
+    window.addEventListener('resize', fitStage);
+    window.addEventListener('orientationchange', fitStage);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitStage);
+      window.visualViewport.addEventListener('scroll', fitStage);
+    }
 
-  tick();
-  fetchWeather();
-  fetchQuote();
-  renderCalendar('today', 'mCalEvents');
-  renderCalendar('tomorrow', 'eCalEvents');
-
-  setInterval(tick,         1000);
-  setInterval(fetchWeather, 10 * 60 * 1000);
-  setInterval(fetchQuote,   60 * 60 * 1000);
-  setInterval(pulseQuote,   60 * 1000);
-  setInterval(applySleepDrift, 5 * 60 * 1000);
-  setInterval(function () {
+    await loadConfig();
+    tick();
+    fetchWeather();
+    fetchQuote();
     renderCalendar('today', 'mCalEvents');
     renderCalendar('tomorrow', 'eCalEvents');
-  }, 15 * 60 * 1000);
+
+    setInterval(tick,         1000);
+    setInterval(fetchWeather, 10 * 60 * 1000);
+    setInterval(fetchQuote,   60 * 60 * 1000);
+    setInterval(pulseQuote,   60 * 1000);
+    setInterval(applySleepDrift, 5 * 60 * 1000);
+    setInterval(function () {
+      renderCalendar('today', 'mCalEvents');
+      renderCalendar('tomorrow', 'eCalEvents');
+    }, 15 * 60 * 1000);
+  }
+
+  init();
 
 })();
 </script>

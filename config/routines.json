@@ -18,7 +18,7 @@
       },
       "window": {
         "start": "06:00",
-        "end": "13:00"
+        "end": "12:35"
       },
       "display": {
         "scene": "departure",
@@ -110,7 +110,7 @@
       ]
     },
     {
-      "id": "routine-school-pickup-1778097357000",
+      "id": "routine-pickup-f4fe9287",
       "label": "Pickup",
       "type": "departure",
       "enabled": true,
@@ -137,11 +137,11 @@
         "arriveBy": "16:15",
         "deadline": "16:30"
       },
-      "routeId": "route-pickup-1778097357000",
-      "listId": "list-school-pickup-1778097357000"
+      "routeId": "route-pickup-f4fe9287",
+      "listId": "list-pickup-f4fe9287"
     },
     {
-      "id": "routine-school-pickup-1778124119125",
+      "id": "routine-pickup-1bec9150",
       "label": "Swimming",
       "type": "departure",
       "enabled": true,
@@ -168,11 +168,11 @@
         "arriveBy": "14:45",
         "deadline": "14:50"
       },
-      "routeId": "route-pickup-1778124119125",
-      "listId": "list-school-pickup-1778124119125"
+      "routeId": "route-pickup-1bec9150",
+      "listId": "list-pickup-1bec9150"
     },
     {
-      "id": "routine-school-pickup-1778166294260",
+      "id": "routine-pickup-e4a5f870",
       "label": "Mothers Day Tea",
       "type": "departure",
       "enabled": true,
@@ -195,8 +195,8 @@
         "arriveBy": "14:45",
         "deadline": "14:50"
       },
-      "routeId": "route-pickup-1778166294260",
-      "listId": "list-school-pickup-1778166294260"
+      "routeId": "route-pickup-e4a5f870",
+      "listId": "list-pickup-e4a5f870"
     }
   ],
   "lists": [
@@ -249,7 +249,7 @@
       ]
     },
     {
-      "id": "list-school-pickup-1778097357000",
+      "id": "list-pickup-f4fe9287",
       "label": "Pickup list",
       "items": [
         {
@@ -276,7 +276,7 @@
       ]
     },
     {
-      "id": "list-school-pickup-1778124119125",
+      "id": "list-pickup-1bec9150",
       "label": "Swimming list",
       "items": [
         {
@@ -303,7 +303,7 @@
       ]
     },
     {
-      "id": "list-school-pickup-1778166294260",
+      "id": "list-pickup-e4a5f870",
       "label": "Mothers Day Tea list",
       "items": [
         {

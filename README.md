@@ -30,11 +30,10 @@ Do not commit:
 
 Current MVP credential storage:
 - credentials live in the browser's localStorage on the admin device only
-- `dashboard-config.js` is safe display data only
+- the TV dashboard reads safe JSON/content files only
 - commute data in the repo should be derived values such as duration, status, labels, and timestamps
 
 Future phase:
-- Move from `dashboard-config.js` to JSON config files.
 - Consider Cloudflare Worker or another edge proxy for Maps and write operations.
 
 ## JSON config foundation
@@ -49,7 +48,7 @@ The first JSON model files live in:
 - `content/messages.md`
 - `content/quotes.md`
 
-For now, `dashboard-config.js` remains the TV dashboard compatibility source. The JSON files are the cleaner admin/source model for the next migration pass.
+The TV dashboard and admin now use these files as the source of truth.
 
 `config/family.json` includes a stable family primary key:
 
@@ -69,4 +68,4 @@ The admin app is moving toward a routine model built from:
 - itinerary segments with a destination, optional stops, and per-stop buffer minutes
 - list templates that can be adopted by segments and assigned to family members
 
-Until the JSON migration is complete, `dashboard-config.js` remains the compatibility layer. Route addresses and private Places details should stay local to the admin app. The repo may store safe display data such as `routeLabel`, `stopCount`, derived commute duration, traffic status, and freshness timestamps.
+Route addresses and private Places details should stay local to the admin app. The repo may store safe display data such as `routeLabel`, `stopCount`, derived commute duration, traffic status, freshness timestamps, and weather coordinates.

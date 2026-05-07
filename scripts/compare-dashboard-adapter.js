@@ -14,30 +14,6 @@ function readText(file) {
   return fs.readFileSync(path.join(root, file), 'utf8');
 }
 
-function loadCurrentDashboardConfig() {
-  return require(path.join(root, 'dashboard-config.js'));
-}
-
-function pick(obj, paths) {
-  const out = {};
-  paths.forEach((keyPath) => {
-    const parts = keyPath.split('.');
-    let source = obj;
-    let target = out;
-    parts.forEach((part, index) => {
-      if (source == null || !(part in source)) return;
-      if (index === parts.length - 1) {
-        target[part] = source[part];
-        return;
-      }
-      target[part] = target[part] || {};
-      target = target[part];
-      source = source[part];
-    });
-  });
-  return out;
-}
-
 function summarize(config) {
   return {
     timeZone: config.time && config.time.timeZone,
@@ -60,22 +36,7 @@ const adapted = toDashboardConfig({
   quotesMarkdown: readText('content/quotes.md'),
 });
 
-const current = loadCurrentDashboardConfig();
-const comparisonPaths = [
-  'time.timeZone',
-  'time.locale',
-  'time.hour12',
-  'modes',
-  'schoolDays',
-  'scenarios',
-  'weekend',
-];
-
 console.log(JSON.stringify({
   adapted: summarize(adapted),
-  current: summarize(current),
-  comparableShape: {
-    adapted: pick(adapted, comparisonPaths),
-    current: pick(current, comparisonPaths),
-  },
+  source: 'config/*.json + content/*.md',
 }, null, 2));

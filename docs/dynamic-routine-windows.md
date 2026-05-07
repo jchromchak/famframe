@@ -66,4 +66,4 @@ This keeps overrides contextual. For example, an early-dismissal override can pa
 
 ## Dashboard Boundary
 
-The dashboard receives a concrete `window.start` and `window.end` in the compatibility output. It does not need to understand auto-window policy.
+The dashboard receives a concrete `window.start` and `window.end` in the normalized adapter output. It does not need to understand auto-window policy.

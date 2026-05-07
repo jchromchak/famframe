@@ -2,7 +2,7 @@
  * JSON-to-dashboard compatibility adapter.
  *
  * This is a pure boundary layer: it maps safe JSON config/content files into
- * the current DASHBOARD_CONFIG shape without changing dashboard runtime reads.
+ * the normalized dashboard runtime shape.
  */
 (function (root, factory) {
   if (typeof module !== 'undefined' && module.exports) {

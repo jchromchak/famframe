@@ -29,9 +29,9 @@ Supported fields:
 - `id`: a stable theme id. Initial values are `default-editorial` and `ambient-evening`.
 - `customBackground`: optional user-selected hex color. When present, the system derives the remaining tokens instead of exposing raw disconnected color controls.
 - `derived`: true when the effective token set was generated from a custom background.
-- `accent`: optional explicit accent during the compatibility phase. New UI should prefer derived theme tokens over reading this directly.
+- `accent`: optional explicit accent. New UI should prefer derived theme tokens over reading this directly.
 
-The TV may receive an expanded safe theme object later, but JSON source should stay compact until the dashboard reads JSON directly.
+The TV may receive an expanded safe theme object later, but JSON source should stay compact.
 
 ## Token Contract
 
@@ -117,6 +117,6 @@ Custom background should be a single color input with a preview. The admin shoul
 
 ## Runtime Boundary
 
-During the compatibility phase, `dashboard-config.js` can continue using existing hard-coded CSS. Theme implementation should arrive as a narrow runtime layer that maps the resolved theme tokens to CSS custom properties. The adapter may pass safe theme metadata through once the dashboard has tokenized CSS.
+Theme implementation should stay as a narrow runtime layer that maps resolved theme tokens to CSS custom properties. The adapter passes safe theme metadata through to the dashboard.
 
 The theme system should not be coupled to routine layering, route refresh, PAT storage, Maps keys, or private context capture.

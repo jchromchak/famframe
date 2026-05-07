@@ -10,7 +10,7 @@
       },
       "destination": {
         "type": "saved-place",
-        "placeId": "place-school",
+        "placeId": "place-7f746591",
         "label": "School"
       },
       "stops": [],
@@ -25,7 +25,7 @@
       }
     },
     {
-      "id": "route-pickup-1778097357000",
+      "id": "route-pickup-f4fe9287",
       "label": "Home to pickup",
       "origin": {
         "type": "home",
@@ -33,7 +33,7 @@
       },
       "destination": {
         "type": "saved-place",
-        "placeId": "place-pickup",
+        "placeId": "place-3ec051a5",
         "label": "Pickup"
       },
       "stops": [],
@@ -48,7 +48,7 @@
       }
     },
     {
-      "id": "route-pickup-1778124119125",
+      "id": "route-pickup-1bec9150",
       "label": "Home to pickup",
       "origin": {
         "type": "home",
@@ -56,12 +56,12 @@
       },
       "destination": {
         "type": "saved-place",
-        "placeId": "place-pickup",
+        "placeId": "place-3ec051a5",
         "label": "Pickup"
       },
       "stops": [
         {
-          "id": "pickup-stop",
+          "id": "stop-2c7e2365",
           "label": "Pickup stop",
           "bufferMinutes": 5
         }
@@ -77,7 +77,7 @@
       }
     },
     {
-      "id": "route-pickup-1778166294260",
+      "id": "route-pickup-e4a5f870",
       "label": "Home to pickup",
       "origin": {
         "type": "home",
@@ -85,12 +85,12 @@
       },
       "destination": {
         "type": "saved-place",
-        "placeId": "place-pickup",
+        "placeId": "place-3ec051a5",
         "label": "Pickup"
       },
       "stops": [
         {
-          "id": "pickup-stop",
+          "id": "stop-2c7e2365",
           "label": "Pickup stop",
           "bufferMinutes": 5
         }
