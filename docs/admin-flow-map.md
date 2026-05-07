@@ -119,6 +119,46 @@ flowchart LR
 
 The goal is not a flashy carousel. The goal is that the phone always feels like it is showing **one thing**: one routine, one aspect, one save path.
 
+## Layered Routine Storyboard
+
+The routine IA should eventually reconcile two viewing modes:
+
+- **Week overview**: a glanceable always-of-week board showing inherited weekly routines and visible special add-ons.
+- **Routine planner canvas**: a focused routine design surface for one person, context, or pattern.
+
+The storyboard direction has four UI levels:
+
+1. **Always of Week**
+   High-level weekly overview. Shows the week at a glance, with inherited repeatable routines and marked special add-ons.
+
+2. **Week Selector**
+   Switches between different week contexts, such as this week, next week, summer vacation, or school break.
+
+3. **Pattern Simple**
+   Defines broad recurring patterns such as weekdays vs. weekend. This should feel like activating a reusable family rhythm, not rebuilding each day.
+
+4. **Routine Planner Canvas**
+   Designs the routines for a person or context. This is where routine cards, lists, route needs, and theme can be adjusted in a focused frame.
+
+```mermaid
+flowchart TD
+  WeekOverview["Always of Week<br/>glanceable weekly overview"] --> WeekSelector["Week Selector<br/>this week / next week / vacation / break"]
+  WeekSelector --> PatternSimple["Pattern Simple<br/>weekday vs weekend rhythm"]
+  PatternSimple --> PlannerCanvas["Routine Planner Canvas<br/>person or context"]
+
+  Baseline["Inherited weekly routines"] --> WeekOverview
+  AddOns["Special add-ons"] --> WeekOverview
+  PatternSimple --> Baseline
+  PlannerCanvas --> Baseline
+  PlannerCanvas --> AddOns
+```
+
+This means the carousel idea should not only be horizontal navigation for cards. It should support the deeper hierarchy:
+
+`week context -> pattern -> routine canvas -> add-ons`
+
+The admin should still begin simply, likely with `This Week` and `Routines`, and only reveal pattern/week-context machinery as the family actually needs it.
+
 ## Theme Placement
 
 Theme should stay attached to `routine.display`, because it is part of how that routine appears on the TV.
