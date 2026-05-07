@@ -2697,6 +2697,28 @@ async function pullJsonModelFromGitHub(c) {
   pulled.quotesMarkdown = quotes ? quotes.content : '# Quotes\n';
   return pulled;
 }
+function comparableConfigId(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/^(routine|route|list)[-_]+/, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+function routineIdSet(source) {
+  return new Set(((source && source.routines) || [])
+    .map(routine => comparableConfigId(routine && (routine.id || routine.label)))
+    .filter(Boolean));
+}
+function richerDashboardRoutineGap(dashboardCfg, adaptedCfg) {
+  const dashboardRoutines = (dashboardCfg && dashboardCfg.routines) || [];
+  const adaptedRoutines = (adaptedCfg && adaptedCfg.routines) || [];
+  const adaptedIds = routineIdSet(adaptedCfg);
+  const missing = dashboardRoutines
+    .filter(routine => !adaptedIds.has(comparableConfigId(routine && (routine.id || routine.label))))
+    .map(routine => (routine && (routine.label || routine.id)) || 'Unnamed routine');
+  if (missing.length) return missing;
+  if (dashboardRoutines.length > adaptedRoutines.length) return ['additional dashboard routines'];
+  return [];
+}
 function configToJS() {
   ensureJsonModel();
   const adapted = jsonToDashboardConfig(jsonModel);
@@ -2740,6 +2762,30 @@ async function pullFromGitHub() {
       jsonModel = await pullJsonModelFromGitHub(c);
       const adapted = jsonToDashboardConfig(jsonModel);
       if (!adapted) throw new Error('JSON adapter unavailable.');
+      let dashboardFile = null;
+      try {
+        dashboardFile = await fetchGitHubFile(c, c.path, { optional:true });
+      } catch(dashboardErr) {
+        console.warn('Dashboard compatibility config comparison unavailable', dashboardErr);
+      }
+      if (dashboardFile) {
+        const dashboardConfig = parseConfigJS(dashboardFile.content);
+        const missingRoutines = richerDashboardRoutineGap(dashboardConfig, adapted);
+        if (missingRoutines.length) {
+          config = dashboardConfig;
+          lastRemoteSha = dashboardFile.sha;
+          localStorage.setItem(KEYS.sha, dashboardFile.sha);
+          ensureModel();
+          syncJsonFromDashboard();
+          persistJsonModel();
+          localStorage.setItem(KEYS.config, JSON.stringify(config));
+          renderAll();
+          setSyncStatus('synced', 'PULLED');
+          showResult(el, true, '✓ Pulled dashboard-config.js because it has routines not yet represented in JSON: ' + missingRoutines.join(', ') + '. Next save will write them back into the JSON files.');
+          toast('Dashboard config pulled ✓');
+          return;
+        }
+      }
       config = adapted;
       ensureModel();
       persistJsonModel();
