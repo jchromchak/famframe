@@ -4,20 +4,25 @@
   "displayName": "Fam Frame",
   "members": [
     {
-      "id": "member-adult-1",
-      "displayName": "Adult 1",
-      "role": "adult"
+      "id": "member_child_1",
+      "displayName": "Kid 1",
+      "role": "child",
+      "age": null
     },
     {
-      "id": "member-child-1",
-      "displayName": "Kid 1",
-      "role": "child"
+      "id": "member_child_2",
+      "displayName": "Kid 2",
+      "role": "child",
+      "age": null
     }
   ],
   "home": {
     "label": "Home",
-    "city": "Home city",
+    "city": "Mount Pleasant, SC",
     "timeZone": "America/New_York",
-    "coordinates": null
+    "coordinates": {
+      "lat": 32.9022832,
+      "lon": -79.78906090000001
+    }
   }
 }

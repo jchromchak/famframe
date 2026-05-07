@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-07T15:22:29.002Z
+// Last updated: 2026-05-07T17:28:35.006Z
+// Generated from JSON admin source via config/dashboard-adapter.js
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -23,6 +24,10 @@ var DASHBOARD_CONFIG = {
       "activeBeforeMin": 8,
       "doneAfterMin": 2
     }
+  },
+  "theme": {
+    "id": "default-editorial",
+    "accent": "#d99a3d"
   },
   "family": {
     "kids": [
@@ -52,7 +57,7 @@ var DASHBOARD_CONFIG = {
   "modes": {
     "morning": {
       "start": "06:00",
-      "end": "12:35"
+      "end": "13:00"
     },
     "evening": {
       "start": "17:00",
@@ -68,7 +73,7 @@ var DASHBOARD_CONFIG = {
   ],
   "routines": [
     {
-      "id": "school_morning",
+      "id": "school-morning",
       "label": "School morning",
       "type": "departure",
       "enabled": true,
@@ -81,19 +86,19 @@ var DASHBOARD_CONFIG = {
       ],
       "window": {
         "start": "06:00",
-        "end": "12:35"
+        "end": "13:00"
       },
       "primaryTime": "06:45",
       "targetTime": "07:20",
       "deadline": "07:25",
-      "routeId": "school_morning",
+      "routeId": "school-morning",
       "display": {
         "scene": "departure",
         "priority": 80
       },
       "segments": [
         {
-          "id": "school_run",
+          "id": "school-morning-run",
           "label": "Leave for school",
           "routeLabel": "US-17 N to School",
           "destinationLabel": "School",
@@ -174,7 +179,7 @@ var DASHBOARD_CONFIG = {
         {
           "id": "home",
           "label": "Home & decompress",
-          "icon": "🏠",
+          "icon": "",
           "start": "17:30",
           "durationMin": 30,
           "note": "Snack, unwind"
@@ -182,7 +187,7 @@ var DASHBOARD_CONFIG = {
         {
           "id": "homework",
           "label": "Homework",
-          "icon": "📚",
+          "icon": "",
           "start": "18:00",
           "durationMin": 30,
           "note": "Both kids"
@@ -190,7 +195,7 @@ var DASHBOARD_CONFIG = {
         {
           "id": "dinner",
           "label": "Dinner",
-          "icon": "🍽",
+          "icon": "",
           "start": "18:30",
           "durationMin": 30,
           "note": "Together"
@@ -198,7 +203,7 @@ var DASHBOARD_CONFIG = {
         {
           "id": "baths",
           "label": "Baths",
-          "icon": "🛁",
+          "icon": "",
           "start": "19:15",
           "durationMin": 30,
           "note": ""
@@ -206,7 +211,7 @@ var DASHBOARD_CONFIG = {
         {
           "id": "reading",
           "label": "Reading",
-          "icon": "📖",
+          "icon": "",
           "start": "19:45",
           "durationMin": 30,
           "note": "30 min each"
@@ -214,7 +219,7 @@ var DASHBOARD_CONFIG = {
         {
           "id": "winddown",
           "label": "Wind down",
-          "icon": "🌙",
+          "icon": "",
           "start": "20:15",
           "durationMin": 15,
           "note": "No screens"
@@ -222,7 +227,7 @@ var DASHBOARD_CONFIG = {
         {
           "id": "bed",
           "label": "Lights out",
-          "icon": "💤",
+          "icon": "",
           "start": "20:30",
           "durationMin": 0,
           "note": "8:30 PM"
@@ -230,7 +235,7 @@ var DASHBOARD_CONFIG = {
       ]
     },
     {
-      "id": "school_pickup_1778097357000",
+      "id": "school-pickup-1778097357000",
       "label": "Pickup",
       "type": "departure",
       "enabled": true,
@@ -248,14 +253,14 @@ var DASHBOARD_CONFIG = {
       "primaryTime": "15:35",
       "targetTime": "16:15",
       "deadline": "16:30",
-      "routeId": "pickup_1778097357000",
+      "routeId": "pickup-1778097357000",
       "display": {
         "scene": "departure",
         "priority": 60
       },
       "segments": [
         {
-          "id": "pickup_run",
+          "id": "pickup-1778097357000-run",
           "label": "Leave for pickup",
           "routeLabel": "Home to pickup",
           "destinationLabel": "Pickup",
@@ -290,7 +295,7 @@ var DASHBOARD_CONFIG = {
       ]
     },
     {
-      "id": "school_pickup_1778124119125",
+      "id": "school-pickup-1778124119125",
       "label": "Swimming",
       "type": "departure",
       "enabled": true,
@@ -308,20 +313,20 @@ var DASHBOARD_CONFIG = {
       "primaryTime": "14:35",
       "targetTime": "14:45",
       "deadline": "14:50",
-      "routeId": "pickup_1778124119125",
+      "routeId": "pickup-1778124119125",
       "display": {
         "scene": "departure",
         "priority": 60
       },
       "segments": [
         {
-          "id": "pickup_run",
+          "id": "pickup-1778124119125-run",
           "label": "Leave for pickup",
           "routeLabel": "Home to pickup",
           "destinationLabel": "Pickup",
           "stops": [
             {
-              "id": "pickup_stop",
+              "id": "pickup-stop",
               "label": "Pickup stop",
               "bufferMin": 5
             }
@@ -356,7 +361,7 @@ var DASHBOARD_CONFIG = {
       ]
     },
     {
-      "id": "school_pickup_1778166294260",
+      "id": "school-pickup-1778166294260",
       "label": "Mothers Day Tea",
       "type": "departure",
       "enabled": true,
@@ -365,25 +370,25 @@ var DASHBOARD_CONFIG = {
       ],
       "window": {
         "start": "11:15",
-        "end": "12:35"
+        "end": "15:15"
       },
       "primaryTime": "14:35",
       "targetTime": "14:45",
       "deadline": "14:50",
-      "routeId": "pickup_1778166294260",
+      "routeId": "pickup-1778166294260",
       "display": {
         "scene": "departure",
         "priority": 60
       },
       "segments": [
         {
-          "id": "pickup_run",
+          "id": "pickup-1778166294260-run",
           "label": "Leave for pickup",
           "routeLabel": "Home to pickup",
           "destinationLabel": "Pickup",
           "stops": [
             {
-              "id": "pickup_stop",
+              "id": "pickup-stop",
               "label": "Pickup stop",
               "bufferMin": 5
             }
@@ -469,7 +474,7 @@ var DASHBOARD_CONFIG = {
     {
       "id": "home",
       "label": "Home & decompress",
-      "icon": "🏠",
+      "icon": "",
       "start": "17:30",
       "durationMin": 30,
       "note": "Snack, unwind"
@@ -477,7 +482,7 @@ var DASHBOARD_CONFIG = {
     {
       "id": "homework",
       "label": "Homework",
-      "icon": "📚",
+      "icon": "",
       "start": "18:00",
       "durationMin": 30,
       "note": "Both kids"
@@ -485,7 +490,7 @@ var DASHBOARD_CONFIG = {
     {
       "id": "dinner",
       "label": "Dinner",
-      "icon": "🍽",
+      "icon": "",
       "start": "18:30",
       "durationMin": 30,
       "note": "Together"
@@ -493,7 +498,7 @@ var DASHBOARD_CONFIG = {
     {
       "id": "baths",
       "label": "Baths",
-      "icon": "🛁",
+      "icon": "",
       "start": "19:15",
       "durationMin": 30,
       "note": ""
@@ -501,7 +506,7 @@ var DASHBOARD_CONFIG = {
     {
       "id": "reading",
       "label": "Reading",
-      "icon": "📖",
+      "icon": "",
       "start": "19:45",
       "durationMin": 30,
       "note": "30 min each"
@@ -509,7 +514,7 @@ var DASHBOARD_CONFIG = {
     {
       "id": "winddown",
       "label": "Wind down",
-      "icon": "🌙",
+      "icon": "",
       "start": "20:15",
       "durationMin": 15,
       "note": "No screens"
@@ -517,7 +522,7 @@ var DASHBOARD_CONFIG = {
     {
       "id": "bed",
       "label": "Lights out",
-      "icon": "💤",
+      "icon": "",
       "start": "20:30",
       "durationMin": 0,
       "note": "8:30 PM"
@@ -581,67 +586,58 @@ var DASHBOARD_CONFIG = {
     "showWeather": true
   },
   "commute": {
-    "activeRouteId": "pickup_1778166294260",
+    "activeRouteId": "school-morning",
     "routes": {
       "school-morning": {
         "provider": "google-maps",
         "routeLabel": "US-17 N to School",
         "stopCount": 0,
-        "durationMinutes": 31,
-        "trafficStatus": "light",
-        "updatedAt": "2026-05-07T15:20:57.485Z",
-        "expiresAt": "2026-05-07T15:35:57.485Z",
-        "stops": [],
-        "bufferMinutes": 0
-      },
-      "school_morning": {
-        "provider": "google-maps",
         "durationMinutes": 26,
         "trafficStatus": "light",
         "updatedAt": "2026-05-07T10:28:43.951Z",
         "expiresAt": "2026-05-07T10:43:43.951Z",
-        "routeLabel": "US-17 N to School",
-        "stopCount": 0,
         "stops": [],
-        "bufferMinutes": 0
+        "bufferMinutes": 5
       },
-      "pickup_1778097357000": {
+      "pickup-1778097357000": {
         "provider": "google-maps",
+        "routeLabel": "Home to pickup",
+        "stopCount": 0,
         "durationMinutes": 28,
         "trafficStatus": "moderate",
         "updatedAt": "2026-05-06T19:57:40.329Z",
         "expiresAt": "2026-05-06T20:12:40.329Z",
-        "routeLabel": "Home to pickup",
-        "stopCount": 0,
-        "stops": []
+        "stops": [],
+        "bufferMinutes": 5
       },
-      "pickup_1778124119125": {
+      "pickup-1778124119125": {
         "provider": "",
+        "routeLabel": "Home to pickup",
+        "stopCount": 1,
         "durationMinutes": null,
         "trafficStatus": "",
         "updatedAt": "",
         "expiresAt": "",
-        "routeLabel": "Home to pickup",
-        "stopCount": 1,
         "stops": [
           {
-            "id": "pickup_stop",
+            "id": "pickup-stop",
             "label": "Pickup stop",
             "bufferMin": 5
           }
-        ]
+        ],
+        "bufferMinutes": 5
       },
-      "pickup_1778166294260": {
+      "pickup-1778166294260": {
         "provider": "google-maps",
-        "durationMinutes": 30,
-        "trafficStatus": "light",
-        "updatedAt": "2026-05-07T15:22:28.724Z",
-        "expiresAt": "2026-05-07T15:37:28.724Z",
         "routeLabel": "Home to pickup",
         "stopCount": 1,
+        "durationMinutes": 30,
+        "trafficStatus": "light",
+        "updatedAt": "2026-05-07T17:28:34.992Z",
+        "expiresAt": "2026-05-07T17:43:34.992Z",
         "stops": [
           {
-            "id": "pickup_stop",
+            "id": "pickup-stop",
             "label": "Pickup stop",
             "bufferMin": 5
           }
