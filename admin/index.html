@@ -484,6 +484,18 @@ select {
 .routine-day { display:inline-flex; align-items:center; gap:5px; font-size:10px; letter-spacing:.12em; color:var(--sub); border:1px solid var(--border); border-radius:999px; padding:6px 8px; }
 .routine-day input { margin:0; }
 .routine-list-card { background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+.route-line { position:relative; display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+.route-line::before { content:""; position:absolute; left:15px; top:18px; bottom:18px; width:1px; background:var(--border); }
+.route-node { position:relative; display:grid; grid-template-columns:32px 1fr; gap:10px; align-items:start; }
+.route-dot { width:30px; height:30px; border:1px solid var(--border); border-radius:999px; background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--sub); font-size:10px; letter-spacing:.08em; z-index:1; }
+.route-dot.start { border-radius:7px; color:var(--gold); border-color:rgba(200,169,110,.35); background:var(--gold-dim); }
+.route-dot.stop { color:var(--text); background:rgba(255,255,255,.035); }
+.route-dot.end { width:18px; height:18px; margin:6px; background:var(--gold); border-color:var(--gold); box-shadow:0 0 14px rgba(200,169,110,.32); }
+.route-node-card { background:rgba(255,255,255,.02); border:1px solid var(--border); border-radius:6px; padding:10px; min-width:0; }
+.route-node-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.route-node-title { font-family:var(--serif); font-size:17px; color:var(--text); }
+.route-node-meta { font-size:9px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; margin-top:2px; }
+.route-stop-grid { display:grid; grid-template-columns:1fr 88px; gap:8px; }
 .small-btn {
   background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
   color: var(--sub); font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
@@ -1006,7 +1018,7 @@ const DEFAULT_CONFIG = {
       deadline: '13:25',
       routeId: 'school-morning',
       display: { scene: 'departure', priority: 80 },
-      segments: [{ id:'school-run', label:'Leave for school', routeLabel:'US-17 N to School', destinationLabel:'School', stopCount:0, bufferMin:5, fallbackDriveMin:22 }],
+      segments: [{ id:'school-run', label:'Leave for school', routeLabel:'US-17 N to School', destinationLabel:'School', stops:[], stopCount:0, bufferMin:5, fallbackDriveMin:22 }],
       listItems: [
         { id:'breakfast', label:'Breakfast', icon:'breakfast', targetMin:-40 },
         { id:'dressed', label:'Get dressed', icon:'dressed', targetMin:-30 },
@@ -1028,7 +1040,7 @@ const DEFAULT_CONFIG = {
       deadline: '14:50',
       routeId: 'school-pickup',
       display: { scene: 'departure', priority: 70 },
-      segments: [{ id:'pickup-run', label:'Leave for pickup', routeLabel:'Home to pickup', destinationLabel:'Pickup', stopCount:1, bufferMin:5, fallbackDriveMin:18 }],
+      segments: [{ id:'pickup-run', label:'Leave for pickup', routeLabel:'Home to pickup', destinationLabel:'Pickup', stops:[{ id:'school-stop', label:'School pickup', bufferMin:5 }], stopCount:1, bufferMin:5, fallbackDriveMin:18 }],
       listItems: [
         { id:'keys', label:'Keys and wallet', icon:'backpack', targetMin:-10 },
         { id:'water', label:'Water bottles', icon:'breakfast', targetMin:-8 },
@@ -1121,6 +1133,9 @@ const CredentialStore = {
   routeKey(routeId, field) { return KEYS.routeLocal + slug(routeId || 'route', 'route') + '_' + field; },
   getRouteField(routeId, field) { return localStorage.getItem(this.routeKey(routeId, field)) || ''; },
   setRouteField(routeId, field, value) { localStorage.setItem(this.routeKey(routeId, field), value || ''); },
+  routeStopKey(routeId, stopId) { return KEYS.routeLocal + slug(routeId || 'route', 'route') + '_stop_' + slug(stopId || 'stop', 'stop'); },
+  getRouteStopPlace(routeId, stopId) { return localStorage.getItem(this.routeStopKey(routeId, stopId)) || ''; },
+  setRouteStopPlace(routeId, stopId, value) { localStorage.setItem(this.routeStopKey(routeId, stopId), value || ''); },
 };
 
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
@@ -1185,6 +1200,7 @@ function defaultRoutinesFromLegacy() {
         label: 'Leave for school',
         routeLabel: schoolRoute.routeLabel || config.family.location.schoolRoute || config.family.location.school || 'to School',
         destinationLabel: 'School',
+        stops: Array.isArray(schoolRoute.stops) ? schoolRoute.stops : [],
         stopCount: Number(schoolRoute.stopCount || 0),
         bufferMin: Number(s.carBufferMin || 5),
         fallbackDriveMin: Number(s.driveMinEst || config.commute.defaultDriveMin || 0),
@@ -1221,16 +1237,8 @@ function normalizeRoutine(routine) {
     r.targetTime = toTime(r.targetTime, r.primaryTime);
     r.deadline = toTime(r.deadline, r.targetTime);
     r.routeId = slug(r.routeId || r.id, r.id);
-    r.segments = Array.isArray(r.segments) && r.segments.length ? r.segments : [{ id:r.id + '-segment', label:'Leave', routeLabel:'Route', destinationLabel:'Destination', stopCount:0, bufferMin:5, fallbackDriveMin:15 }];
-    r.segments = r.segments.map((seg, i) => ({
-      id: slug(seg.id || seg.label, r.id + '-segment-' + i),
-      label: seg.label || 'Leave',
-      routeLabel: seg.routeLabel || seg.destinationLabel || 'Route',
-      destinationLabel: seg.destinationLabel || 'Destination',
-      stopCount: Math.max(0, Math.floor(Number(seg.stopCount || 0))),
-      bufferMin: Math.max(0, Math.floor(Number(seg.bufferMin || 0))),
-      fallbackDriveMin: Math.max(0, Math.floor(Number(seg.fallbackDriveMin || 0))),
-    }));
+    r.segments = Array.isArray(r.segments) && r.segments.length ? r.segments : [{ id:r.id + '-segment', label:'Leave', routeLabel:'Route', destinationLabel:'Destination', stops:[], stopCount:0, bufferMin:5, fallbackDriveMin:15 }];
+    r.segments = r.segments.map((seg, i) => normalizeSegment(seg, r.id, i));
     r.listItems = Array.isArray(r.listItems) ? r.listItems.map((item, i) => ({
       id: slug(item.id || item.label, r.id + '-item-' + i),
       label: item.label || 'List item',
@@ -1243,6 +1251,33 @@ function normalizeRoutine(routine) {
     r.timelineItems = Array.isArray(r.timelineItems) ? r.timelineItems : [];
   }
   return r;
+}
+function normalizeSegment(seg, routineId, i) {
+  const s = seg && typeof seg === 'object' ? clone(seg) : {};
+  const legacyStopCount = Math.max(0, Math.floor(Number(s.stopCount || 0)));
+  let stops = Array.isArray(s.stops) ? s.stops : [];
+  if (!stops.length && legacyStopCount > 0) {
+    stops = Array.from({ length: legacyStopCount }, (_, stopIndex) => ({
+      id: 'stop-' + (stopIndex + 1),
+      label: stopIndex === 0 ? 'Pickup stop' : 'Stop ' + (stopIndex + 1),
+      bufferMin: Math.max(0, Math.floor(Number(s.bufferMin || 0))),
+    }));
+  }
+  stops = stops.map((stop, stopIndex) => ({
+    id: slug(stop.id || stop.label, 'stop-' + (stopIndex + 1)),
+    label: stop.label || 'Stop ' + (stopIndex + 1),
+    bufferMin: Math.max(0, Math.floor(Number(stop.bufferMin == null ? s.bufferMin || 0 : stop.bufferMin))),
+  }));
+  return {
+    id: slug(s.id || s.label, routineId + '-segment-' + i),
+    label: s.label || 'Leave',
+    routeLabel: s.routeLabel || s.destinationLabel || 'Route',
+    destinationLabel: s.destinationLabel || 'Destination',
+    stops,
+    stopCount: stops.length,
+    bufferMin: Math.max(0, Math.floor(Number(s.bufferMin || 0))),
+    fallbackDriveMin: Math.max(0, Math.floor(Number(s.fallbackDriveMin || 0))),
+  };
 }
 function syncLegacyFromRoutines() {
   const school = (config.routines || []).find(r => r.id === 'school-morning' && r.type === 'departure') || (config.routines || []).find(r => r.type === 'departure');
@@ -1274,6 +1309,11 @@ function syncLegacyFromRoutines() {
     }, config.commute.routes[r.routeId || r.id] || {}, {
       routeLabel: seg.routeLabel || r.label,
       stopCount: Number(seg.stopCount || 0),
+      stops: (seg.stops || []).map(stop => ({
+        id: stop.id,
+        label: stop.label,
+        bufferMin: Number(stop.bufferMin || 0),
+      })),
     });
   });
 }
@@ -1326,6 +1366,9 @@ function routeDestinationFor(routine) {
   const routeId = routine && (routine.routeId || routine.id);
   return CredentialStore.getRouteField(routeId, 'destination') ||
     (routine && routine.id === 'school-morning' ? CredentialStore.getCommuteDestination() : '');
+}
+function routeStopPlaceFor(routine, stop) {
+  return CredentialStore.getRouteStopPlace(routine && (routine.routeId || routine.id), stop && stop.id);
 }
 function cleanToken(value) {
   return String(value || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
@@ -1572,6 +1615,11 @@ function attachPlaceAutocomplete(maps, el) {
         if (routine.id === 'school-morning' && el.dataset.routeField === 'destination') CredentialStore.setCommuteDestination(value);
       }
     }
+    if (role === 'routine-stop') {
+      const routine = config.routines && config.routines[Number(el.dataset.routineIndex)];
+      const stopId = el.dataset.stopId || '';
+      if (routine && stopId) CredentialStore.setRouteStopPlace(routine.routeId || routine.id, stopId, value);
+    }
     if ((role === 'commute-origin' || (role === 'routine-route' && el.dataset.routeField === 'origin')) && place.geometry && place.geometry.location) {
       config.family.location.lat = place.geometry.location.lat();
       config.family.location.lon = place.geometry.location.lng();
@@ -1592,9 +1640,12 @@ async function updateDerivedCommute(opts = {}) {
     const routes = maps.importLibrary ? await maps.importLibrary('routes') : maps;
     const DistanceMatrixService = routes.DistanceMatrixService || maps.DistanceMatrixService;
     const service = new DistanceMatrixService();
+    const stops = Array.isArray(opts.stops) ? opts.stops : [];
+    const waypoints = stops.map(stop => stop.place).filter(Boolean);
+    const points = [origin].concat(waypoints, [destination]);
     const request = {
-      origins: [origin],
-      destinations: [destination],
+      origins: points.slice(0, -1),
+      destinations: points.slice(1),
       travelMode: maps.TravelMode.DRIVING,
       unitSystem: maps.UnitSystem.IMPERIAL,
       drivingOptions: {
@@ -1607,9 +1658,15 @@ async function updateDerivedCommute(opts = {}) {
       : await new Promise((resolve, reject) => {
           service.getDistanceMatrix(request, (res, status) => status === 'OK' ? resolve(res) : reject(new Error(status)));
         });
-    const result = response && response.rows && response.rows[0] && response.rows[0].elements && response.rows[0].elements[0];
-    if (!result || result.status !== 'OK') throw new Error((result && result.status) || 'No route');
-    const duration = result.duration_in_traffic || result.duration;
+    const legs = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const leg = response && response.rows && response.rows[i] && response.rows[i].elements && response.rows[i].elements[i];
+      if (!leg || leg.status !== 'OK') throw new Error((leg && leg.status) || 'No route');
+      legs.push(leg);
+    }
+    const trafficSeconds = legs.reduce((sum, leg) => sum + ((leg.duration_in_traffic || leg.duration || {}).value || 0), 0);
+    const normalSeconds = legs.reduce((sum, leg) => sum + ((leg.duration || {}).value || 0), 0);
+    const bufferMinutes = stops.reduce((sum, stop) => sum + Math.max(0, Number(stop.bufferMin || 0)), 0);
     const now = new Date();
     const expires = new Date(now.getTime() + 15 * 60 * 1000);
     const existingRoute = (config.commute.routes || {})[routeId] || {};
@@ -1618,9 +1675,11 @@ async function updateDerivedCommute(opts = {}) {
     config.commute.routes[routeId] = {
       provider: 'google-maps',
       routeLabel: opts.routeLabel || existingRoute.routeLabel || config.family.location.schoolRoute || config.family.location.school || 'Route',
-      stopCount: Number(opts.stopCount != null ? opts.stopCount : existingRoute.stopCount || 0),
-      durationMinutes: Math.max(1, Math.round(duration.value / 60)),
-      trafficStatus: trafficStatus(duration.value, result.duration && result.duration.value),
+      stopCount: stops.length,
+      stops: stops.map(stop => ({ id: stop.id, label: stop.label, bufferMin: Math.max(0, Number(stop.bufferMin || 0)) })),
+      bufferMinutes,
+      durationMinutes: Math.max(1, Math.round(trafficSeconds / 60) + bufferMinutes),
+      trafficStatus: trafficStatus(trafficSeconds, normalSeconds),
       updatedAt: now.toISOString(),
       expiresAt: expires.toISOString(),
     };
@@ -1688,6 +1747,33 @@ function routineRouteSummary(routine) {
   const stops = Number(seg.stopCount || 0);
   return `${seg.routeLabel || routine.label || 'Route'}${stops ? ' / ' + stops + ' stop' + (stops === 1 ? '' : 's') : ''}`;
 }
+function routineBufferSummary(routine) {
+  const seg = routine && routine.segments && routine.segments[0] ? routine.segments[0] : {};
+  const total = (seg.stops || []).reduce((sum, stop) => sum + Number(stop.bufferMin || 0), 0);
+  return total ? total + ' min buffers' : 'No stop buffers';
+}
+function routeStopRows(routine, routineIndex, seg) {
+  const stops = Array.isArray(seg.stops) ? seg.stops : [];
+  return stops.map((stop, stopIndex) => `
+    <div class="route-node">
+      <div class="route-dot stop">${stopIndex + 1}</div>
+      <div class="route-node-card">
+        <div class="route-node-head">
+          <div>
+            <div class="route-node-title">${html(stop.label || 'Stop ' + (stopIndex + 1))}</div>
+            <div class="route-node-meta">${Number(stop.bufferMin || 0)} min buffer</div>
+          </div>
+          <button class="small-btn danger" onclick="removeRoutineStop(${routineIndex}, ${stopIndex})">REMOVE</button>
+        </div>
+        <div class="form-grid">
+          <div><div class="field-label">Display label</div><input type="text" value="${html(stop.label || '')}" onchange="updateRoutineStop(${routineIndex}, ${stopIndex}, 'label', this.value)"></div>
+          <div><div class="field-label">Buffer min</div><input type="number" min="0" value="${Number(stop.bufferMin || 0)}" onchange="updateRoutineStop(${routineIndex}, ${stopIndex}, 'bufferMin', this.value)"></div>
+        </div>
+        <div style="margin-top:8px"><div class="field-label">Local place / address</div><input type="text" value="${html(routeStopPlaceFor(routine, stop))}" placeholder="Pickup location, errand, field, etc." data-place-autocomplete data-place-role="routine-stop" data-routine-index="${routineIndex}" data-stop-id="${html(stop.id)}" onchange="updateRoutineStopLocal(${routineIndex}, '${html(stop.id)}', this.value)"></div>
+      </div>
+    </div>
+  `).join('');
+}
 function renderRoutineEditor() {
   const el = document.getElementById('routineEditor');
   if (!el) return;
@@ -1718,6 +1804,7 @@ function renderRoutineEditor() {
             <span class="routine-pill ${routine.enabled !== false ? 'on' : ''}">${routine.enabled !== false ? 'Enabled' : 'Disabled'}</span>
             <span class="routine-pill">${html(routine.type || 'routine')}</span>
             <span class="routine-pill">${(routine.listItems || []).length} list items</span>
+            ${routine.type === 'departure' ? `<span class="routine-pill">${html(routineBufferSummary(routine))}</span>` : ''}
           </div>
         </div>
         <div class="routine-details">
@@ -1746,10 +1833,26 @@ function renderRoutineEditor() {
               <div><div class="field-label">Segment label</div><input type="text" value="${html(seg.label || '')}" onchange="updateRoutineSegment(${i}, 'label', this.value)"></div>
               <div><div class="field-label">Route label</div><input type="text" value="${html(seg.routeLabel || '')}" onchange="updateRoutineSegment(${i}, 'routeLabel', this.value)"></div>
               <div><div class="field-label">Destination</div><input type="text" value="${html(seg.destinationLabel || '')}" onchange="updateRoutineSegment(${i}, 'destinationLabel', this.value)"></div>
-              <div><div class="field-label">Stops</div><input type="number" min="0" value="${Number(seg.stopCount || 0)}" onchange="updateRoutineSegment(${i}, 'stopCount', this.value)"></div>
-              <div><div class="field-label">Buffer min</div><input type="number" min="0" value="${Number(seg.bufferMin || 0)}" onchange="updateRoutineSegment(${i}, 'bufferMin', this.value)"></div>
               <div><div class="field-label">Fallback drive</div><input type="number" min="0" value="${Number(seg.fallbackDriveMin || 0)}" onchange="updateRoutineSegment(${i}, 'fallbackDriveMin', this.value)"></div>
             </div>
+            <div class="route-line">
+              <div class="route-node">
+                <div class="route-dot start">HOME</div>
+                <div class="route-node-card">
+                  <div class="route-node-title">Start</div>
+                  <div class="route-node-meta">${html(routeOriginFor(routine) || 'Local origin not set')}</div>
+                </div>
+              </div>
+              ${routeStopRows(routine, i, seg)}
+              <div class="route-node">
+                <div class="route-dot end"></div>
+                <div class="route-node-card">
+                  <div class="route-node-title">${html(seg.destinationLabel || 'Destination')}</div>
+                  <div class="route-node-meta">${html(routeDestinationFor(routine) || 'Local destination not set')}</div>
+                </div>
+              </div>
+            </div>
+            <button class="small-btn" onclick="addRoutineStop(${i})" style="margin-top:12px">+ ADD STOP</button>
           </details>
           <details>
             <summary>Local route lookup</summary>
@@ -1801,7 +1904,7 @@ function addRoutine() {
     deadline: '14:50',
     routeId: 'pickup-' + Date.now(),
     display: { scene:'departure', priority: 60 },
-    segments: [{ id:'pickup-run', label:'Leave for pickup', routeLabel:'Home to pickup', destinationLabel:'Pickup', stopCount:1, bufferMin:5, fallbackDriveMin:18 }],
+    segments: [{ id:'pickup-run', label:'Leave for pickup', routeLabel:'Home to pickup', destinationLabel:'Pickup', stops:[{ id:'pickup-stop', label:'Pickup stop', bufferMin:5 }], stopCount:1, bufferMin:5, fallbackDriveMin:18 }],
     listItems: [
       { id:'keys', label:'Keys and wallet', icon:'backpack', targetMin:-10 },
       { id:'water', label:'Water bottles', icon:'breakfast', targetMin:-8 },
@@ -1835,6 +1938,44 @@ function updateRoutineSegment(i, key, value) {
   if (!r) return;
   r.segments = Array.isArray(r.segments) && r.segments.length ? r.segments : [{}];
   r.segments[0][key] = ['stopCount','bufferMin','fallbackDriveMin'].includes(key) ? Number(value) : value;
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function addRoutineStop(i) {
+  const r = config.routines[i];
+  if (!r) return;
+  r.segments = Array.isArray(r.segments) && r.segments.length ? r.segments : [{}];
+  const seg = r.segments[0];
+  seg.stops = Array.isArray(seg.stops) ? seg.stops : [];
+  const next = seg.stops.length + 1;
+  seg.stops.push({ id:'stop-' + next + '-' + Date.now(), label:'Stop ' + next, bufferMin:Number(seg.bufferMin || 5) });
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function updateRoutineStop(i, stopIndex, key, value) {
+  const r = config.routines[i];
+  if (!r || !r.segments || !r.segments[0]) return;
+  const seg = r.segments[0];
+  seg.stops = Array.isArray(seg.stops) ? seg.stops : [];
+  if (!seg.stops[stopIndex]) return;
+  seg.stops[stopIndex][key] = key === 'bufferMin' ? Number(value) : value;
+  config.routines[i] = normalizeRoutine(r);
+  saveConfig();
+  renderRoutineEditor();
+}
+function updateRoutineStopLocal(i, stopId, value) {
+  const r = config.routines[i];
+  if (!r) return;
+  CredentialStore.setRouteStopPlace(r.routeId || r.id, stopId, value);
+}
+function removeRoutineStop(i, stopIndex) {
+  const r = config.routines[i];
+  if (!r || !r.segments || !r.segments[0]) return;
+  const seg = r.segments[0];
+  seg.stops = Array.isArray(seg.stops) ? seg.stops : [];
+  seg.stops.splice(stopIndex, 1);
   config.routines[i] = normalizeRoutine(r);
   saveConfig();
   renderRoutineEditor();
@@ -2187,9 +2328,21 @@ async function updateRoutineMapsStatus(i) {
   const seg = (routine.segments || [])[0] || {};
   const origin = routeOriginFor(routine);
   const destination = routeDestinationFor(routine);
+  const stops = (seg.stops || []).map(stop => ({
+    id: stop.id,
+    label: stop.label,
+    bufferMin: Number(stop.bufferMin || 0),
+    place: routeStopPlaceFor(routine, stop),
+  }));
   if (!origin || !destination) {
     showResult(el, false, 'Add local origin and destination first.');
     toast('Route needs origin and destination', 'fail');
+    return;
+  }
+  const missingStop = stops.find(stop => !stop.place);
+  if (missingStop) {
+    showResult(el, false, 'Add a local place for ' + missingStop.label + ' first.');
+    toast('Route stop needs a place', 'fail');
     return;
   }
   showResult(el, true, 'Updating Maps status for ' + routine.label + '...');
@@ -2199,7 +2352,7 @@ async function updateRoutineMapsStatus(i) {
     origin,
     destination,
     routeLabel: seg.routeLabel || routine.label,
-    stopCount: Number(seg.stopCount || 0),
+    stops,
   });
   if (!ok) {
     showResult(el, false, 'Maps status unavailable. Check the Maps key, origin, and destination.');
