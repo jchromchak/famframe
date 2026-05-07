@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-06T20:03:26.458Z
+// Last updated: 2026-05-07T03:23:35.311Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -97,6 +97,7 @@ var DASHBOARD_CONFIG = {
           "label": "Leave for school",
           "routeLabel": "US-17 N to School",
           "destinationLabel": "School",
+          "stops": [],
           "stopCount": 0,
           "bufferMin": 5,
           "fallbackDriveMin": 28
@@ -258,6 +259,73 @@ var DASHBOARD_CONFIG = {
           "label": "Leave for pickup",
           "routeLabel": "Home to pickup",
           "destinationLabel": "Pickup",
+          "stops": [],
+          "stopCount": 0,
+          "bufferMin": 5,
+          "fallbackDriveMin": 18
+        }
+      ],
+      "listItems": [
+        {
+          "id": "keys",
+          "label": "Keys and wallet",
+          "icon": "backpack",
+          "targetMin": -10,
+          "assignee": ""
+        },
+        {
+          "id": "water",
+          "label": "Water bottles",
+          "icon": "breakfast",
+          "targetMin": -8,
+          "assignee": ""
+        },
+        {
+          "id": "car",
+          "label": "Get in the car",
+          "icon": "car",
+          "targetMin": 0,
+          "assignee": ""
+        }
+      ]
+    },
+    {
+      "id": "school_pickup_1778124119125",
+      "label": "Swimming",
+      "type": "departure",
+      "enabled": true,
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "window": {
+        "start": "14:15",
+        "end": "15:15"
+      },
+      "primaryTime": "14:35",
+      "targetTime": "14:45",
+      "deadline": "14:50",
+      "routeId": "pickup_1778124119125",
+      "display": {
+        "scene": "departure",
+        "priority": 60
+      },
+      "segments": [
+        {
+          "id": "pickup_run",
+          "label": "Leave for pickup",
+          "routeLabel": "Home to pickup",
+          "destinationLabel": "Pickup",
+          "stops": [
+            {
+              "id": "pickup_stop",
+              "label": "Pickup stop",
+              "bufferMin": 5
+            }
+          ],
           "stopCount": 1,
           "bufferMin": 5,
           "fallbackDriveMin": 18
@@ -458,7 +526,7 @@ var DASHBOARD_CONFIG = {
     "showWeather": true
   },
   "commute": {
-    "activeRouteId": "school-morning",
+    "activeRouteId": "school_morning",
     "routes": {
       "school-morning": {
         "provider": "google-maps",
@@ -470,13 +538,15 @@ var DASHBOARD_CONFIG = {
         "expiresAt": "2026-05-06T20:18:26.234Z"
       },
       "school_morning": {
-        "provider": "",
-        "durationMinutes": null,
-        "trafficStatus": "",
-        "updatedAt": "",
-        "expiresAt": "",
+        "provider": "google-maps",
+        "durationMinutes": 26,
+        "trafficStatus": "light",
+        "updatedAt": "2026-05-07T03:23:35.005Z",
+        "expiresAt": "2026-05-07T03:38:35.005Z",
         "routeLabel": "US-17 N to School",
-        "stopCount": 0
+        "stopCount": 0,
+        "stops": [],
+        "bufferMinutes": 0
       },
       "pickup_1778097357000": {
         "provider": "google-maps",
@@ -485,7 +555,24 @@ var DASHBOARD_CONFIG = {
         "updatedAt": "2026-05-06T19:57:40.329Z",
         "expiresAt": "2026-05-06T20:12:40.329Z",
         "routeLabel": "Home to pickup",
-        "stopCount": 1
+        "stopCount": 0,
+        "stops": []
+      },
+      "pickup_1778124119125": {
+        "provider": "",
+        "durationMinutes": null,
+        "trafficStatus": "",
+        "updatedAt": "",
+        "expiresAt": "",
+        "routeLabel": "Home to pickup",
+        "stopCount": 1,
+        "stops": [
+          {
+            "id": "pickup_stop",
+            "label": "Pickup stop",
+            "bufferMin": 5
+          }
+        ]
       }
     },
     "defaultDriveMin": 12,
