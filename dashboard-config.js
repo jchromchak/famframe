@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-07T15:20:57.742Z
+// Last updated: 2026-05-07T15:22:29.002Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -581,7 +581,7 @@ var DASHBOARD_CONFIG = {
     "showWeather": true
   },
   "commute": {
-    "activeRouteId": "school-morning",
+    "activeRouteId": "pickup_1778166294260",
     "routes": {
       "school-morning": {
         "provider": "google-maps",
@@ -632,11 +632,11 @@ var DASHBOARD_CONFIG = {
         ]
       },
       "pickup_1778166294260": {
-        "provider": "",
-        "durationMinutes": null,
-        "trafficStatus": "",
-        "updatedAt": "",
-        "expiresAt": "",
+        "provider": "google-maps",
+        "durationMinutes": 30,
+        "trafficStatus": "light",
+        "updatedAt": "2026-05-07T15:22:28.724Z",
+        "expiresAt": "2026-05-07T15:37:28.724Z",
         "routeLabel": "Home to pickup",
         "stopCount": 1,
         "stops": [
@@ -645,7 +645,8 @@ var DASHBOARD_CONFIG = {
             "label": "Pickup stop",
             "bufferMin": 5
           }
-        ]
+        ],
+        "bufferMinutes": 5
       }
     },
     "defaultDriveMin": 12,
