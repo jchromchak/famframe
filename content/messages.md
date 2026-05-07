@@ -1,5 +1,35 @@
 # Messages
 
+## Morning Calm
+
+- Morning is easy.
+- Plenty of time.
+- Take your time.
+
+## Morning Tight
+
+- Start getting ready.
+- Time to move.
+- Get going soon.
+
+## Morning Late
+
+- Shoes on, please.
+- Almost time.
+- Wrap it up.
+
+## Morning Critical
+
+- Move it!
+- Let's go!
+- Out the door!
+
+## Morning Gone
+
+- Have a great day. ☀︎
+- Go get 'em.
+- See you this afternoon.
+
 ## Evening On Track
 
 - On track. Nice work.

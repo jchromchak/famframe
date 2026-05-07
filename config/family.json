@@ -4,13 +4,13 @@
   "displayName": "Fam Frame",
   "members": [
     {
-      "id": "mem-46dc873e",
+      "id": "member_child_1",
       "displayName": "Kid 1",
       "role": "child",
       "age": null
     },
     {
-      "id": "mem-1c4e27e2",
+      "id": "member_child_2",
       "displayName": "Kid 2",
       "role": "child",
       "age": null
