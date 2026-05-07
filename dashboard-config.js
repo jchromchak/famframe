@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 // DASHBOARD CONFIG — safe display data only; no secrets
-// Last updated: 2026-05-07T03:23:35.311Z
+// Last updated: 2026-05-07T10:28:44.261Z
 // ═══════════════════════════════════════════════════════════════════
 
 var DASHBOARD_CONFIG = {
@@ -532,17 +532,19 @@ var DASHBOARD_CONFIG = {
         "provider": "google-maps",
         "routeLabel": "US-17 N to School",
         "stopCount": 0,
-        "durationMinutes": 33,
+        "durationMinutes": 27,
         "trafficStatus": "light",
-        "updatedAt": "2026-05-06T20:03:26.234Z",
-        "expiresAt": "2026-05-06T20:18:26.234Z"
+        "updatedAt": "2026-05-07T03:23:56.711Z",
+        "expiresAt": "2026-05-07T03:38:56.711Z",
+        "stops": [],
+        "bufferMinutes": 0
       },
       "school_morning": {
         "provider": "google-maps",
         "durationMinutes": 26,
         "trafficStatus": "light",
-        "updatedAt": "2026-05-07T03:23:35.005Z",
-        "expiresAt": "2026-05-07T03:38:35.005Z",
+        "updatedAt": "2026-05-07T10:28:43.951Z",
+        "expiresAt": "2026-05-07T10:43:43.951Z",
         "routeLabel": "US-17 N to School",
         "stopCount": 0,
         "stops": [],
