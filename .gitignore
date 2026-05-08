@@ -1,3 +1,6 @@
 .famframe-context/
 launcher.md
 _prompt-shaper.md
+.DS_Store
+node_modules/
+admin-react/dist/

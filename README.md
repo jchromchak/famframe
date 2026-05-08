@@ -50,6 +50,9 @@ The first JSON model files live in:
 
 The TV dashboard and admin now use these files as the source of truth.
 
+The legacy admin in `admin/` remains the current editor. A React admin shell is being prototyped in `admin-react/` beside it so the new information architecture can evolve without breaking the working admin.
+
+
 `config/family.json` includes a stable family primary key:
 
 ```json
