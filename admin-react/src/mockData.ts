@@ -1,0 +1,202 @@
+export type Account = {
+  email: string;
+  displayName: string;
+  isSuperAdmin: boolean;
+};
+
+export type FamilyRole = "member" | "maintainer" | "co-owner" | "owner";
+
+export type Family = {
+  id: string;
+  name: string;
+  handle: string;
+};
+
+export type FamilyMember = {
+  id: string;
+  familyId: string;
+  name: string;
+  email?: string;
+  relationship: string;
+};
+
+export type Membership = {
+  accountEmail: string;
+  familyId: string;
+  familyMemberId: string;
+  role: FamilyRole;
+};
+
+export type DeviceTarget = {
+  id: string;
+  familyId: string;
+  handle: string;
+  label: string;
+  surface: "tv" | "tablet" | "phone";
+  room: string;
+  mode: string;
+};
+
+export const accounts: Account[] = [
+  {
+    email: "john@example.test",
+    displayName: "John",
+    isSuperAdmin: true,
+  },
+  {
+    email: "partner@example.test",
+    displayName: "Partner",
+    isSuperAdmin: false,
+  },
+  {
+    email: "helper@example.test",
+    displayName: "Helper",
+    isSuperAdmin: false,
+  },
+];
+
+export const families: Family[] = [
+  {
+    id: "fam-smith-a1b2c3d4",
+    name: "Smith Family",
+    handle: "smith-family-a1b2c3d4",
+  },
+  {
+    id: "fam-test-9f8e7d6c",
+    name: "Test Family",
+    handle: "test-family-9f8e7d6c",
+  },
+];
+
+export const familyMembers: FamilyMember[] = [
+  {
+    id: "mem-john",
+    familyId: "fam-smith-a1b2c3d4",
+    name: "John",
+    email: "john@example.test",
+    relationship: "Parent",
+  },
+  {
+    id: "mem-partner",
+    familyId: "fam-smith-a1b2c3d4",
+    name: "Partner",
+    email: "partner@example.test",
+    relationship: "Parent",
+  },
+  {
+    id: "mem-child-a",
+    familyId: "fam-smith-a1b2c3d4",
+    name: "Ada",
+    relationship: "Kid",
+  },
+  {
+    id: "mem-child-b",
+    familyId: "fam-smith-a1b2c3d4",
+    name: "Jack",
+    relationship: "Kid",
+  },
+  {
+    id: "mem-test-owner",
+    familyId: "fam-test-9f8e7d6c",
+    name: "John",
+    email: "john@example.test",
+    relationship: "Tester",
+  },
+  {
+    id: "mem-helper",
+    familyId: "fam-test-9f8e7d6c",
+    name: "Helper",
+    email: "helper@example.test",
+    relationship: "Tester",
+  },
+];
+
+export const memberships: Membership[] = [
+  {
+    accountEmail: "john@example.test",
+    familyId: "fam-smith-a1b2c3d4",
+    familyMemberId: "mem-john",
+    role: "owner",
+  },
+  {
+    accountEmail: "partner@example.test",
+    familyId: "fam-smith-a1b2c3d4",
+    familyMemberId: "mem-partner",
+    role: "co-owner",
+  },
+  {
+    accountEmail: "john@example.test",
+    familyId: "fam-test-9f8e7d6c",
+    familyMemberId: "mem-test-owner",
+    role: "owner",
+  },
+  {
+    accountEmail: "helper@example.test",
+    familyId: "fam-test-9f8e7d6c",
+    familyMemberId: "mem-helper",
+    role: "maintainer",
+  },
+];
+
+export const deviceTargets: DeviceTarget[] = [
+  {
+    id: "dev-living-room-tv",
+    familyId: "fam-smith-a1b2c3d4",
+    handle: "living-room-tv",
+    label: "Living Room TV",
+    surface: "tv",
+    room: "Living Room",
+    mode: "Household dashboard",
+  },
+  {
+    id: "dev-family-room-tv",
+    familyId: "fam-smith-a1b2c3d4",
+    handle: "family-room-tv",
+    label: "Family Room TV",
+    surface: "tv",
+    room: "Family Room",
+    mode: "Kid-forward dashboard",
+  },
+  {
+    id: "dev-kitchen-ipad",
+    familyId: "fam-smith-a1b2c3d4",
+    handle: "kitchen-ipad",
+    label: "Kitchen iPad",
+    surface: "tablet",
+    room: "Kitchen",
+    mode: "Capture and prep",
+  },
+  {
+    id: "dev-test-tv",
+    familyId: "fam-test-9f8e7d6c",
+    handle: "test-tv",
+    label: "Test TV",
+    surface: "tv",
+    room: "Lab",
+    mode: "Testing view",
+  },
+];
+
+export function familiesForAccount(account: Account) {
+  const accountMemberships = memberships.filter((membership) => membership.accountEmail === account.email);
+
+  if (account.isSuperAdmin) {
+    return families;
+  }
+
+  return families.filter((family) => accountMemberships.some((membership) => membership.familyId === family.id));
+}
+
+export function roleForAccount(account: Account, familyId: string) {
+  return memberships.find(
+    (membership) => membership.accountEmail === account.email && membership.familyId === familyId,
+  )?.role;
+}
+
+export function membersForFamily(familyId: string) {
+  return familyMembers.filter((member) => member.familyId === familyId);
+}
+
+export function devicesForFamily(familyId: string) {
+  return deviceTargets.filter((device) => device.familyId === familyId);
+}
