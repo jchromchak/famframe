@@ -10,6 +10,7 @@ export type Family = {
   id: string;
   name: string;
   handle: string;
+  timezone?: string;
 };
 
 export type FamilyMember = {
@@ -60,11 +61,13 @@ export const families: Family[] = [
     id: "fam-smith-a1b2c3d4",
     name: "Smith Family",
     handle: "smith-family-a1b2c3d4",
+    timezone: "America/New_York",
   },
   {
     id: "fam-test-9f8e7d6c",
     name: "Test Family",
     handle: "test-family-9f8e7d6c",
+    timezone: "America/New_York",
   },
 ];
 

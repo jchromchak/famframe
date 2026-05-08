@@ -226,6 +226,7 @@
   text-transform: uppercase;
 }
 
+.field-stack input,
 .field-stack select {
   background: var(--ff-color-surface);
   border: 1px solid #d8c6a5;
@@ -233,10 +234,10 @@
   color: var(--ff-color-ink);
   min-height: 48px;
   padding: 10px 12px;
+  width: 100%;
 }
 
 .primary-action,
-.device-list button,
 .target-button {
   border: 1px solid #d7c8ad;
   border-radius: var(--ff-radius-control);
@@ -251,24 +252,24 @@
   padding: 12px 16px;
 }
 
-.device-list,
+.primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.create-family-card {
+  background: #fff7e6;
+  border-color: #e7c16b;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
 .target-stack {
   display: grid;
   gap: 8px;
-}
-
-.device-list button {
-  align-items: flex-start;
-  background: var(--ff-color-surface);
-  display: grid;
-  gap: 3px;
-  padding: 12px;
-  text-align: left;
-}
-
-.device-list small {
-  color: var(--ff-color-muted);
-  font-weight: 700;
 }
 
 .target-stack {

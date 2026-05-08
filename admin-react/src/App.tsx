@@ -4,11 +4,13 @@ import {
   Account,
   DeviceTarget,
   Family,
+  FamilyMember,
+  Membership,
   accounts,
-  devicesForFamily,
-  familiesForAccount,
-  membersForFamily,
-  roleForAccount,
+  deviceTargets as seedDeviceTargets,
+  families as seedFamilies,
+  familyMembers as seedFamilyMembers,
+  memberships as seedMemberships,
 } from "./mockData";
 
 type View = "week" | "capture" | "routines" | "system";
@@ -21,6 +23,7 @@ const navItems: Array<{ id: View; label: string }> = [
 ];
 
 const sampleAppends = ["Library books tomorrow", "Pack soccer gear", "Late start morning"];
+const timezoneOptions = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"];
 
 function daysLabel(routine: Routine) {
   const dayNumbers = routine.appliesTo?.days;
@@ -43,6 +46,10 @@ function App() {
   const [activeFamily, setActiveFamily] = useState<Family | null>(null);
   const [activeDevice, setActiveDevice] = useState<DeviceTarget | null>(null);
   const [activeView, setActiveView] = useState<View>("week");
+  const [families, setFamilies] = useState<Family[]>(seedFamilies);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(seedFamilyMembers);
+  const [memberships, setMemberships] = useState<Membership[]>(seedMemberships);
+  const [deviceTargets, setDeviceTargets] = useState<DeviceTarget[]>(seedDeviceTargets);
   const [config, setConfig] = useState<ConfigState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [captureText, setCaptureText] = useState("Late start tomorrow. Need library books. Pack soccer gear.");
@@ -60,6 +67,79 @@ function App() {
   const operationalRoutines = activeRoutines.filter((routine) => routine.enabled !== false);
   const visibleAppends = captureText.trim() ? sampleAppends : [];
 
+  const familiesForActiveAccount = useMemo(() => {
+    if (!activeAccount) {
+      return [];
+    }
+
+    if (activeAccount.isSuperAdmin) {
+      return families;
+    }
+
+    return families.filter((family) =>
+      memberships.some((membership) => membership.accountEmail === activeAccount.email && membership.familyId === family.id),
+    );
+  }, [activeAccount, families, memberships]);
+
+  function devicesForFamily(familyId: string) {
+    return deviceTargets.filter((device) => device.familyId === familyId);
+  }
+
+  function membersForFamily(familyId: string) {
+    return familyMembers.filter((member) => member.familyId === familyId);
+  }
+
+  function roleForAccount(account: Account, familyId: string) {
+    return memberships.find(
+      (membership) => membership.accountEmail === account.email && membership.familyId === familyId,
+    )?.role;
+  }
+
+  function createFamily(input: CreateFamilyInput) {
+    if (!activeAccount) {
+      return;
+    }
+
+    const suffix = makeOpaqueSuffix();
+    const slug = slugify(input.name);
+    const nextFamily: Family = {
+      id: `fam-${slug}-${suffix}`,
+      name: input.name.trim(),
+      handle: `${slug}-${suffix}`,
+      timezone: input.timezone,
+    };
+    const nextMember: FamilyMember = {
+      id: `mem-${suffix}`,
+      familyId: nextFamily.id,
+      name: input.ownerName.trim() || activeAccount.displayName,
+      email: activeAccount.email,
+      relationship: "Parent",
+    };
+    const nextMembership: Membership = {
+      accountEmail: activeAccount.email,
+      familyId: nextFamily.id,
+      familyMemberId: nextMember.id,
+      role: "owner",
+    };
+    const nextDevice: DeviceTarget = {
+      id: `dev-${suffix}-default-tv`,
+      familyId: nextFamily.id,
+      handle: "default-tv",
+      label: input.deviceLabel.trim() || "Default TV",
+      surface: "tv",
+      room: "Default",
+      mode: "Household dashboard",
+    };
+
+    setFamilies((current) => [...current, nextFamily]);
+    setFamilyMembers((current) => [...current, nextMember]);
+    setMemberships((current) => [...current, nextMembership]);
+    setDeviceTargets((current) => [...current, nextDevice]);
+    setActiveFamily(nextFamily);
+    setActiveDevice(nextDevice);
+    setActiveView("week");
+  }
+
   if (!activeAccount) {
     return <LoginScreen onLogin={setActiveAccount} />;
   }
@@ -68,11 +148,16 @@ function App() {
     return (
       <FamilySwitcher
         account={activeAccount}
+        families={familiesForActiveAccount}
+        devicesForFamily={devicesForFamily}
+        membersForFamily={membersForFamily}
+        roleForAccount={roleForAccount}
         onBack={() => setActiveAccount(null)}
         onSelectFamily={(family, device) => {
           setActiveFamily(family);
           setActiveDevice(device);
         }}
+        onCreateFamily={createFamily}
       />
     );
   }
@@ -167,15 +252,23 @@ function LoginScreen({ onLogin }: { onLogin: (account: Account) => void }) {
 
 function FamilySwitcher({
   account,
+  families,
+  devicesForFamily,
+  membersForFamily,
+  roleForAccount,
   onBack,
   onSelectFamily,
+  onCreateFamily,
 }: {
   account: Account;
+  families: Family[];
+  devicesForFamily: (familyId: string) => DeviceTarget[];
+  membersForFamily: (familyId: string) => FamilyMember[];
+  roleForAccount: (account: Account, familyId: string) => string | undefined;
   onBack: () => void;
   onSelectFamily: (family: Family, device: DeviceTarget | null) => void;
+  onCreateFamily: (input: CreateFamilyInput) => void;
 }) {
-  const availableFamilies = familiesForAccount(account);
-
   return (
     <main className="admin-shell family-shell">
       <header className="topbar">
@@ -192,10 +285,13 @@ function FamilySwitcher({
       </header>
 
       <section className="family-grid view-frame">
-        {availableFamilies.map((family) => {
+        <CreateFamilyCard account={account} onCreateFamily={onCreateFamily} />
+
+        {families.map((family) => {
           const role = roleForAccount(account, family.id) ?? "super admin";
           const devices = devicesForFamily(family.id);
           const members = membersForFamily(family.id);
+          const defaultDevice = devices[0] ?? null;
 
           return (
             <article className="family-card" key={family.id}>
@@ -213,16 +309,12 @@ function FamilySwitcher({
                   <dt>Devices</dt>
                   <dd>{devices.length}</dd>
                 </div>
+                <div>
+                  <dt>Default</dt>
+                  <dd>{defaultDevice?.label ?? "None"}</dd>
+                </div>
               </dl>
-              <div className="device-list">
-                {devices.map((device) => (
-                  <button key={device.id} type="button" onClick={() => onSelectFamily(family, device)}>
-                    <span>{device.label}</span>
-                    <small>{device.mode}</small>
-                  </button>
-                ))}
-              </div>
-              <button className="primary-action" type="button" onClick={() => onSelectFamily(family, devices[0] ?? null)}>
+              <button className="primary-action" type="button" onClick={() => onSelectFamily(family, defaultDevice)}>
                 Open family
               </button>
             </article>
@@ -231,6 +323,104 @@ function FamilySwitcher({
       </section>
     </main>
   );
+}
+
+type CreateFamilyInput = {
+  name: string;
+  ownerName: string;
+  timezone: string;
+  deviceLabel: string;
+};
+
+function CreateFamilyCard({
+  account,
+  onCreateFamily,
+}: {
+  account: Account;
+  onCreateFamily: (input: CreateFamilyInput) => void;
+}) {
+  const [name, setName] = useState("");
+  const [ownerName, setOwnerName] = useState(account.displayName);
+  const [timezone, setTimezone] = useState(timezoneOptions[0]);
+  const [deviceLabel, setDeviceLabel] = useState("Living Room TV");
+  const slugPreview = name.trim() ? `${slugify(name)}-${"a1b2c3d4"}` : "family-name-a1b2c3d4";
+  const canCreate = name.trim().length >= 2;
+
+  return (
+    <article className="family-card create-family-card">
+      <div>
+        <p className="eyebrow">New family</p>
+        <h2>Create family</h2>
+        <p className="muted">Start with one owner, one default display, and the same routine truths underneath.</p>
+      </div>
+
+      <div className="form-grid">
+        <label className="field-stack">
+          <span>Family name</span>
+          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Smith Family" />
+        </label>
+        <label className="field-stack">
+          <span>Your family member name</span>
+          <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} />
+        </label>
+        <label className="field-stack">
+          <span>Timezone</span>
+          <select value={timezone} onChange={(event) => setTimezone(event.target.value)}>
+            {timezoneOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field-stack">
+          <span>Default display</span>
+          <input value={deviceLabel} onChange={(event) => setDeviceLabel(event.target.value)} />
+        </label>
+      </div>
+
+      <dl className="system-list">
+        <div>
+          <dt>Handle</dt>
+          <dd>{slugPreview}</dd>
+        </div>
+        <div>
+          <dt>Role</dt>
+          <dd>owner</dd>
+        </div>
+      </dl>
+
+      <button
+        className="primary-action"
+        type="button"
+        disabled={!canCreate}
+        onClick={() => onCreateFamily({ name, ownerName, timezone, deviceLabel })}
+      >
+        Create and open
+      </button>
+    </article>
+  );
+}
+
+function slugify(value: string) {
+  return (
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "family"
+  );
+}
+
+function makeOpaqueSuffix() {
+  const values = new Uint8Array(4);
+
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(values);
+    return Array.from(values, (value) => value.toString(16).padStart(2, "0")).join("");
+  }
+
+  return Math.random().toString(16).slice(2, 10).padEnd(8, "0");
 }
 
 function ThisWeek({
