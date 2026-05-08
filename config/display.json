@@ -20,7 +20,7 @@
     "eveningScene": "evening"
   },
   "theme": {
-    "id": "ambient-evening",
+    "id": "default-editorial",
     "accent": "#d99a3d"
   }
 }
