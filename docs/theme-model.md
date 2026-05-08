@@ -86,24 +86,24 @@ It should feel quiet, sharp enough for morning urgency, and restrained enough fo
 
 ### Ambient Evening
 
-Reference phrase: foggy evening periwinkle with warm lamp-light accents.
+Reference phrase: muted mauve / purple-gray with warm lamp-light accents.
 
 Base tokens:
 
 ```json
 {
-  "background": "#958AAD",
-  "surface": "#86799D",
-  "surfaceStrong": "#B3A8C4",
-  "text": "#F4F1F8",
-  "textSecondary": "rgba(244,241,248,0.68)",
-  "textMuted": "rgba(244,241,248,0.52)",
-  "divider": "rgba(255,255,255,0.10)",
-  "accent": "#EFD27A"
+  "background": "#AA98A9",
+  "surface": "rgba(23,18,23,0.035)",
+  "surfaceStrong": "rgba(23,18,23,0.07)",
+  "text": "#171217",
+  "textSecondary": "rgba(23,18,23,0.68)",
+  "textMuted": "rgba(23,18,23,0.46)",
+  "divider": "rgba(23,18,23,0.12)",
+  "accent": "#70551E"
 }
 ```
 
-Ambient Evening is for dinner-to-bedtime transitions, wind-down routines, family reset moments, and low-energy household coordination. Avoid plum, wine, saturated violet, neon accents, harsh white borders, pure black text, productivity-app energy, and overly playful colors.
+Ambient Evening is for dinner-to-bedtime transitions, wind-down routines, family reset moments, and low-energy household coordination. On lighter mauve backgrounds, foreground and line tokens should derive from deep charcoal instead of off-white. Avoid bright periwinkle, plum, wine, saturated violet, neon accents, harsh white borders, productivity-app energy, and overly playful colors.
 
 ## Derived Colors
 

@@ -11,7 +11,20 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--app-width:100vw;--app-height:100dvh;--stage-scale:1;--stage-width:1920px;--ff-bg:#0b0b09;--ff-text:#efe7d7;--ff-text-rgb:239,231,215;--ff-accent:#d99a3d;--ff-accent-rgb:217,154,61;--ff-accent-hot:#f0c06d;--ff-done:#7aaa8a;--ff-warn:#d4845a;--ff-warn-rgb:212,132,90;--ff-crit:#c94f3a;--ff-crit-rgb:201,79,58;--ff-timeline-done:#8d879f;--ff-timeline-done-rgb:141,135,159}
-body[data-theme="ambient-evening"]{--ff-bg:#958AAD;--ff-text:#F4F1F8;--ff-text-rgb:244,241,248;--ff-accent:#EFD27A;--ff-accent-rgb:239,210,122;--ff-accent-hot:#F7E5A5;--ff-done:#B8C8AF;--ff-warn:#F0BE7A;--ff-warn-rgb:240,190,122;--ff-crit:#D98472;--ff-crit-rgb:217,132,114;--ff-timeline-done:#B3A8C4;--ff-timeline-done-rgb:179,168,196}
+body[data-theme="ambient-evening"]{--ff-bg:#AA98A9;--ff-text:#171217;--ff-text-rgb:23,18,23;--ff-accent:#70551E;--ff-accent-rgb:112,85,30;--ff-accent-hot:#9A7830;--ff-done:#4F684D;--ff-warn:#7A4E24;--ff-warn-rgb:122,78,36;--ff-crit:#84382D;--ff-crit-rgb:132,56,45;--ff-timeline-done:#6F6371;--ff-timeline-done-rgb:111,99,113}
+body[data-theme="ambient-evening"] .stage{box-shadow:0 0 0 1px rgba(0,0,0,.2) inset}
+body[data-theme="ambient-evening"] .main-panel,
+body[data-theme="ambient-evening"] .weather-panel,
+body[data-theme="ambient-evening"] .cal-panel,
+body[data-theme="ambient-evening"] .traffic-panel,
+body[data-theme="ambient-evening"] .quote-bar,
+body[data-theme="ambient-evening"] .bottom-bar{border-color:rgba(0,0,0,.22)}
+body[data-theme="ambient-evening"] .evening-timeline .tl-content,
+body[data-theme="ambient-evening"] .checklist,
+body[data-theme="ambient-evening"] .cl-item,
+body[data-theme="ambient-evening"] .day-forecast{border-color:rgba(0,0,0,.16)}
+body[data-theme="ambient-evening"] .tl-line{background:rgba(0,0,0,.22)}
+body[data-theme="ambient-evening"] .progress-track{background:rgba(0,0,0,.12)}
 html,body{width:100%;height:100%;overflow:hidden;background:var(--ff-bg);color:var(--ff-text);cursor:none}
 body{font-family:'DM Mono',monospace}
 .viewport{position:fixed;left:0;top:0;width:var(--app-width);height:var(--app-height);overflow:hidden;background:var(--ff-bg)}
