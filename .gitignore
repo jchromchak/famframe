@@ -4,3 +4,4 @@ _prompt-shaper.md
 .DS_Store
 node_modules/
 admin-react/dist/
+.tools/
