@@ -693,284 +693,104 @@ select {
  
   <!-- HOME -->
   <div class="page active" id="pageHome">
-    <div class="nav-cards" style="padding:0">
-      <div class="nav-card" onclick="nav('family')">
-        <div class="nav-card-icon">👨‍👩‍👧‍👦</div>
-        <div class="nav-card-body">
-          <div class="nav-card-title">Family</div>
-          <div class="nav-card-desc">Members and home base</div>
-        </div>
-        <div class="nav-card-arrow">›</div>
-      </div>
-      <div class="nav-card" onclick="nav('scenes')">
-        <div class="nav-card-icon">↻</div>
-        <div class="nav-card-body">
-          <div class="nav-card-title">Daily Routines</div>
-          <div class="nav-card-desc">Windows, days, theme</div>
-        </div>
-        <div class="nav-card-arrow">›</div>
-      </div>
-      <div class="nav-card" onclick="nav('modules')">
-        <div class="nav-card-icon">⇢</div>
-        <div class="nav-card-body">
-          <div class="nav-card-title">Segments</div>
-          <div class="nav-card-desc">Trips, stops, destinations</div>
-        </div>
-        <div class="nav-card-arrow">›</div>
-      </div>
-      <div class="nav-card" onclick="nav('lists')">
-        <div class="nav-card-icon">☑</div>
-        <div class="nav-card-body">
-          <div class="nav-card-title">Lists</div>
-          <div class="nav-card-desc">Checklist tasks</div>
-        </div>
-        <div class="nav-card-arrow">›</div>
-      </div>
-      <div class="nav-card" onclick="nav('integrations')">
-        <div class="nav-card-icon">⌁</div>
-        <div class="nav-card-body">
-          <div class="nav-card-title">Integrations</div>
-          <div class="nav-card-desc">Keys and content sources</div>
-        </div>
-        <div class="nav-card-arrow">›</div>
-      </div>
-      <div class="nav-card" onclick="nav('actions')">
-        <div class="nav-card-icon">⚡</div>
-        <div class="nav-card-body">
-          <div class="nav-card-title">Sync & Advanced</div>
-          <div class="nav-card-desc">Refresh, pull, save</div>
-        </div>
-        <div class="nav-card-arrow">›</div>
-      </div>
-    </div>
-  </div>
- 
-  <!-- FAMILY -->
-  <div class="page" id="pageFamily">
-    <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Family</div>
-    <div class="page-sub">MEMBERS · HOME BASE</div>
- 
-    <div class="section-label">Members</div>
-    <div id="kidCards"></div>
- 
-    <div class="section-label" style="margin-top:16px">Home</div>
-    <div class="field-label">Home city</div>
-    <input type="text" id="homeCityApp" class="full-input" placeholder="Mount Pleasant, SC">
-    <details class="compact-details">
-      <summary>Coordinates</summary>
-      <div class="compact-body">
-        <div class="field-label">Latitude</div>
-        <input type="text" id="homeLat" class="full-input" placeholder="32.83">
-        <div class="field-label">Longitude</div>
-        <input type="text" id="homeLon" class="full-input" placeholder="-79.83">
-      </div>
-    </details>
- 
-    <div class="save-row"><button class="save-btn" onclick="saveFamily()">Save family settings</button></div>
-  </div>
- 
-  <!-- DAILY ROUTINES -->
-  <div class="page" id="pageScenes">
-    <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Daily Routines</div>
-    <div class="page-sub">SCREEN WINDOWS · DAYS · DEFAULT RHYTHM</div>
+    <div class="page-title">Fallback Admin</div>
+    <div class="page-sub">SYNC · ROUTES · EMERGENCY</div>
 
-    <div class="section-label">Timezone</div>
-    <div class="field-label">IANA time zone</div>
-    <input type="text" id="timeZoneInput" class="full-input" placeholder="America/New_York">
-
-    <div class="section-label">Theme</div>
-    <div class="field-label">Dashboard theme</div>
-    <select id="themeSelect" class="full-input">
-      <option value="default-editorial">Default</option>
-      <option value="ambient-evening">Ambient Evening</option>
+    <div class="section-label">GitHub connection</div>
+    <div class="field-label">Repository</div>
+    <input type="text" id="repoInput" class="full-input" placeholder="username/repo-name">
+    <div class="field-label">Branch</div>
+    <select id="branchSelect" class="full-input">
+      <option value="main">main</option>
     </select>
-
-    <div class="section-label">Display windows</div>
-    <div class="form-grid">
-      <div>
-        <div class="field-label">Wake display</div>
-        <input type="time" id="morningStart" oninput="renderScheduleValidationFromFields()">
-      </div>
-      <div>
-        <div class="field-label">Morning standby</div>
-        <input type="time" id="morningEnd" oninput="renderScheduleValidationFromFields()">
-      </div>
-      <div>
-        <div class="field-label">Evening display</div>
-        <input type="time" id="eveningStart" oninput="renderScheduleValidationFromFields()">
-      </div>
-      <div>
-        <div class="field-label">Evening standby</div>
-        <input type="time" id="eveningEnd" oninput="renderScheduleValidationFromFields()">
-      </div>
-    </div>
-
-    <div class="section-label">Default morning routine</div>
-    <div class="form-grid">
-      <div>
-        <div class="field-label">Leave home</div>
-        <input type="time" id="defaultLeave" oninput="renderScheduleValidationFromFields()">
-      </div>
-      <div>
-        <div class="field-label">Arrive by</div>
-        <input type="time" id="defaultSchool" oninput="renderScheduleValidationFromFields()">
-      </div>
-      <div>
-        <div class="field-label">Hard deadline</div>
-        <input type="time" id="defaultLateBell" oninput="renderScheduleValidationFromFields()">
-      </div>
-      <div>
-        <div class="field-label">Fallback drive</div>
-        <input type="number" id="defaultDrive" min="0" step="1">
-      </div>
-    </div>
-
-    <div id="scheduleValidation"></div>
-
-    <div class="section-label">Routine days</div>
-    <div id="schoolDayToggles"></div>
-
-    <details class="compact-details">
-      <summary>Routine library</summary>
-      <div class="compact-body">
-        <div id="routineEditor"></div>
-        <button class="small-btn" onclick="addRoutine()">+ ADD ROUTINE</button>
-        <button class="small-btn" onclick="addTimelineRoutine()" style="margin-left:8px">+ ADD TIMELINE</button>
-      </div>
-    </details>
-
-    <div class="save-row"><button class="save-btn" onclick="saveSchedule()">Save daily routine</button></div>
-  </div>
- 
-  <!-- SEGMENTS -->
-  <div class="page" id="pageModules">
-    <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Segments</div>
-    <div class="page-sub">DESTINATIONS · STOPS · BUFFERS</div>
-
-    <div class="section-label">Default school segment</div>
-    <div class="field-label">Display label</div>
-    <input type="text" id="schoolRoute" class="full-input" placeholder="US-17 N to School">
-    <div class="field-label">Origin</div>
-    <input type="text" id="commuteOrigin" class="full-input" placeholder="Home address or lat,lng" data-place-autocomplete data-place-role="commute-origin">
-    <div class="field-label">Destination</div>
-    <input type="text" id="commuteDestination" class="full-input" placeholder="School address" data-place-autocomplete data-place-role="commute-destination">
-    <div class="field-label">Stops before destination</div>
-    <input type="number" id="commuteStopCount" class="full-input" min="0" step="1" placeholder="0">
-    <div class="field-hint">Addresses stay on this admin device. GitHub receives only safe route labels and derived timing.</div>
-    <button class="action-btn" onclick="updateActiveMapsStatus()" style="margin-top:12px">
-      <span class="action-icon">↻</span>
-      <span class="action-label">Update maps status for this segment</span>
-    </button>
-    <div class="action-result" id="mapsStatusResult"></div>
-
-    <details class="compact-details" style="margin-top:16px">
-      <summary>Evening display segments</summary>
-      <div class="compact-body">
-        <div id="timelineItems"></div>
-        <button class="small-btn" onclick="addTimelineItem()">+ ADD SEGMENT</button>
-      </div>
-    </details>
-
-    <details class="compact-details">
-      <summary>Fallback drive windows</summary>
-      <div class="compact-body">
-        <div id="commuteEditor"></div>
-        <button class="small-btn" onclick="addCommuteEstimate()">+ ADD DRIVE WINDOW</button>
-      </div>
-    </details>
-
-    <div class="save-row"><button class="save-btn" onclick="saveSegments()">Save segments</button></div>
-  </div>
-
-  <!-- LISTS -->
-  <div class="page" id="pageLists">
-    <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Lists</div>
-    <div class="page-sub">TASKS · TEMPLATES · ASSIGNMENTS</div>
-
-    <div class="section-label">Morning checklist</div>
-    <div id="checklistEditor"></div>
-    <button class="small-btn" onclick="addChecklistItem()">+ ADD LIST ITEM</button>
-
-    <div class="save-row"><button class="save-btn" onclick="saveLists()">Save lists</button></div>
-  </div>
-
-  <!-- INTEGRATIONS -->
-  <div class="page" id="pageIntegrations">
-    <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Integrations</div>
-    <div class="page-sub">LOCAL CREDENTIALS · CONTENT SOURCES</div>
-
-    <div class="section-label">Credentials</div>
-    <div class="field-label">Google Calendar API key</div>
-    <div class="input-wrap" style="margin-bottom:8px">
-      <input type="password" id="gcalAppInput" class="full-input" style="margin-bottom:0" placeholder="AIza...">
-    </div>
-    <div class="field-label">Google Maps browser API key</div>
-    <div class="input-wrap" style="margin-bottom:8px">
-      <input type="password" id="gmapsAppInput" class="full-input" style="margin-bottom:0" placeholder="AIza...">
-    </div>
     <div class="field-label">GitHub PAT</div>
     <div class="input-wrap" style="margin-bottom:8px">
       <input type="password" id="patAppInput" class="full-input" style="margin-bottom:0" placeholder="ghp_...">
     </div>
-    <div class="field-hint">Credentials are stored only on this admin device. They are stripped before config is written to GitHub.</div>
-
-    <div class="section-label" style="margin-top:16px">Quote source</div>
-    <div class="field-label">Source</div>
-    <select id="quoteSource">
-      <option value="stoic">Stoic (Quotable API)</option>
-      <option value="wisdom">Wisdom + life</option>
-      <option value="family">Family + love</option>
-      <option value="any">Any category</option>
-    </select>
-
-    <div class="save-row"><button class="save-btn" onclick="saveIntegrations()">Save integrations</button></div>
-  </div>
- 
-  <!-- QUICK ACTIONS -->
-  <div class="page" id="pageActions">
-    <button class="back-btn" onclick="nav('home')">← Back</button>
-    <div class="page-title">Quick Actions</div>
-    <div class="page-sub">RUN · SYNC · OVERRIDE</div>
-
-    <div class="section-label">Route status</div>
-    <button class="action-btn" onclick="refreshAllRouteStatuses()">
-      <span class="action-icon">↻</span>
-      <span class="action-label">Refresh all route maps</span>
+    <div class="field-hint">This page is only a fallback utility while the React admin becomes the main product surface.</div>
+    <button class="action-btn" onclick="saveIntegrations()" style="margin-top:12px">
+      <span class="action-icon">✓</span>
+      <span class="action-label">Save local credentials</span>
     </button>
-    <div class="action-result" id="allRoutesResult"></div>
- 
-    <div class="section-label">GitHub sync</div>
-    <button class="action-btn" onclick="pullFromGitHub()">
+    <button class="action-btn" onclick="checkGitHubAccess()" style="margin-top:12px">
+      <span class="action-icon">?</span>
+      <span class="action-label">Check GitHub access</span>
+    </button>
+    <div class="action-result" id="githubDiagResult"></div>
+    <button class="action-btn" onclick="pullFromGitHub()" style="margin-top:8px">
       <span class="action-icon">↓</span>
       <span class="action-label">Pull latest config</span>
     </button>
     <div class="action-result" id="pullResult"></div>
-
-    <button class="action-btn" onclick="pushToGitHub()">
+    <button class="action-btn" onclick="pushToGitHub()" style="margin-top:8px">
       <span class="action-icon">↑</span>
       <span class="action-label">Save config to GitHub</span>
     </button>
     <div class="action-result" id="pushResult"></div>
 
-    <button class="action-btn" onclick="checkGitHubAccess()" style="margin-top:8px">
-      <span class="action-icon">?</span>
-      <span class="action-label">Check GitHub access</span>
+    <div class="section-label">Route refresh</div>
+    <div class="field-label">Google Maps browser API key</div>
+    <div class="input-wrap" style="margin-bottom:8px">
+      <input type="password" id="gmapsAppInput" class="full-input" style="margin-bottom:0" placeholder="AIza...">
+    </div>
+    <div class="field-label">Route label</div>
+    <input type="text" id="schoolRoute" class="full-input" placeholder="US-17 N to School">
+    <div class="field-label">Origin</div>
+    <input type="text" id="commuteOrigin" class="full-input" placeholder="Home address or lat,lng" data-place-autocomplete data-place-role="commute-origin">
+    <div class="field-label">Destination</div>
+    <input type="text" id="commuteDestination" class="full-input" placeholder="School address" data-place-autocomplete data-place-role="commute-destination">
+    <input type="hidden" id="commuteStopCount" value="0">
+    <div class="field-hint">Addresses stay on this admin device. GitHub receives only safe route labels and derived timing.</div>
+    <button class="action-btn" onclick="refreshAllRouteStatuses()" style="margin-top:12px">
+      <span class="action-icon">↻</span>
+      <span class="action-label">Refresh all route maps</span>
     </button>
-    <div class="action-result" id="githubDiagResult"></div>
+    <div class="action-result" id="allRoutesResult"></div>
+    <button class="action-btn" onclick="updateActiveMapsStatus()" style="margin-top:8px">
+      <span class="action-icon">↻</span>
+      <span class="action-label">Refresh default school route</span>
+    </button>
+    <div class="action-result" id="mapsStatusResult"></div>
 
-    <button class="action-btn danger" onclick="resetGitHubConnection()" style="margin-top:8px">
-      <span class="action-icon">✕</span>
-      <span class="action-label">Reset GitHub connection</span>
-    </button>
-    <div class="action-result" id="githubResetResult"></div>
- 
-    <details class="compact-details" style="margin-top:16px">
-      <summary>Raw config</summary>
+    <details class="compact-details">
+      <summary>Minimal display fallback</summary>
+      <div class="compact-body">
+        <div class="field-label">IANA time zone</div>
+        <input type="text" id="timeZoneInput" class="full-input" placeholder="America/New_York">
+        <div class="field-label">Dashboard theme</div>
+        <select id="themeSelect" class="full-input">
+          <option value="default-editorial">Default</option>
+          <option value="ambient-evening">Ambient Evening</option>
+        </select>
+        <div class="form-grid">
+          <div>
+            <div class="field-label">Wake display</div>
+            <input type="time" id="morningStart" oninput="renderScheduleValidationFromFields()">
+          </div>
+          <div>
+            <div class="field-label">Morning standby</div>
+            <input type="time" id="morningEnd" oninput="renderScheduleValidationFromFields()">
+          </div>
+          <div>
+            <div class="field-label">Evening display</div>
+            <input type="time" id="eveningStart" oninput="renderScheduleValidationFromFields()">
+          </div>
+          <div>
+            <div class="field-label">Evening standby</div>
+            <input type="time" id="eveningEnd" oninput="renderScheduleValidationFromFields()">
+          </div>
+        </div>
+        <input type="hidden" id="defaultLeave">
+        <input type="hidden" id="defaultSchool">
+        <input type="hidden" id="defaultLateBell">
+        <input type="hidden" id="defaultDrive">
+        <div id="scheduleValidation"></div>
+        <div class="save-row"><button class="save-btn" onclick="saveSchedule()">Save display fallback</button></div>
+      </div>
+    </details>
+
+    <details class="compact-details">
+      <summary>Emergency JSON tools</summary>
       <div class="compact-body">
         <textarea id="rawConfig" class="code-panel" spellcheck="false"></textarea>
         <button class="action-btn" onclick="applyRawConfig()" style="margin-top:8px">
@@ -978,88 +798,25 @@ select {
           <span class="action-label">Apply raw editor changes</span>
         </button>
         <div class="action-result" id="rawResult"></div>
-      </div>
-    </details>
-
-    <details class="compact-details">
-      <summary>Force scene</summary>
-      <div class="compact-body">
-        <select id="forceSceneSelect" style="margin-bottom:10px">
-          <option value="">— Select a scene to force —</option>
-          <option value="morning">Morning</option>
-          <option value="evening">Evening</option>
-          <option value="weekend">Weekend</option>
-          <option value="art">Art / blank mode</option>
-        </select>
-        <button class="action-btn" onclick="forceScene()">
-          <span class="action-icon">▶</span>
-          <span class="action-label">Force this scene now</span>
+        <button class="action-btn danger" onclick="resetGitHubConnection()" style="margin-top:12px">
+          <span class="action-icon">✕</span>
+          <span class="action-label">Reset GitHub connection</span>
         </button>
-        <div class="action-result" id="forceResult"></div>
-      </div>
-    </details>
-
-    <details class="compact-details">
-      <summary>Feedback</summary>
-      <div class="compact-body">
-        <div style="margin-bottom:10px">
-          <div class="field-label">Type</div>
-          <select id="feedbackType" style="margin-bottom:10px">
-            <option value="bug">Bug report</option>
-            <option value="feature">Feature request</option>
-            <option value="general">General feedback</option>
-            <option value="wtp">What would you pay?</option>
-          </select>
-          <div class="field-label">Message</div>
-          <textarea id="feedbackBody" rows="4"
-            placeholder="Tell us what happened, what you'd love to see, or what you'd pay for this..."
-            style="width:100%;background:var(--surface);border:1px solid var(--border);
-                   border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:13px;
-                   color:var(--text);outline:none;resize:none;line-height:1.6;
-                   -webkit-appearance:none;margin-bottom:8px"></textarea>
-          <div class="field-label" style="margin-bottom:6px">Your name (optional)</div>
-          <input type="text" id="feedbackName" class="full-input" placeholder="First name or leave blank">
-        </div>
-        <button class="action-btn" onclick="submitFeedback()">
-          <span class="action-icon">↑</span>
-          <span class="action-label">Submit feedback</span>
-        </button>
-        <div class="action-result" id="feedbackResult"></div>
-      </div>
-    </details>
-
-    <details class="compact-details">
-      <summary>Danger zone</summary>
-      <div class="compact-body">
-        <button class="action-btn danger" onclick="clearAllData()">
+        <div class="action-result" id="githubResetResult"></div>
+        <button class="action-btn danger" onclick="clearAllData()" style="margin-top:8px">
           <span class="action-icon">✕</span>
           <span class="action-label">Clear all local data + reset</span>
         </button>
       </div>
     </details>
+
+    <select id="quoteSource" style="display:none">
+      <option value="stoic">Stoic</option>
+    </select>
+    <input type="hidden" id="gcalAppInput">
   </div>
  
 </div><!-- /app -->
- 
-<!-- Bottom nav -->
-<div class="bottom-nav" id="bottomNav">
-  <button class="nav-btn active" id="navHome" onclick="nav('home')">
-    <span class="nav-btn-icon">⌂</span>
-    <span class="nav-btn-label">HOME</span>
-  </button>
-  <button class="nav-btn" id="navScenes" onclick="nav('scenes')">
-    <span class="nav-btn-icon">↻</span>
-    <span class="nav-btn-label">ROUTINES</span>
-  </button>
-  <button class="nav-btn" id="navModules" onclick="nav('modules')">
-    <span class="nav-btn-icon">⇢</span>
-    <span class="nav-btn-label">SEGMENTS</span>
-  </button>
-  <button class="nav-btn" id="navActions" onclick="nav('actions')">
-    <span class="nav-btn-icon">⚡</span>
-    <span class="nav-btn-label">SYNC</span>
-  </button>
-</div>
  
 <!-- Toast -->
 <div class="toast" id="toast"></div>
@@ -1801,16 +1558,19 @@ function skipOnboarding() { localStorage.setItem(KEYS.onboarded, '1'); showApp()
 function showApp() {
   document.getElementById('onboarding').classList.remove('active');
   document.getElementById('app').classList.add('active');
-  document.getElementById('bottomNav').classList.add('visible');
+  const bottomNav = document.getElementById('bottomNav');
+  if (bottomNav) bottomNav.classList.add('visible');
   renderAll();
   updateSyncStatus();
 }
 function nav(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+  const targetPage = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
+  (targetPage || document.getElementById('pageHome')).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const map = { home:'navHome', scenes:'navScenes', modules:'navModules', actions:'navActions', family:'navHome', lists:'navModules', integrations:'navActions' };
-  if (map[page]) document.getElementById(map[page]).classList.add('active');
+  const navButton = map[page] ? document.getElementById(map[page]) : null;
+  if (navButton) navButton.classList.add('active');
   if (page === 'family') setupPlacesAutocomplete();
 }
 function renderAll() {
