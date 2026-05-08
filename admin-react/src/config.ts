@@ -9,18 +9,37 @@ export type RoutineTask = {
 export type Routine = {
   id: string;
   label: string;
-  scene?: string;
-  days?: string[];
+  type?: string;
+  enabled?: boolean;
+  layer?: string;
+  appliesTo?: {
+    days?: number[];
+  };
   window?: {
     start?: string;
     end?: string;
   };
+  display?: {
+    scene?: string;
+    priority?: number;
+    themeId?: string;
+  };
+  timing?: {
+    leaveAt?: string;
+    arriveBy?: string;
+    deadline?: string;
+  };
   targetTime?: string;
   deadlineTime?: string;
   routeId?: string;
+  listId?: string;
   listIds?: string[];
   themeId?: string;
   tasks?: RoutineTask[];
+};
+
+type RoutinesConfig = {
+  routines: Routine[];
 };
 
 export type DisplayConfig = {
@@ -49,12 +68,12 @@ async function readJson<T>(path: string): Promise<T> {
 }
 
 export async function loadConfig(): Promise<ConfigState> {
-  const [routines, display] = await Promise.all([
-    readJson<Routine[]>("config/routines.json"),
+  const [routineConfig, display] = await Promise.all([
+    readJson<RoutinesConfig>("config/routines.json"),
     readJson<DisplayConfig>("config/display.json"),
   ]);
 
-  return { routines, display };
+  return { routines: routineConfig.routines ?? [], display };
 }
 
 export function formatRoutineWindow(routine: Routine) {
@@ -65,9 +84,17 @@ export function formatRoutineWindow(routine: Routine) {
     return `${start} to ${end}`;
   }
 
+  if (routine.timing?.leaveAt) {
+    return `Leave ${routine.timing.leaveAt}`;
+  }
+
   if (routine.targetTime) {
     return `Target ${routine.targetTime}`;
   }
 
   return "Flexible";
+}
+
+export function routineTheme(routine: Routine) {
+  return routine.display?.themeId || routine.themeId || "Default";
 }

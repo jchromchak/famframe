@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ConfigState, Routine, formatRoutineWindow, loadConfig } from "./config";
+import { ConfigState, Routine, formatRoutineWindow, loadConfig, routineTheme } from "./config";
 
 type View = "week" | "capture" | "routines" | "system";
 
@@ -13,15 +13,19 @@ const navItems: Array<{ id: View; label: string }> = [
 const sampleAppends = ["Library books tomorrow", "Pack soccer gear", "Late start morning"];
 
 function daysLabel(routine: Routine) {
-  if (!routine.days?.length) {
+  const dayNumbers = routine.appliesTo?.days;
+
+  if (!dayNumbers?.length) {
     return "As needed";
   }
 
-  if (routine.days.length === 7) {
+  if (dayNumbers.length === 7) {
     return "Every day";
   }
 
-  return routine.days.join(", ");
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return dayNumbers.map((day) => dayLabels[day] ?? String(day)).join(", ");
 }
 
 function App() {
@@ -40,7 +44,7 @@ function App() {
   }, []);
 
   const activeRoutines = useMemo(() => config?.routines ?? [], [config]);
-  const operationalRoutines = activeRoutines.filter((routine) => routine.scene || routine.tasks?.length);
+  const operationalRoutines = activeRoutines.filter((routine) => routine.enabled !== false);
   const visibleAppends = captureText.trim() ? sampleAppends : [];
 
   return (
@@ -189,7 +193,7 @@ function RoutineCard({ routine }: { routine: Routine }) {
         </div>
         <div>
           <dt>Theme</dt>
-          <dd>{routine.themeId || "Default"}</dd>
+          <dd>{routineTheme(routine)}</dd>
         </div>
       </dl>
     </article>
