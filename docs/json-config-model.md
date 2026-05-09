@@ -7,6 +7,7 @@ The TV dashboard reads these JSON/content files directly through `/config/dashbo
 ## Files
 
 - `/config/family.json`: family identity, `familyId`, members, home display facts, and time zone.
+- `/config/identity.json`: public-safe sample accounts, families, members, memberships, and device targets for the React admin identity/family flow.
 - `/config/routines.json`: routines, routine layers, timing, display scene hints, and reusable lists.
 - `/config/routes.json`: safe route labels, stop labels, per-stop buffers, fallback drive estimates, and safe derived route data.
 - `/config/display.json`: TV runtime, scene, time, and theme display settings.
@@ -27,6 +28,20 @@ The TV dashboard reads these JSON/content files directly through `/config/dashbo
 The format is `fam-[random 8char lowercase hex]`.
 
 Member and private place identifiers should also use stable opaque ids such as `mem-[random 8char lowercase hex]` and `place-[random 8char lowercase hex]`. Durable workflow/template objects can keep readable ids such as `routine-school-morning`, `routine-evening`, `breakfast`, or `dinner`; event-like generated routines/routes/lists should use readable categories with opaque suffixes, such as `routine-pickup-8f3a2c91`.
+
+## Identity and Family Access
+
+`identity.json` is a public-safe sample model for the React admin flow. It is not authentication.
+
+It contains:
+
+- `accounts`: login-shaped identities using sample `.test` email addresses.
+- `families`: family records with readable handles plus opaque suffixes.
+- `familyMembers`: people in a family; members may or may not have an email.
+- `memberships`: links between accounts and family members, with roles of `member`, `maintainer`, `co-owner`, or `owner`.
+- `deviceTargets`: display targets such as Living Room TV or Kitchen iPad.
+
+`isSuperAdmin` lives on the account object, not on family membership. Family roles stay family-native.
 
 ## Security Boundary
 
@@ -61,6 +76,7 @@ The admin keeps a local JSON-shaped source snapshot in browser localStorage unde
 GitHub sync now understands the JSON file set:
 
 - `config/family.json`
+- `config/identity.json`
 - `config/routines.json`
 - `config/routes.json`
 - `config/display.json`

@@ -41,6 +41,7 @@ Future phase:
 The first JSON model files live in:
 
 - `config/family.json`
+- `config/identity.json`
 - `config/routines.json`
 - `config/routes.json`
 - `config/display.json`
@@ -62,6 +63,8 @@ The legacy admin in `admin/` remains the current editor. A React admin shell is 
 ```
 
 See `docs/json-config-model.md` for the model boundary and migration plan.
+
+`config/identity.json` contains public-safe sample accounts, families, memberships, members, and device targets for the React admin prototype. It uses `.test` email addresses and is not authentication.
 
 ## Routine model direction
 

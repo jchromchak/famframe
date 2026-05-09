@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { ConfigState, Routine, formatRoutineWindow, loadConfig, routineTheme } from "./config";
+import {
+  ConfigState,
+  Routine,
+  fallbackIdentity,
+  formatRoutineWindow,
+  loadConfig,
+  loadIdentityConfig,
+  routineTheme,
+} from "./config";
 import {
   Account,
   DeviceTarget,
   Family,
   FamilyMember,
   Membership,
-  accounts,
-  deviceTargets as seedDeviceTargets,
-  families as seedFamilies,
-  familyMembers as seedFamilyMembers,
-  memberships as seedMemberships,
 } from "./mockData";
 
 type View = "week" | "capture" | "routines" | "system";
@@ -46,10 +49,11 @@ function App() {
   const [activeFamily, setActiveFamily] = useState<Family | null>(null);
   const [activeDevice, setActiveDevice] = useState<DeviceTarget | null>(null);
   const [activeView, setActiveView] = useState<View>("week");
-  const [families, setFamilies] = useState<Family[]>(seedFamilies);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(seedFamilyMembers);
-  const [memberships, setMemberships] = useState<Membership[]>(seedMemberships);
-  const [deviceTargets, setDeviceTargets] = useState<DeviceTarget[]>(seedDeviceTargets);
+  const [accounts, setAccounts] = useState<Account[]>(fallbackIdentity.accounts);
+  const [families, setFamilies] = useState<Family[]>(fallbackIdentity.families);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(fallbackIdentity.familyMembers);
+  const [memberships, setMemberships] = useState<Membership[]>(fallbackIdentity.memberships);
+  const [deviceTargets, setDeviceTargets] = useState<DeviceTarget[]>(fallbackIdentity.deviceTargets);
   const [config, setConfig] = useState<ConfigState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [captureText, setCaptureText] = useState("Late start tomorrow. Need library books. Pack soccer gear.");
@@ -61,6 +65,14 @@ function App() {
         setError(null);
       })
       .catch((nextError: Error) => setError(nextError.message));
+
+    loadIdentityConfig().then((identity) => {
+      setAccounts(identity.accounts);
+      setFamilies(identity.families);
+      setFamilyMembers(identity.familyMembers);
+      setMemberships(identity.memberships);
+      setDeviceTargets(identity.deviceTargets);
+    });
   }, []);
 
   const activeRoutines = useMemo(() => config?.routines ?? [], [config]);
@@ -141,7 +153,7 @@ function App() {
   }
 
   if (!activeAccount) {
-    return <LoginScreen onLogin={setActiveAccount} />;
+    return <LoginScreen accounts={accounts} onLogin={setActiveAccount} />;
   }
 
   if (!activeFamily) {
@@ -222,9 +234,15 @@ function App() {
   );
 }
 
-function LoginScreen({ onLogin }: { onLogin: (account: Account) => void }) {
-  const [email, setEmail] = useState(accounts[0].email);
+function LoginScreen({ accounts, onLogin }: { accounts: Account[]; onLogin: (account: Account) => void }) {
+  const [email, setEmail] = useState(accounts[0]?.email ?? "");
   const selectedAccount = accounts.find((account) => account.email === email) ?? accounts[0];
+
+  useEffect(() => {
+    if (!accounts.some((account) => account.email === email)) {
+      setEmail(accounts[0]?.email ?? "");
+    }
+  }, [accounts, email]);
 
   return (
     <main className="entry-shell">
@@ -241,10 +259,15 @@ function LoginScreen({ onLogin }: { onLogin: (account: Account) => void }) {
             ))}
           </select>
         </label>
-        <button className="primary-action" type="button" onClick={() => onLogin(selectedAccount)}>
+        <button
+          className="primary-action"
+          type="button"
+          disabled={!selectedAccount}
+          onClick={() => onLogin(selectedAccount)}
+        >
           Continue
         </button>
-        <p className="muted">Mock login only. This is shaping identity and family access before real auth exists.</p>
+        <p className="muted">Sample login only. This is shaping identity and family access before real auth exists.</p>
       </section>
     </main>
   );

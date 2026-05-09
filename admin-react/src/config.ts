@@ -1,3 +1,16 @@
+import {
+  Account,
+  DeviceTarget,
+  Family,
+  FamilyMember,
+  Membership,
+  accounts as fallbackAccounts,
+  deviceTargets as fallbackDeviceTargets,
+  families as fallbackFamilies,
+  familyMembers as fallbackFamilyMembers,
+  memberships as fallbackMemberships,
+} from "./mockData";
+
 export type RoutineTask = {
   id: string;
   label: string;
@@ -55,6 +68,22 @@ export type ConfigState = {
   display: DisplayConfig;
 };
 
+export type IdentityConfig = {
+  accounts: Account[];
+  families: Family[];
+  familyMembers: FamilyMember[];
+  memberships: Membership[];
+  deviceTargets: DeviceTarget[];
+};
+
+export const fallbackIdentity: IdentityConfig = {
+  accounts: fallbackAccounts,
+  families: fallbackFamilies,
+  familyMembers: fallbackFamilyMembers,
+  memberships: fallbackMemberships,
+  deviceTargets: fallbackDeviceTargets,
+};
+
 const configUrl = (path: string) => (import.meta.env.DEV ? `/${path}` : `../${path}`);
 
 async function readJson<T>(path: string): Promise<T> {
@@ -74,6 +103,22 @@ export async function loadConfig(): Promise<ConfigState> {
   ]);
 
   return { routines: routineConfig.routines ?? [], display };
+}
+
+export async function loadIdentityConfig(): Promise<IdentityConfig> {
+  try {
+    const identity = await readJson<Partial<IdentityConfig>>("config/identity.json");
+
+    return {
+      accounts: identity.accounts ?? fallbackIdentity.accounts,
+      families: identity.families ?? fallbackIdentity.families,
+      familyMembers: identity.familyMembers ?? fallbackIdentity.familyMembers,
+      memberships: identity.memberships ?? fallbackIdentity.memberships,
+      deviceTargets: identity.deviceTargets ?? fallbackIdentity.deviceTargets,
+    };
+  } catch {
+    return fallbackIdentity;
+  }
 }
 
 export function formatRoutineWindow(routine: Routine) {
