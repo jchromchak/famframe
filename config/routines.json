@@ -202,37 +202,6 @@
       },
       "routeId": "route-pickup-1778166294260",
       "listId": "list-school-pickup-1778166294260"
-    },
-    {
-      "id": "routine-soccer-practice-20260509",
-      "label": "Soccer practice",
-      "type": "departure",
-      "enabled": true,
-      "layer": "addon",
-      "appliesTo": {
-        "days": [
-          6
-        ],
-        "dates": [
-          "2026-05-09"
-        ]
-      },
-      "window": {
-        "start": "08:45",
-        "end": "10:20"
-      },
-      "display": {
-        "scene": "departure",
-        "priority": 95,
-        "themeId": ""
-      },
-      "timing": {
-        "leaveAt": "09:20",
-        "arriveBy": "09:50",
-        "deadline": "09:50"
-      },
-      "routeId": "route-soccer-practice-20260509",
-      "listId": "list-soccer-practice-20260509"
     }
   ],
   "lists": [
@@ -347,40 +316,6 @@
           "label": "Keys and wallet",
           "icon": "backpack",
           "targetOffsetMinutes": -10,
-          "assignee": ""
-        },
-        {
-          "id": "car",
-          "label": "Get in the car",
-          "icon": "car",
-          "targetOffsetMinutes": 0,
-          "assignee": ""
-        }
-      ]
-    },
-    {
-      "id": "list-soccer-practice-20260509",
-      "label": "Soccer practice list",
-      "items": [
-        {
-          "id": "water-bottle",
-          "label": "Water bottle",
-          "icon": "backpack",
-          "targetOffsetMinutes": -15,
-          "assignee": ""
-        },
-        {
-          "id": "soccer-ball",
-          "label": "Soccer ball",
-          "icon": "backpack",
-          "targetOffsetMinutes": -15,
-          "assignee": ""
-        },
-        {
-          "id": "chairs",
-          "label": "Chairs",
-          "icon": "backpack",
-          "targetOffsetMinutes": -15,
           "assignee": ""
         },
         {

@@ -17,11 +17,11 @@
       "bufferMinutes": 5,
       "fallbackDriveMinutes": 28,
       "derived": {
-        "provider": "",
-        "durationMinutes": null,
-        "trafficStatus": "",
-        "updatedAt": "",
-        "expiresAt": ""
+        "provider": "google-maps",
+        "durationMinutes": 28,
+        "trafficStatus": "light",
+        "updatedAt": "2026-05-09T13:28:59.866Z",
+        "expiresAt": "2026-05-09T13:43:59.866Z"
       }
     },
     {
@@ -40,11 +40,11 @@
       "bufferMinutes": 5,
       "fallbackDriveMinutes": 18,
       "derived": {
-        "provider": "",
-        "durationMinutes": null,
-        "trafficStatus": "",
-        "updatedAt": "",
-        "expiresAt": ""
+        "provider": "google-maps",
+        "durationMinutes": 22,
+        "trafficStatus": "light",
+        "updatedAt": "2026-05-09T13:29:00.173Z",
+        "expiresAt": "2026-05-09T13:44:00.173Z"
       }
     },
     {
@@ -104,42 +104,7 @@
         "updatedAt": "",
         "expiresAt": ""
       }
-    },
-    {
-      "id": "route-soccer-practice-20260509",
-      "label": "Home to soccer practice",
-      "origin": {
-        "type": "home",
-        "label": "Home"
-      },
-      "destination": {
-        "type": "saved-place",
-        "placeId": "place-soccer-rifle-range",
-        "label": "Soccer practice"
-      },
-      "stops": [],
-      "bufferMinutes": 5,
-      "fallbackDriveMinutes": 25,
-      "derived": {
-        "provider": "manual-estimate",
-        "durationMinutes": 25,
-        "trafficStatus": "safe estimate",
-        "updatedAt": "2026-05-09T04:30:00Z",
-        "expiresAt": "2026-05-09T14:00:00Z"
-      }
     }
   ],
-  "places": [
-    {
-      "id": "place-soccer-rifle-range",
-      "label": "Soccer practice",
-      "kind": "sports-field",
-      "city": "Mount Pleasant",
-      "postalCode": "29464",
-      "coordinates": {
-        "lat": 32.797683,
-        "lon": -79.853408
-      }
-    }
-  ]
+  "places": []
 }
