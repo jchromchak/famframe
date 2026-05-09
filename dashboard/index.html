@@ -703,6 +703,13 @@ body.sleep-active #artMode{filter:brightness(.76)}
   function routineActive(t, routine) {
     if (!routine || routine.enabled === false) return false;
     var days = Object.prototype.toString.call(routine.days) === '[object Array]' ? routine.days : [0,1,2,3,4,5,6];
+    var dates = Object.prototype.toString.call(routine.dates) === '[object Array]' ? routine.dates : [];
+    if (dates.length) {
+      var today = t.year + '-' + String(t.monthIndex + 1).padStart(2, '0') + '-' + String(t.day).padStart(2, '0');
+      var dateOk = false;
+      for (var d = 0; d < dates.length; d++) if (String(dates[d]) === today) dateOk = true;
+      if (!dateOk) return false;
+    }
     var dayOk = false;
     for (var i = 0; i < days.length; i++) if (Number(days[i]) === t.dayIndex) dayOk = true;
     if (!dayOk) return false;

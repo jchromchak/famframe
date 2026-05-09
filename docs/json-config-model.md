@@ -101,6 +101,8 @@ Per-route refresh controls can remain as diagnostics, but the preferred workflow
 
 See `/docs/routine-layering-model.md` for the routine inheritance model. The short version: the JSON source can evolve through `baseline`, `pattern`, `override`, and `addon` layers, but the TV should continue to receive only resolved, display-safe routine output.
 
+Routines can be limited to a single day or set of exact days by adding `appliesTo.dates` with `YYYY-MM-DD` values. The dashboard checks `dates` before day-of-week, which allows one-time Saturday items without making them recur every Saturday.
+
 ## Dynamic Routine Windows
 
 See `/docs/dynamic-routine-windows.md` for the display-window policy. Explicit routine windows are preserved. Missing windows, or windows marked with `"mode": "auto"`, can be derived from routine timing before dashboard output is generated.

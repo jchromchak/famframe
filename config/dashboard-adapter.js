@@ -208,6 +208,7 @@
       type: 'departure',
       enabled: routine.enabled !== false,
       days: arr(routine.appliesTo && routine.appliesTo.days).map(Number),
+      dates: arr(routine.appliesTo && routine.appliesTo.dates).map(String),
       window: departureWindow(routine),
       primaryTime: time(routine.timing && routine.timing.leaveAt, '07:00'),
       targetTime: time(routine.timing && routine.timing.arriveBy, '07:30'),
@@ -239,6 +240,7 @@
       type: 'timeline',
       enabled: routine.enabled !== false,
       days: arr(routine.appliesTo && routine.appliesTo.days).map(Number),
+      dates: arr(routine.appliesTo && routine.appliesTo.dates).map(String),
       window: timelineWindow(routine),
       display: {
         scene: (routine.display && routine.display.scene) || 'evening',

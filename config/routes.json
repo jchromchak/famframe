@@ -104,7 +104,42 @@
         "updatedAt": "",
         "expiresAt": ""
       }
+    },
+    {
+      "id": "route-soccer-practice-20260509",
+      "label": "Home to soccer practice",
+      "origin": {
+        "type": "home",
+        "label": "Home"
+      },
+      "destination": {
+        "type": "saved-place",
+        "placeId": "place-soccer-rifle-range",
+        "label": "Soccer practice"
+      },
+      "stops": [],
+      "bufferMinutes": 5,
+      "fallbackDriveMinutes": 25,
+      "derived": {
+        "provider": "manual-estimate",
+        "durationMinutes": 25,
+        "trafficStatus": "safe estimate",
+        "updatedAt": "2026-05-09T04:30:00Z",
+        "expiresAt": "2026-05-09T14:00:00Z"
+      }
     }
   ],
-  "places": []
+  "places": [
+    {
+      "id": "place-soccer-rifle-range",
+      "label": "Soccer practice",
+      "kind": "sports-field",
+      "city": "Mount Pleasant",
+      "postalCode": "29464",
+      "coordinates": {
+        "lat": 32.797683,
+        "lon": -79.853408
+      }
+    }
+  ]
 }
