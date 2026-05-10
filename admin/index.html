@@ -750,14 +750,14 @@ select {
       </select>
       <div class="field-label">Private image</div>
       <select id="tributeImageSelect" class="full-input" onchange="onTributeSelectionChange()">
-        <option value="../../famframe-private/assets/tributes/mothers-day-2026.png">Generated floral background</option>
-        <option value="../../famframe-private/assets/tributes/mothers-day-siblings-with-baby-2026.jpeg">Siblings with baby</option>
-        <option value="../../famframe-private/assets/tributes/mothers-day-mom-with-kids-2026.jpeg">Mom with kids</option>
+        <option value="../assets/tributes/mothers-day-2026.png">Generated floral background</option>
+        <option value="../assets/tributes/mothers-day-siblings-with-baby-2026.jpeg">Siblings with baby</option>
+        <option value="../assets/tributes/mothers-day-mom-with-kids-2026.jpeg">Mom with kids</option>
         <option value="uploaded">Upload from this device</option>
         <option value="custom">Custom private path</option>
       </select>
       <input type="file" id="tributeUploadImage" class="full-input" style="margin-top:8px" accept="image/*" onchange="handleTributeUpload(this.files)">
-      <input type="text" id="tributeCustomImage" class="full-input" style="margin-top:8px" placeholder="../../famframe-private/assets/tributes/your-image.jpeg" oninput="onTributeSelectionChange()">
+      <input type="text" id="tributeCustomImage" class="full-input" style="margin-top:8px" placeholder="../assets/tributes/your-image.jpeg" oninput="onTributeSelectionChange()">
       <div class="field-label" style="margin-top:10px">Tone</div>
       <select id="tributeToneSelect" class="full-input">
         <option value="auto">Auto detect</option>
@@ -1647,9 +1647,9 @@ function renderAll() {
 }
 
 const TRIBUTE_IMAGE_OPTIONS = [
-  '../../famframe-private/assets/tributes/mothers-day-2026.png',
-  '../../famframe-private/assets/tributes/mothers-day-siblings-with-baby-2026.jpeg',
-  '../../famframe-private/assets/tributes/mothers-day-mom-with-kids-2026.jpeg',
+  '../assets/tributes/mothers-day-2026.png',
+  '../assets/tributes/mothers-day-siblings-with-baby-2026.jpeg',
+  '../assets/tributes/mothers-day-mom-with-kids-2026.jpeg',
 ];
 const TRIBUTE_PRESETS = {
   'mothers-day-2026': {

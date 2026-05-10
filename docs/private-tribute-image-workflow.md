@@ -8,6 +8,12 @@ Current local asset folder:
 /Users/johnchromchak/projects/famframe-private/assets/tributes/
 ```
 
+Temporary public copies for hosted/phone preview live here:
+
+```text
+/Users/johnchromchak/projects/famframe/assets/tributes/
+```
+
 The fallback admin can save a selected tribute image path, tone, title, and message into browser `localStorage`:
 
 - `fam_frame_tribute_image`
@@ -22,7 +28,8 @@ The TV dashboard reads those local values when `?scene=tribute` is active. This 
 
 There are two supported quick-update paths:
 
-- Private repo path: use this on the Mac where `famframe` and `famframe-private` are sibling folders. These paths will not load from a hosted public dashboard or from a phone browser.
+- Public asset path: use this for today's hosted/phone preview. These files are committed to the public repo under `assets/tributes/`.
+- Private repo path: use this later for private-only media on the Mac where `famframe` and `famframe-private` are sibling folders. These paths will not load from a hosted public dashboard or from a phone browser.
 - Upload from this device: use this for phone/browser preview. The admin resizes the selected photo and stores it only in that browser's local storage, then the dashboard reads it locally.
 
 Special-day screens use the same tribute scene. The admin currently includes presets for Mother's Day 2026 and Arthur's birthday on May 11, 2026. The override checkbox controls whether this browser sets `fam_frame_force_scene=tribute`; Preview still opens the tribute scene even when the persistent override is off.
