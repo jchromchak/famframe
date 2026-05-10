@@ -204,14 +204,19 @@ body.sleep-active #artMode{filter:brightness(.76)}
 @keyframes textureDrift{0%{background-position:0 0}100%{background-position:96px 64px}}
 
 /* ── TRIBUTE ── */
-#tributeMode{display:none;position:relative;width:100%;height:100%;overflow:hidden;background:#0b0b09}
+#tributeMode{--tribute-text:#f4ecdc;--tribute-message:rgba(244,236,220,.82);--tribute-mark:rgba(244,236,220,.24);display:none;position:relative;width:100%;height:100%;overflow:hidden;background:#0b0b09}
 #tributeMode.active{display:block}
+#tributeMode.tone-light{--tribute-text:#17130e;--tribute-message:rgba(23,19,14,.76);--tribute-mark:rgba(23,19,14,.28)}
+#tributeMode.tone-dark{--tribute-text:#f4ecdc;--tribute-message:rgba(244,236,220,.82);--tribute-mark:rgba(244,236,220,.24)}
 .tribute-bg{position:absolute;inset:0;background-image:var(--tribute-image);background-size:cover;background-position:center;filter:saturate(.96) brightness(.82)}
+#tributeMode.tone-light .tribute-bg{filter:saturate(.96) brightness(.98)}
 .tribute-shade{position:absolute;inset:0;background:radial-gradient(circle at 72% 48%,rgba(0,0,0,.08),rgba(0,0,0,.48) 62%,rgba(0,0,0,.72)),linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.16) 58%,rgba(0,0,0,.34))}
-.tribute-copy{position:absolute;left:112px;bottom:118px;max-width:840px;color:#f4ecdc;text-shadow:0 2px 24px rgba(0,0,0,.6)}
+#tributeMode.tone-light .tribute-shade{background:radial-gradient(circle at 72% 48%,rgba(255,250,240,.02),rgba(255,250,240,.2) 58%,rgba(255,250,240,.34)),linear-gradient(90deg,rgba(255,250,240,.66),rgba(255,250,240,.2) 58%,rgba(255,250,240,.16))}
+.tribute-copy{position:absolute;left:112px;bottom:118px;max-width:840px;color:var(--tribute-text);text-shadow:0 2px 24px rgba(0,0,0,.6)}
+#tributeMode.tone-light .tribute-copy{text-shadow:0 2px 22px rgba(255,250,240,.44)}
 .tribute-title{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:116px;font-weight:200;letter-spacing:0;line-height:.96;margin-bottom:30px}
-.tribute-message{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:36px;font-weight:300;line-height:1.28;color:rgba(244,236,220,.82);max-width:720px}
-.tribute-mark{position:absolute;right:46px;bottom:34px;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:rgba(244,236,220,.24)}
+.tribute-message{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:36px;font-weight:300;line-height:1.28;color:var(--tribute-message);max-width:720px}
+.tribute-mark{position:absolute;right:46px;bottom:34px;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--tribute-mark)}
 
 /* ── CONFIG ERROR ── */
 .config-error{display:none;position:absolute;inset:0;padding:96px;background:var(--ff-bg);z-index:100;color:var(--ff-text)}
@@ -494,6 +499,14 @@ body.sleep-active #artMode{filter:brightness(.76)}
     } catch (e) {
       return fallback;
     }
+  }
+  function setTributeTone(tone) {
+    var el = id('tributeMode');
+    if (!el) return;
+    el.className = el.className
+      .replace(/\s?tone-light/g, '')
+      .replace(/\s?tone-dark/g, '');
+    el.className += tone === 'light' ? ' tone-light' : ' tone-dark';
   }
   function applyTheme() {
     if (document.body) document.body.setAttribute('data-theme', themeId());
@@ -807,14 +820,72 @@ body.sleep-active #artMode{filter:brightness(.76)}
     if (document.body) document.body.classList.toggle('sleep-active', m === 'art');
   }
 
+  var tributeState = { imageUrl: '', tone: '' };
   function renderTribute() {
     var imageUrl = queryValue('tributeImage', '../../famframe-private/assets/tributes/mothers-day-2026.png');
     var title = queryValue('tributeTitle', 'Happy Mothers Day');
     var message = queryValue('tributeMessage', 'To the best mom in the world. We love you');
+    var tone = queryValue('tributeTone', 'dark');
     id('tributeMode').style.setProperty('--tribute-image', 'url("' + imageUrl.replace(/"/g, '\\"') + '")');
     id('tributeTitle').textContent = title;
     id('tributeMessage').textContent = message;
     id('tributeMark').textContent = queryValue('tributeMark', 'MOTHER’S DAY 2026');
+    if (tone === 'auto') {
+      if (tributeState.imageUrl !== imageUrl || tributeState.tone !== 'auto') {
+        tributeState.imageUrl = imageUrl;
+        tributeState.tone = 'auto';
+        setTributeTone('dark');
+        detectTributeTone(imageUrl);
+      }
+    } else {
+      tributeState.imageUrl = imageUrl;
+      tributeState.tone = tone === 'light' ? 'light' : 'dark';
+      setTributeTone(tributeState.tone);
+    }
+  }
+  function detectTributeTone(imageUrl) {
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var canvas = document.createElement('canvas');
+        var width = 1920;
+        var height = 1080;
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        var imageRatio = img.naturalWidth / img.naturalHeight;
+        var stageRatio = width / height;
+        var drawW = width;
+        var drawH = height;
+        var drawX = 0;
+        var drawY = 0;
+        if (imageRatio > stageRatio) {
+          drawW = height * imageRatio;
+          drawX = (width - drawW) / 2;
+        } else {
+          drawH = width / imageRatio;
+          drawY = (height - drawH) / 2;
+        }
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+        var pixels = ctx.getImageData(96, 610, 880, 270).data;
+        var total = 0;
+        var count = 0;
+        for (var i = 0; i < pixels.length; i += 16) {
+          var r = pixels[i] / 255;
+          var g = pixels[i + 1] / 255;
+          var b = pixels[i + 2] / 255;
+          total += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          count++;
+        }
+        setTributeTone(total / Math.max(1, count) > 0.54 ? 'light' : 'dark');
+      } catch (e) {
+        setTributeTone('dark');
+      }
+    };
+    img.onerror = function () {
+      setTributeTone('dark');
+    };
+    img.src = imageUrl;
   }
 
   // ── CLOCKS ────────────────────────────────────────────────────────
