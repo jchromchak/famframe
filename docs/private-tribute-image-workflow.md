@@ -32,7 +32,7 @@ There are two supported quick-update paths:
 - Private repo path: use this later for private-only media on the Mac where `famframe` and `famframe-private` are sibling folders. These paths will not load from a hosted public dashboard or from a phone browser.
 - Upload from this device: use this for phone/browser preview. The admin resizes the selected photo and stores it only in that browser's local storage, then the dashboard reads it locally.
 
-Special-day screens use the same tribute scene. The admin currently includes presets for Mother's Day 2026 and Arthur's birthday on May 11, 2026. The override checkbox controls whether this browser sets `fam_frame_force_scene=tribute`; Preview still opens the tribute scene even when the persistent override is off.
+Special-day screens use the same tribute scene. The admin currently includes presets for Mother's Day 2026 and Arthur's birthday on May 11, 2026. Arthur's birthday also has a temporary dashboard-level special-day rule for May 10 and May 11, 2026 so the hosted display can show it even when the evening routine would normally be active. The override checkbox controls whether this browser sets `fam_frame_force_scene=tribute`; Preview still opens the tribute scene even when the persistent override is off.
 
 Time fences live in two layers:
 

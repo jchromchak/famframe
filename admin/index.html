@@ -750,6 +750,7 @@ select {
       </select>
       <div class="field-label">Private image</div>
       <select id="tributeImageSelect" class="full-input" onchange="onTributeSelectionChange()">
+        <option value="../assets/tributes/arthur-birthday-2026.png">Arthur birthday background</option>
         <option value="../assets/tributes/mothers-day-2026.png">Generated floral background</option>
         <option value="../assets/tributes/mothers-day-siblings-with-baby-2026.jpeg">Siblings with baby</option>
         <option value="../assets/tributes/mothers-day-mom-with-kids-2026.jpeg">Mom with kids</option>
@@ -1647,6 +1648,7 @@ function renderAll() {
 }
 
 const TRIBUTE_IMAGE_OPTIONS = [
+  '../assets/tributes/arthur-birthday-2026.png',
   '../assets/tributes/mothers-day-2026.png',
   '../assets/tributes/mothers-day-siblings-with-baby-2026.jpeg',
   '../assets/tributes/mothers-day-mom-with-kids-2026.jpeg',
@@ -1656,11 +1658,15 @@ const TRIBUTE_PRESETS = {
     title: 'Happy Mothers Day',
     message: 'To the best mom in the world. We love you',
     mark: 'MOTHER’S DAY 2026',
+    image: '../assets/tributes/mothers-day-mom-with-kids-2026.jpeg',
+    tone: 'light',
   },
   'arthur-birthday-2026': {
     title: 'Happy Birthday Arthur!',
     message: 'We love you. Have the best day.',
     mark: 'ARTHUR BIRTHDAY 2026',
+    image: '../assets/tributes/arthur-birthday-2026.png',
+    tone: 'dark',
   },
 };
 const TRIBUTE_UPLOAD_MAX_EDGE = 1800;
@@ -1690,7 +1696,10 @@ function applyTributePreset(id) {
   if (!preset) return;
   setVal('tributeTitleInput', preset.title);
   setVal('tributeMessageInput', preset.message);
+  if (preset.image) setVal('tributeImageSelect', preset.image);
+  if (preset.tone) setVal('tributeToneSelect', preset.tone);
   localStorage.setItem(KEYS.tributeMark, preset.mark);
+  onTributeSelectionChange();
 }
 function renderTributeAdmin() {
   const select = document.getElementById('tributeImageSelect');

@@ -515,6 +515,14 @@ body.sleep-active #artMode{filter:brightness(.76)}
     } catch (e) {}
     return localValue(localKey, fallback);
   }
+  function queryOrSpecialOrLocal(queryName, specialValue, localKey, fallback) {
+    try {
+      var value = new URLSearchParams(window.location.search).get(queryName);
+      if (value != null && value !== '') return value;
+    } catch (e) {}
+    if (specialValue != null && specialValue !== '') return specialValue;
+    return localValue(localKey, fallback);
+  }
   function setTributeTone(tone) {
     var el = id('tributeMode');
     if (!el) return;
@@ -776,6 +784,29 @@ body.sleep-active #artMode{filter:brightness(.76)}
     if (s <= e) return n >= s && n < e;
     return n >= s || n < e;
   }
+  var SPECIAL_DAY_TRIBUTES = [
+    {
+      id: 'arthur-birthday-2026',
+      dates: ['2026-05-10', '2026-05-11'],
+      image: '../assets/tributes/arthur-birthday-2026.png',
+      title: 'Happy Birthday Arthur!',
+      message: 'We love you. Have the best day.',
+      mark: 'ARTHUR BIRTHDAY 2026',
+      tone: 'dark'
+    }
+  ];
+  function dayKey(t) {
+    return t.year + '-' + String(t.monthIndex + 1).padStart(2, '0') + '-' + String(t.day).padStart(2, '0');
+  }
+  function activeSpecialTribute(t) {
+    var today = dayKey(t);
+    for (var i = 0; i < SPECIAL_DAY_TRIBUTES.length; i++) {
+      var tribute = SPECIAL_DAY_TRIBUTES[i];
+      var dates = Object.prototype.toString.call(tribute.dates) === '[object Array]' ? tribute.dates : [];
+      for (var d = 0; d < dates.length; d++) if (String(dates[d]) === today) return tribute;
+    }
+    return null;
+  }
   function activeRoutine(t) {
     var routines = ConfigService.getRoutines().filter(function (r) { return routineActive(t, r); });
     routines.sort(function (a, b) {
@@ -788,13 +819,14 @@ body.sleep-active #artMode{filter:brightness(.76)}
   var currentRoutine = null;
   function currentMode(t) {
     var forced = null;
+    var storedForced = null;
     var forcedRoutine = null;
     try {
       var params = new URLSearchParams(window.location.search);
       forcedRoutine = params.get('routine');
       forced = params.get('scene') ||
-        params.get('mode') ||
-        window.localStorage.getItem('fam_frame_force_scene');
+        params.get('mode');
+      storedForced = window.localStorage.getItem('fam_frame_force_scene');
     } catch (e) {}
     currentRoutine = null;
     if (forcedRoutine) {
@@ -806,6 +838,8 @@ body.sleep-active #artMode{filter:brightness(.76)}
       }
     }
     if (forced) return forced;
+    if (activeSpecialTribute(t)) return 'tribute';
+    if (storedForced) return storedForced;
     currentRoutine = activeRoutine(t);
     if (currentRoutine) {
       var scene = currentRoutine.display && currentRoutine.display.scene ? currentRoutine.display.scene : currentRoutine.type;
@@ -837,14 +871,15 @@ body.sleep-active #artMode{filter:brightness(.76)}
 
   var tributeState = { imageUrl: '', tone: '' };
   function renderTribute() {
-    var imageUrl = queryOrLocal('tributeImage', 'fam_frame_tribute_image', '../assets/tributes/mothers-day-2026.png');
-    var title = queryOrLocal('tributeTitle', 'fam_frame_tribute_title', 'Happy Mothers Day');
-    var message = queryOrLocal('tributeMessage', 'fam_frame_tribute_message', 'To the best mom in the world. We love you');
-    var tone = queryOrLocal('tributeTone', 'fam_frame_tribute_tone', 'dark');
+    var special = activeSpecialTribute(zonedNow()) || {};
+    var imageUrl = queryOrSpecialOrLocal('tributeImage', special.image, 'fam_frame_tribute_image', '../assets/tributes/mothers-day-2026.png');
+    var title = queryOrSpecialOrLocal('tributeTitle', special.title, 'fam_frame_tribute_title', 'Happy Mothers Day');
+    var message = queryOrSpecialOrLocal('tributeMessage', special.message, 'fam_frame_tribute_message', 'To the best mom in the world. We love you');
+    var tone = queryOrSpecialOrLocal('tributeTone', special.tone, 'fam_frame_tribute_tone', 'dark');
     id('tributeMode').style.setProperty('--tribute-image', 'url("' + imageUrl.replace(/"/g, '\\"') + '")');
     id('tributeTitle').textContent = title;
     id('tributeMessage').textContent = message;
-    id('tributeMark').textContent = queryOrLocal('tributeMark', 'fam_frame_tribute_mark', 'MOTHER’S DAY 2026');
+    id('tributeMark').textContent = queryOrSpecialOrLocal('tributeMark', special.mark, 'fam_frame_tribute_mark', 'MOTHER’S DAY 2026');
     if (tone === 'auto') {
       if (tributeState.imageUrl !== imageUrl || tributeState.tone !== 'auto') {
         tributeState.imageUrl = imageUrl;
