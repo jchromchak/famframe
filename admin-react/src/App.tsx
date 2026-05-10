@@ -15,6 +15,15 @@ import {
   FamilyMember,
   Membership,
 } from "./mockData";
+import { parseCaptureAppends } from "./capture";
+import { CaptureView } from "./CaptureView";
+import { ThisWeekView } from "./ThisWeekView";
+import {
+  devicesForFamily,
+  familiesForAccount,
+  membersForFamily,
+  roleForAccount,
+} from "./identity";
 
 type View = "week" | "capture" | "routines" | "system";
 
@@ -25,7 +34,6 @@ const navItems: Array<{ id: View; label: string }> = [
   { id: "system", label: "System" },
 ];
 
-const sampleAppends = ["Library books tomorrow", "Pack soccer gear", "Late start morning"];
 const timezoneOptions = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"];
 
 function daysLabel(routine: Routine) {
@@ -76,35 +84,33 @@ function App() {
   }, []);
 
   const activeRoutines = useMemo(() => config?.routines ?? [], [config]);
-  const operationalRoutines = activeRoutines.filter((routine) => routine.enabled !== false);
-  const visibleAppends = captureText.trim() ? sampleAppends : [];
+  const operationalRoutines = useMemo(
+    () => activeRoutines.filter((routine) => routine.enabled !== false),
+    [activeRoutines],
+  );
+  const visibleAppends = useMemo(
+    () => parseCaptureAppends(captureText, operationalRoutines),
+    [captureText, operationalRoutines],
+  );
 
   const familiesForActiveAccount = useMemo(() => {
     if (!activeAccount) {
       return [];
     }
 
-    if (activeAccount.isSuperAdmin) {
-      return families;
-    }
-
-    return families.filter((family) =>
-      memberships.some((membership) => membership.accountEmail === activeAccount.email && membership.familyId === family.id),
-    );
+    return familiesForAccount(activeAccount, families, memberships);
   }, [activeAccount, families, memberships]);
 
-  function devicesForFamily(familyId: string) {
-    return deviceTargets.filter((device) => device.familyId === familyId);
+  function getDevicesForFamily(familyId: string) {
+    return devicesForFamily(familyId, deviceTargets);
   }
 
-  function membersForFamily(familyId: string) {
-    return familyMembers.filter((member) => member.familyId === familyId);
+  function getMembersForFamily(familyId: string) {
+    return membersForFamily(familyId, familyMembers);
   }
 
-  function roleForAccount(account: Account, familyId: string) {
-    return memberships.find(
-      (membership) => membership.accountEmail === account.email && membership.familyId === familyId,
-    )?.role;
+  function getRoleForAccount(account: Account, familyId: string) {
+    return roleForAccount(account, familyId, memberships);
   }
 
   function createFamily(input: CreateFamilyInput) {
@@ -161,9 +167,9 @@ function App() {
       <FamilySwitcher
         account={activeAccount}
         families={familiesForActiveAccount}
-        devicesForFamily={devicesForFamily}
-        membersForFamily={membersForFamily}
-        roleForAccount={roleForAccount}
+        devicesForFamily={getDevicesForFamily}
+        membersForFamily={getMembersForFamily}
+        roleForAccount={getRoleForAccount}
         onBack={() => setActiveAccount(null)}
         onSelectFamily={(family, device) => {
           setActiveFamily(family);
@@ -174,8 +180,8 @@ function App() {
     );
   }
 
-  const familyRole = roleForAccount(activeAccount, activeFamily.id);
-  const familyDevices = devicesForFamily(activeFamily.id);
+  const familyRole = getRoleForAccount(activeAccount, activeFamily.id);
+  const familyDevices = getDevicesForFamily(activeFamily.id);
 
   return (
     <main className="admin-shell">
@@ -199,7 +205,7 @@ function App() {
 
       <section className="view-frame">
         {activeView === "week" ? (
-          <ThisWeek
+          <ThisWeekView
             routines={operationalRoutines}
             appends={visibleAppends}
             account={activeAccount}
@@ -207,10 +213,11 @@ function App() {
             device={activeDevice}
             devices={familyDevices}
             onDeviceChange={setActiveDevice}
+            renderRoutine={(routine) => <RoutineCard key={routine.id} routine={routine} />}
           />
         ) : null}
         {activeView === "capture" ? (
-          <Capture text={captureText} onTextChange={setCaptureText} appends={visibleAppends} />
+          <CaptureView text={captureText} onTextChange={setCaptureText} appends={visibleAppends} />
         ) : null}
         {activeView === "routines" ? <Routines routines={operationalRoutines} /> : null}
         {activeView === "system" ? (
@@ -444,126 +451,6 @@ function makeOpaqueSuffix() {
   }
 
   return Math.random().toString(16).slice(2, 10).padEnd(8, "0");
-}
-
-function ThisWeek({
-  routines,
-  appends,
-  account,
-  family,
-  device,
-  devices,
-  onDeviceChange,
-}: {
-  routines: Routine[];
-  appends: string[];
-  account: Account;
-  family: Family;
-  device: DeviceTarget | null;
-  devices: DeviceTarget[];
-  onDeviceChange: (device: DeviceTarget) => void;
-}) {
-  return (
-    <div className="panel-grid">
-      <section className="wide-panel">
-        <div className="section-heading">
-          <p className="eyebrow">Operational View</p>
-          <h2>This week starts with inherited routines.</h2>
-        </div>
-        <div className="week-strip">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-            <article key={day} className="day-card">
-              <span>{day}</span>
-              <div className="routine-dots">
-                <i />
-                <i />
-                {day === "Thu" || day === "Sun" ? <b /> : null}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="side-panel">
-        <p className="eyebrow">Active Target</p>
-        <h3 className="compact-title">{device?.label ?? "No device selected"}</h3>
-        <p className="muted">{family.handle}</p>
-        <div className="target-stack">
-          {devices.map((target) => (
-            <button
-              key={target.id}
-              className={target.id === device?.id ? "target-button active" : "target-button"}
-              type="button"
-              onClick={() => onDeviceChange(target)}
-            >
-              {target.label}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {account.isSuperAdmin ? (
-        <section className="side-panel super-panel">
-          <p className="eyebrow">Testing View</p>
-          <p className="muted">Super-admin controls will set which family and device a TV route renders.</p>
-          <code>/dashboard/?family={family.handle}&device={device?.handle ?? "none"}</code>
-        </section>
-      ) : null}
-
-      <section className="side-panel">
-        <p className="eyebrow">Temporary Appends</p>
-        {appends.length ? (
-          <ul className="plain-list">
-            {appends.map((append) => (
-              <li key={append}>{append}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="muted">No temporary context captured yet.</p>
-        )}
-      </section>
-
-      <section className="wide-panel">
-        <p className="eyebrow">Routines In Play</p>
-        <div className="routine-row">
-          {routines.slice(0, 4).map((routine) => (
-            <RoutineCard key={routine.id} routine={routine} />
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function Capture({
-  text,
-  onTextChange,
-  appends,
-}: {
-  text: string;
-  onTextChange: (value: string) => void;
-  appends: string[];
-}) {
-  return (
-    <div className="panel-grid capture-grid">
-      <section className="wide-panel">
-        <p className="eyebrow">Quick Capture</p>
-        <textarea
-          value={text}
-          onChange={(event) => onTextChange(event.target.value)}
-          aria-label="Quick capture text"
-        />
-      </section>
-      <section className="side-panel">
-        <p className="eyebrow">Append Preview</p>
-        <ul className="plain-list">
-          {appends.map((append) => (
-            <li key={append}>{append}</li>
-          ))}
-        </ul>
-      </section>
-    </div>
-  );
 }
 
 function Routines({ routines }: { routines: Routine[] }) {

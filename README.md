@@ -5,7 +5,7 @@ your family's living room dashboard
 
 This public repository contains the Fam Frame app code and safe sample/config data only.
 
-Private Dovetell context memory, planning notes, risks, decisions, and strategy live in the private companion repository:
+Private project context memory, planning notes, risks, decisions, and strategy live in the private companion repository:
 
 - `github.com/jchromchak/famframe-private`
 
@@ -52,6 +52,20 @@ The first JSON model files live in:
 The TV dashboard and admin now use these files as the source of truth.
 
 The legacy admin in `admin/` remains the current editor. A React admin shell is being prototyped in `admin-react/` beside it so the new information architecture can evolve without breaking the working admin.
+
+`admin-next/` is a generated static snapshot of the React admin for lightweight phone testing after a push. Treat `admin-react/` as the source and refresh the snapshot with:
+
+```sh
+cd admin-react
+npm run publish:preview
+```
+
+Before pushing React admin changes, run:
+
+```sh
+cd admin-react
+npm run verify
+```
 
 
 `config/family.json` includes a stable family primary key:

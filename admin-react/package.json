@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test:capture": "node ../scripts/test-capture-parser.js",
+    "publish:preview": "vite build && node ../scripts/sync-admin-preview.js",
+    "verify": "tsc --noEmit && node ../scripts/test-capture-parser.js && vite build && node ../scripts/verify-admin-preview.js",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
@@ -15,5 +19,9 @@
     "rollup": "npm:@rollup/wasm-node@^4.60.3",
     "typescript": "^5.8.0",
     "vite": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
   }
 }

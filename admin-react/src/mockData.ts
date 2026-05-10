@@ -179,27 +179,3 @@ export const deviceTargets: DeviceTarget[] = [
     mode: "Testing view",
   },
 ];
-
-export function familiesForAccount(account: Account) {
-  const accountMemberships = memberships.filter((membership) => membership.accountEmail === account.email);
-
-  if (account.isSuperAdmin) {
-    return families;
-  }
-
-  return families.filter((family) => accountMemberships.some((membership) => membership.familyId === family.id));
-}
-
-export function roleForAccount(account: Account, familyId: string) {
-  return memberships.find(
-    (membership) => membership.accountEmail === account.email && membership.familyId === familyId,
-  )?.role;
-}
-
-export function membersForFamily(familyId: string) {
-  return familyMembers.filter((member) => member.familyId === familyId);
-}
-
-export function devicesForFamily(familyId: string) {
-  return deviceTargets.filter((device) => device.familyId === familyId);
-}

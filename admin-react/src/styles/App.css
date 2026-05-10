@@ -214,6 +214,22 @@
   padding: 12px;
 }
 
+.append-card {
+  display: grid;
+  gap: 6px;
+}
+
+.append-label {
+  font-weight: 800;
+}
+
+.append-meta {
+  color: var(--ff-color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .field-stack {
   display: grid;
   gap: 8px;
@@ -270,9 +286,6 @@
 .target-stack {
   display: grid;
   gap: 8px;
-}
-
-.target-stack {
   margin-top: 14px;
 }
 
