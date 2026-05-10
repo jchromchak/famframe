@@ -500,6 +500,21 @@ body.sleep-active #artMode{filter:brightness(.76)}
       return fallback;
     }
   }
+  function localValue(key, fallback) {
+    try {
+      var value = window.localStorage.getItem(key);
+      return value == null || value === '' ? fallback : value;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function queryOrLocal(queryName, localKey, fallback) {
+    try {
+      var value = new URLSearchParams(window.location.search).get(queryName);
+      if (value != null && value !== '') return value;
+    } catch (e) {}
+    return localValue(localKey, fallback);
+  }
   function setTributeTone(tone) {
     var el = id('tributeMode');
     if (!el) return;
@@ -822,14 +837,14 @@ body.sleep-active #artMode{filter:brightness(.76)}
 
   var tributeState = { imageUrl: '', tone: '' };
   function renderTribute() {
-    var imageUrl = queryValue('tributeImage', '../../famframe-private/assets/tributes/mothers-day-2026.png');
-    var title = queryValue('tributeTitle', 'Happy Mothers Day');
-    var message = queryValue('tributeMessage', 'To the best mom in the world. We love you');
-    var tone = queryValue('tributeTone', 'dark');
+    var imageUrl = queryOrLocal('tributeImage', 'fam_frame_tribute_image', '../../famframe-private/assets/tributes/mothers-day-2026.png');
+    var title = queryOrLocal('tributeTitle', 'fam_frame_tribute_title', 'Happy Mothers Day');
+    var message = queryOrLocal('tributeMessage', 'fam_frame_tribute_message', 'To the best mom in the world. We love you');
+    var tone = queryOrLocal('tributeTone', 'fam_frame_tribute_tone', 'dark');
     id('tributeMode').style.setProperty('--tribute-image', 'url("' + imageUrl.replace(/"/g, '\\"') + '")');
     id('tributeTitle').textContent = title;
     id('tributeMessage').textContent = message;
-    id('tributeMark').textContent = queryValue('tributeMark', 'MOTHER’S DAY 2026');
+    id('tributeMark').textContent = queryOrLocal('tributeMark', 'fam_frame_tribute_mark', 'MOTHER’S DAY 2026');
     if (tone === 'auto') {
       if (tributeState.imageUrl !== imageUrl || tributeState.tone !== 'auto') {
         tributeState.imageUrl = imageUrl;

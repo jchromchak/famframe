@@ -382,6 +382,17 @@ input[type="time"], input[type="number"] {
 }
 .action-result.ok   { background: rgba(122,170,138,0.1); color: var(--ok); display: block; }
 .action-result.fail { background: rgba(201,79,58,0.1);   color: var(--crit); display: block; }
+
+.tribute-admin-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px; margin-bottom: 12px;
+}
+.tribute-preview {
+  aspect-ratio: 16 / 9; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface2); object-fit: cover; width: 100%;
+  display: block; margin-bottom: 12px;
+}
+.tribute-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
  
 /* Bottom nav */
 .bottom-nav {
@@ -728,6 +739,35 @@ select {
     </button>
     <div class="action-result" id="pushResult"></div>
 
+    <div class="section-label">Tribute image</div>
+    <div class="tribute-admin-card">
+      <img class="tribute-preview" id="tributePreview" alt="Selected tribute background preview">
+      <div class="field-label">Private image</div>
+      <select id="tributeImageSelect" class="full-input" onchange="onTributeSelectionChange()">
+        <option value="../../famframe-private/assets/tributes/mothers-day-2026.png">Generated floral background</option>
+        <option value="../../famframe-private/assets/tributes/mothers-day-siblings-with-baby-2026.jpeg">Siblings with baby</option>
+        <option value="../../famframe-private/assets/tributes/mothers-day-mom-with-kids-2026.jpeg">Mom with kids</option>
+        <option value="custom">Custom private path</option>
+      </select>
+      <input type="text" id="tributeCustomImage" class="full-input" style="margin-top:8px" placeholder="../../famframe-private/assets/tributes/your-image.jpeg" oninput="onTributeSelectionChange()">
+      <div class="field-label" style="margin-top:10px">Tone</div>
+      <select id="tributeToneSelect" class="full-input">
+        <option value="auto">Auto detect</option>
+        <option value="light">Light image / dark text</option>
+        <option value="dark">Dark image / ivory text</option>
+      </select>
+      <div class="field-label" style="margin-top:10px">Title</div>
+      <input type="text" id="tributeTitleInput" class="full-input" placeholder="Happy Mothers Day">
+      <div class="field-label" style="margin-top:10px">Message</div>
+      <input type="text" id="tributeMessageInput" class="full-input" placeholder="To the best mom in the world. We love you">
+      <div class="field-hint">Saved only in this browser. Private photo paths do not sync to the public repo.</div>
+      <div class="tribute-actions">
+        <button class="small-btn" onclick="saveTributeImage()">SAVE</button>
+        <button class="small-btn" onclick="openTributePreview()">PREVIEW</button>
+      </div>
+      <div class="action-result" id="tributeResult"></div>
+    </div>
+
     <div class="section-label">Route refresh</div>
     <div class="field-label">Google Maps browser API key</div>
     <div class="input-wrap" style="margin-bottom:8px">
@@ -838,6 +878,11 @@ const KEYS = {
   jsonModel: 'fam_frame_json_model',
   sha:       'fam_frame_config_sha',
   onboarded: 'fam_frame_onboarded',
+  tributeImage: 'fam_frame_tribute_image',
+  tributeTone: 'fam_frame_tribute_tone',
+  tributeTitle: 'fam_frame_tribute_title',
+  tributeMessage: 'fam_frame_tribute_message',
+  tributeMark: 'fam_frame_tribute_mark',
 };
 
 const JSON_SYNC_FILES = {
@@ -1582,8 +1627,62 @@ function renderAll() {
   renderChecklistEditor();
   renderTimeline();
   renderCommuteEditor();
+  renderTributeAdmin();
   setVal('quoteSource', (((config.modules || {}).quote || {}).source) || 'stoic');
   renderRawConfig();
+}
+
+const TRIBUTE_IMAGE_OPTIONS = [
+  '../../famframe-private/assets/tributes/mothers-day-2026.png',
+  '../../famframe-private/assets/tributes/mothers-day-siblings-with-baby-2026.jpeg',
+  '../../famframe-private/assets/tributes/mothers-day-mom-with-kids-2026.jpeg',
+];
+function currentTributeImagePath() {
+  const selected = getVal('tributeImageSelect');
+  return selected === 'custom' ? getVal('tributeCustomImage') : selected;
+}
+function renderTributeAdmin() {
+  const select = document.getElementById('tributeImageSelect');
+  if (!select) return;
+  const savedImage = localStorage.getItem(KEYS.tributeImage) || TRIBUTE_IMAGE_OPTIONS[0];
+  const isKnown = TRIBUTE_IMAGE_OPTIONS.includes(savedImage);
+  select.value = isKnown ? savedImage : 'custom';
+  setVal('tributeCustomImage', isKnown ? '' : savedImage);
+  setVal('tributeToneSelect', localStorage.getItem(KEYS.tributeTone) || 'auto');
+  setVal('tributeTitleInput', localStorage.getItem(KEYS.tributeTitle) || 'Happy Mothers Day');
+  setVal('tributeMessageInput', localStorage.getItem(KEYS.tributeMessage) || 'To the best mom in the world. We love you');
+  onTributeSelectionChange();
+}
+function onTributeSelectionChange() {
+  const path = currentTributeImagePath();
+  const custom = document.getElementById('tributeCustomImage');
+  if (custom) custom.style.display = getVal('tributeImageSelect') === 'custom' ? 'block' : 'none';
+  const preview = document.getElementById('tributePreview');
+  if (preview && path) preview.src = path;
+}
+function saveTributeImage() {
+  const el = document.getElementById('tributeResult');
+  const image = currentTributeImagePath();
+  if (!image) { showResult(el, false, 'Choose or enter a private image path.'); return; }
+  localStorage.setItem(KEYS.tributeImage, image);
+  localStorage.setItem(KEYS.tributeTone, getVal('tributeToneSelect') || 'auto');
+  localStorage.setItem(KEYS.tributeTitle, getVal('tributeTitleInput') || 'Happy Mothers Day');
+  localStorage.setItem(KEYS.tributeMessage, getVal('tributeMessageInput') || 'To the best mom in the world. We love you');
+  localStorage.setItem(KEYS.tributeMark, 'MOTHER’S DAY 2026');
+  localStorage.setItem('fam_frame_force_scene', 'tribute');
+  showResult(el, true, 'Tribute image saved locally. Dashboard scene forced to tribute.');
+}
+function openTributePreview() {
+  saveTributeImage();
+  const params = new URLSearchParams({
+    scene: 'tribute',
+    tributeImage: localStorage.getItem(KEYS.tributeImage) || TRIBUTE_IMAGE_OPTIONS[0],
+    tributeTone: localStorage.getItem(KEYS.tributeTone) || 'auto',
+    tributeTitle: localStorage.getItem(KEYS.tributeTitle) || 'Happy Mothers Day',
+    tributeMessage: localStorage.getItem(KEYS.tributeMessage) || 'To the best mom in the world. We love you',
+    tributeMark: localStorage.getItem(KEYS.tributeMark) || 'MOTHER’S DAY 2026',
+  });
+  window.open('../dashboard/index.html?' + params.toString(), '_blank');
 }
 
 function renderKids() {
