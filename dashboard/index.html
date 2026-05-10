@@ -203,6 +203,16 @@ body.sleep-active #artMode{filter:brightness(.76)}
 .art-date{font-size:18px;letter-spacing:.32em;text-transform:uppercase;color:rgba(var(--ff-text-rgb),.14)}
 @keyframes textureDrift{0%{background-position:0 0}100%{background-position:96px 64px}}
 
+/* ── TRIBUTE ── */
+#tributeMode{display:none;position:relative;width:100%;height:100%;overflow:hidden;background:#0b0b09}
+#tributeMode.active{display:block}
+.tribute-bg{position:absolute;inset:0;background-image:var(--tribute-image);background-size:cover;background-position:center;filter:saturate(.96) brightness(.82)}
+.tribute-shade{position:absolute;inset:0;background:radial-gradient(circle at 72% 48%,rgba(0,0,0,.08),rgba(0,0,0,.48) 62%,rgba(0,0,0,.72)),linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.16) 58%,rgba(0,0,0,.34))}
+.tribute-copy{position:absolute;left:112px;bottom:118px;max-width:840px;color:#f4ecdc;text-shadow:0 2px 24px rgba(0,0,0,.6)}
+.tribute-title{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:116px;font-weight:200;letter-spacing:0;line-height:.96;margin-bottom:30px}
+.tribute-message{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:36px;font-weight:300;line-height:1.28;color:rgba(244,236,220,.82);max-width:720px}
+.tribute-mark{position:absolute;right:46px;bottom:34px;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:rgba(244,236,220,.24)}
+
 /* ── CONFIG ERROR ── */
 .config-error{display:none;position:absolute;inset:0;padding:96px;background:var(--ff-bg);z-index:100;color:var(--ff-text)}
 .config-error.active{display:block}
@@ -223,6 +233,16 @@ body.sleep-active #artMode{filter:brightness(.76)}
   <div id="artMode">
     <div class="art-time" id="artClock">—</div>
     <div class="art-date"  id="artDate">—</div>
+  </div>
+
+  <div id="tributeMode">
+    <div class="tribute-bg"></div>
+    <div class="tribute-shade"></div>
+    <div class="tribute-copy">
+      <div class="tribute-title" id="tributeTitle">Happy Mothers Day</div>
+      <div class="tribute-message" id="tributeMessage">To the best mom in the world. We love you</div>
+    </div>
+    <div class="tribute-mark" id="tributeMark">Fam Frame</div>
   </div>
 
   <!-- ═══ MORNING ═══ -->
@@ -466,6 +486,14 @@ body.sleep-active #artMode{filter:brightness(.76)}
       if (forced) selected = forced;
     } catch (e) {}
     return selected === 'ambient-evening' ? selected : 'default-editorial';
+  }
+  function queryValue(name, fallback) {
+    try {
+      var value = new URLSearchParams(window.location.search).get(name);
+      return value == null || value === '' ? fallback : value;
+    } catch (e) {
+      return fallback;
+    }
   }
   function applyTheme() {
     if (document.body) document.body.setAttribute('data-theme', themeId());
@@ -760,15 +788,33 @@ body.sleep-active #artMode{filter:brightness(.76)}
     if (inWindow(t, 'evening')) return 'evening';
     return 'art';
   }
+  function forcedScene() {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      return params.get('scene') || params.get('mode') || '';
+    } catch (e) {
+      return '';
+    }
+  }
 
   // ── MODE SWITCH ───────────────────────────────────────────────────
   function show(m) {
-    ['artMode','morningLayout','eveningLayout','weekendLayout'].forEach(function (n) {
+    ['artMode','tributeMode','morningLayout','eveningLayout','weekendLayout'].forEach(function (n) {
       var el = id(n); el.className = el.className.replace(/\s?active/g, '');
     });
-    var map = { art:'artMode', morning:'morningLayout', evening:'eveningLayout', weekend:'weekendLayout' };
+    var map = { art:'artMode', tribute:'tributeMode', morning:'morningLayout', evening:'eveningLayout', weekend:'weekendLayout' };
     if (map[m]) id(map[m]).className += ' active';
     if (document.body) document.body.classList.toggle('sleep-active', m === 'art');
+  }
+
+  function renderTribute() {
+    var imageUrl = queryValue('tributeImage', '../../famframe-private/assets/tributes/mothers-day-2026.png');
+    var title = queryValue('tributeTitle', 'Happy Mothers Day');
+    var message = queryValue('tributeMessage', 'To the best mom in the world. We love you');
+    id('tributeMode').style.setProperty('--tribute-image', 'url("' + imageUrl.replace(/"/g, '\\"') + '")');
+    id('tributeTitle').textContent = title;
+    id('tributeMessage').textContent = message;
+    id('tributeMark').textContent = queryValue('tributeMark', 'MOTHER’S DAY 2026');
   }
 
   // ── CLOCKS ────────────────────────────────────────────────────────
@@ -1082,6 +1128,11 @@ body.sleep-active #artMode{filter:brightness(.76)}
 
   // ── TICK ──────────────────────────────────────────────────────────
   function tick() {
+    if (forcedScene() === 'tribute') {
+      show('tribute');
+      renderTribute();
+      return;
+    }
     if (!cfg) {
       id('configError').className += ' active';
       if (configLoadError) console.warn('Config load failed', configLoadError);
@@ -1096,6 +1147,7 @@ body.sleep-active #artMode{filter:brightness(.76)}
     if (m === 'morning') renderMorning(now);
     if (m === 'evening') renderTimeline(now);
     if (m === 'weekend') renderWeekend();
+    if (m === 'tribute') renderTribute();
   }
 
   // ── WEATHER ───────────────────────────────────────────────────────
