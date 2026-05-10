@@ -742,6 +742,12 @@ select {
     <div class="section-label">Tribute image</div>
     <div class="tribute-admin-card">
       <img class="tribute-preview" id="tributePreview" alt="Selected tribute background preview">
+      <div class="field-label">Occasion</div>
+      <select id="tributePresetSelect" class="full-input" onchange="applyTributePreset(this.value)">
+        <option value="mothers-day-2026">Mother's Day 2026</option>
+        <option value="arthur-birthday-2026">Arthur birthday 2026</option>
+        <option value="custom">Custom message</option>
+      </select>
       <div class="field-label">Private image</div>
       <select id="tributeImageSelect" class="full-input" onchange="onTributeSelectionChange()">
         <option value="../../famframe-private/assets/tributes/mothers-day-2026.png">Generated floral background</option>
@@ -762,6 +768,10 @@ select {
       <input type="text" id="tributeTitleInput" class="full-input" placeholder="Happy Mothers Day">
       <div class="field-label" style="margin-top:10px">Message</div>
       <input type="text" id="tributeMessageInput" class="full-input" placeholder="To the best mom in the world. We love you">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--sub);font-size:12px;letter-spacing:.08em;text-transform:uppercase">
+        <input type="checkbox" id="tributeForceToggle">
+        Override dashboard with this screen
+      </label>
       <div class="field-hint">Saved only in this browser. Upload is best for phone preview; private paths are for this Mac.</div>
       <div class="tribute-actions">
         <button class="small-btn" onclick="saveTributeImage()">SAVE</button>
@@ -886,6 +896,7 @@ const KEYS = {
   tributeMessage: 'fam_frame_tribute_message',
   tributeMark: 'fam_frame_tribute_mark',
   tributeUploadedImage: 'fam_frame_tribute_uploaded_image',
+  tributeForceOverride: 'fam_frame_tribute_force_override',
 };
 
 const JSON_SYNC_FILES = {
@@ -1640,23 +1651,63 @@ const TRIBUTE_IMAGE_OPTIONS = [
   '../../famframe-private/assets/tributes/mothers-day-siblings-with-baby-2026.jpeg',
   '../../famframe-private/assets/tributes/mothers-day-mom-with-kids-2026.jpeg',
 ];
+const TRIBUTE_PRESETS = {
+  'mothers-day-2026': {
+    title: 'Happy Mothers Day',
+    message: 'To the best mom in the world. We love you',
+    mark: 'MOTHER’S DAY 2026',
+  },
+  'arthur-birthday-2026': {
+    title: 'Happy Birthday Arthur!',
+    message: 'We love you. Have the best day.',
+    mark: 'ARTHUR BIRTHDAY 2026',
+  },
+};
 const TRIBUTE_UPLOAD_MAX_EDGE = 1800;
 function currentTributeImagePath() {
   const selected = getVal('tributeImageSelect');
   if (selected === 'uploaded') return localStorage.getItem(KEYS.tributeUploadedImage) || '';
   return selected === 'custom' ? getVal('tributeCustomImage') : selected;
 }
+function setChecked(id, checked) {
+  const el = document.getElementById(id);
+  if (el) el.checked = !!checked;
+}
+function isChecked(id) {
+  const el = document.getElementById(id);
+  return !!(el && el.checked);
+}
+function presetForTributeCopy(title, message, mark) {
+  const keys = Object.keys(TRIBUTE_PRESETS);
+  for (let i = 0; i < keys.length; i++) {
+    const preset = TRIBUTE_PRESETS[keys[i]];
+    if (preset.title === title && preset.message === message && preset.mark === mark) return keys[i];
+  }
+  return 'custom';
+}
+function applyTributePreset(id) {
+  const preset = TRIBUTE_PRESETS[id];
+  if (!preset) return;
+  setVal('tributeTitleInput', preset.title);
+  setVal('tributeMessageInput', preset.message);
+  localStorage.setItem(KEYS.tributeMark, preset.mark);
+}
 function renderTributeAdmin() {
   const select = document.getElementById('tributeImageSelect');
   if (!select) return;
   const savedImage = localStorage.getItem(KEYS.tributeImage) || TRIBUTE_IMAGE_OPTIONS[0];
+  const savedTitle = localStorage.getItem(KEYS.tributeTitle) || TRIBUTE_PRESETS['mothers-day-2026'].title;
+  const savedMessage = localStorage.getItem(KEYS.tributeMessage) || TRIBUTE_PRESETS['mothers-day-2026'].message;
+  const savedMark = localStorage.getItem(KEYS.tributeMark) || TRIBUTE_PRESETS['mothers-day-2026'].mark;
   const isKnown = TRIBUTE_IMAGE_OPTIONS.includes(savedImage);
   const isUpload = savedImage.indexOf('data:image/') === 0 || !!localStorage.getItem(KEYS.tributeUploadedImage);
   select.value = isKnown ? savedImage : (isUpload ? 'uploaded' : 'custom');
   setVal('tributeCustomImage', isKnown || isUpload ? '' : savedImage);
   setVal('tributeToneSelect', localStorage.getItem(KEYS.tributeTone) || 'auto');
-  setVal('tributeTitleInput', localStorage.getItem(KEYS.tributeTitle) || 'Happy Mothers Day');
-  setVal('tributeMessageInput', localStorage.getItem(KEYS.tributeMessage) || 'To the best mom in the world. We love you');
+  setVal('tributeTitleInput', savedTitle);
+  setVal('tributeMessageInput', savedMessage);
+  setVal('tributePresetSelect', presetForTributeCopy(savedTitle, savedMessage, savedMark));
+  setChecked('tributeForceToggle', localStorage.getItem(KEYS.tributeForceOverride) !== 'n');
   onTributeSelectionChange();
 }
 function onTributeSelectionChange() {
@@ -1718,9 +1769,15 @@ function saveTributeImage() {
   localStorage.setItem(KEYS.tributeTone, getVal('tributeToneSelect') || 'auto');
   localStorage.setItem(KEYS.tributeTitle, getVal('tributeTitleInput') || 'Happy Mothers Day');
   localStorage.setItem(KEYS.tributeMessage, getVal('tributeMessageInput') || 'To the best mom in the world. We love you');
-  localStorage.setItem(KEYS.tributeMark, 'MOTHER’S DAY 2026');
-  localStorage.setItem('fam_frame_force_scene', 'tribute');
-  showResult(el, true, 'Tribute image saved locally. Dashboard scene forced to tribute.');
+  localStorage.setItem(KEYS.tributeMark, (TRIBUTE_PRESETS[getVal('tributePresetSelect')] || {}).mark || localStorage.getItem(KEYS.tributeMark) || 'SPECIAL DAY 2026');
+  localStorage.setItem(KEYS.tributeForceOverride, isChecked('tributeForceToggle') ? 'y' : 'n');
+  if (isChecked('tributeForceToggle')) {
+    localStorage.setItem('fam_frame_force_scene', 'tribute');
+    showResult(el, true, 'Tribute saved locally. Dashboard override is on.');
+  } else {
+    if (localStorage.getItem('fam_frame_force_scene') === 'tribute') localStorage.removeItem('fam_frame_force_scene');
+    showResult(el, true, 'Tribute saved locally. Dashboard override is off.');
+  }
   return true;
 }
 function openTributePreview() {
