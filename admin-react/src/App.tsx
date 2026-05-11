@@ -39,6 +39,15 @@ const navItems: Array<{ id: View; label: string }> = [
 ];
 
 const timezoneOptions = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"];
+const weekdayOptions = [
+  { value: 0, label: "Sun" },
+  { value: 1, label: "Mon" },
+  { value: 2, label: "Tue" },
+  { value: 3, label: "Wed" },
+  { value: 4, label: "Thu" },
+  { value: 5, label: "Fri" },
+  { value: 6, label: "Sat" },
+];
 
 function daysLabel(routine: Routine) {
   const dayNumbers = routine.appliesTo?.days;
@@ -474,19 +483,30 @@ function makeOpaqueSuffix() {
 }
 
 function Routines({ routines }: { routines: Routine[] }) {
+  const [draftRoutines, setDraftRoutines] = useState(routines);
   const [selectedRoutineId, setSelectedRoutineId] = useState(routines[0]?.id ?? "");
-  const selectedRoutine = routines.find((routine) => routine.id === selectedRoutineId) ?? routines[0] ?? null;
+  const selectedRoutine = draftRoutines.find((routine) => routine.id === selectedRoutineId) ?? draftRoutines[0] ?? null;
 
   useEffect(() => {
-    if (!routines.some((routine) => routine.id === selectedRoutineId)) {
-      setSelectedRoutineId(routines[0]?.id ?? "");
+    setDraftRoutines(routines);
+  }, [routines]);
+
+  useEffect(() => {
+    if (!draftRoutines.some((routine) => routine.id === selectedRoutineId)) {
+      setSelectedRoutineId(draftRoutines[0]?.id ?? "");
     }
-  }, [routines, selectedRoutineId]);
+  }, [draftRoutines, selectedRoutineId]);
+
+  function updateRoutine(nextRoutine: Routine) {
+    setDraftRoutines((current) =>
+      current.map((routine) => (routine.id === nextRoutine.id ? nextRoutine : routine)),
+    );
+  }
 
   return (
     <div className="routine-workspace">
       <section className="routine-rail" aria-label="Routines">
-        {routines.map((routine) => (
+        {draftRoutines.map((routine) => (
           <button
             key={routine.id}
             className={routine.id === selectedRoutine?.id ? "routine-select active" : "routine-select"}
@@ -499,7 +519,7 @@ function Routines({ routines }: { routines: Routine[] }) {
         ))}
       </section>
 
-      {selectedRoutine ? <RoutineDetail routine={selectedRoutine} /> : null}
+      {selectedRoutine ? <RoutineDetail routine={selectedRoutine} onUpdate={updateRoutine} /> : null}
     </div>
   );
 }
@@ -593,9 +613,60 @@ function RoutineCard({ routine }: { routine: Routine }) {
   );
 }
 
-function RoutineDetail({ routine }: { routine: Routine }) {
+function RoutineDetail({ routine, onUpdate }: { routine: Routine; onUpdate: (routine: Routine) => void }) {
   const isTimeline = routine.type === "timeline";
   const items = isTimeline ? routine.timeline ?? [] : routine.tasks ?? [];
+  const activeDays = routine.appliesTo?.days ?? [];
+  const activeDates = routine.appliesTo?.dates ?? [];
+
+  function updateRoutine(patch: Partial<Routine>) {
+    onUpdate({ ...routine, ...patch });
+  }
+
+  function updateWindow(field: "start" | "end", value: string) {
+    updateRoutine({
+      window: {
+        ...routine.window,
+        [field]: value || undefined,
+      },
+    });
+  }
+
+  function updateTiming(field: "leaveAt" | "arriveBy" | "deadline", value: string) {
+    updateRoutine({
+      timing: {
+        ...routine.timing,
+        [field]: value || undefined,
+      },
+    });
+  }
+
+  function toggleDay(day: number) {
+    const nextDays = activeDays.includes(day)
+      ? activeDays.filter((activeDay) => activeDay !== day)
+      : [...activeDays, day].sort((left, right) => left - right);
+
+    updateRoutine({
+      appliesTo: {
+        ...routine.appliesTo,
+        days: nextDays,
+      },
+    });
+  }
+
+  function updateDates(value: string) {
+    const dates = value
+      .split(",")
+      .map((date) => date.trim())
+      .filter(Boolean);
+
+    updateRoutine({
+      appliesTo: {
+        ...routine.appliesTo,
+        dates,
+      },
+    });
+  }
 
   return (
     <section className="routine-detail">
@@ -616,6 +687,67 @@ function RoutineDetail({ routine }: { routine: Routine }) {
       </div>
 
       <div className="routine-detail-grid">
+        <section className="detail-panel detail-panel-wide routine-editor">
+          <div className="detail-panel-head">
+            <p className="eyebrow">Draft editor</p>
+            <span className="sync-pill">Local only</span>
+          </div>
+
+          <label className="toggle-row">
+            <input
+              type="checkbox"
+              checked={routine.enabled !== false}
+              onChange={(event) => updateRoutine({ enabled: event.target.checked })}
+            />
+            <span>Enabled</span>
+          </label>
+
+          <div className="routine-editor-grid">
+            <label className="field-stack">
+              <span>Name</span>
+              <input value={routine.label} onChange={(event) => updateRoutine({ label: event.target.value })} />
+            </label>
+            <label className="field-stack">
+              <span>One-off dates</span>
+              <input value={activeDates.join(", ")} onChange={(event) => updateDates(event.target.value)} />
+            </label>
+            <label className="field-stack">
+              <span>Window start</span>
+              <input type="time" value={routine.window?.start ?? ""} onChange={(event) => updateWindow("start", event.target.value)} />
+            </label>
+            <label className="field-stack">
+              <span>Window end</span>
+              <input type="time" value={routine.window?.end ?? ""} onChange={(event) => updateWindow("end", event.target.value)} />
+            </label>
+            <label className="field-stack">
+              <span>Leave</span>
+              <input type="time" value={routine.timing?.leaveAt ?? ""} onChange={(event) => updateTiming("leaveAt", event.target.value)} />
+            </label>
+            <label className="field-stack">
+              <span>Arrive</span>
+              <input type="time" value={routine.timing?.arriveBy ?? ""} onChange={(event) => updateTiming("arriveBy", event.target.value)} />
+            </label>
+            <label className="field-stack">
+              <span>Deadline</span>
+              <input type="time" value={routine.timing?.deadline ?? routine.deadlineTime ?? ""} onChange={(event) => updateTiming("deadline", event.target.value)} />
+            </label>
+          </div>
+
+          <div className="day-toggle-group" aria-label="Recurring days">
+            {weekdayOptions.map((day) => (
+              <button
+                key={day.value}
+                aria-pressed={activeDays.includes(day.value)}
+                className={activeDays.includes(day.value) ? "day-toggle active" : "day-toggle"}
+                type="button"
+                onClick={() => toggleDay(day.value)}
+              >
+                {day.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
         <section className="detail-panel">
           <p className="eyebrow">Summary</p>
           <dl className="system-list">

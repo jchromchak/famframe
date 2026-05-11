@@ -54,8 +54,14 @@ Acceptance:
 - [x] Routine list is deterministic after refresh.
 - [x] Routine detail shows the fields that actually drive the dashboard.
 - [x] Enabled/disabled state is clear.
-- [ ] One-off and recurring schedule concepts are understandable.
+- [x] One-off and recurring schedule concepts are understandable.
 - [ ] Create/edit/delete persistence path is clear.
+
+Current slice:
+
+- React admin has a local-only draft editor for routine name, enabled state, recurring weekdays, one-off dates, display window, and timing fields.
+- Draft edits update the visible routine detail and routine rail immediately, but do not persist beyond the current admin session.
+- Persistence remains deliberately open pending `WF-05`, because writing JSON safely from the browser is the next architectural decision.
 
 Non-goals:
 
