@@ -51,6 +51,17 @@ export type Routine = {
   tasks?: RoutineTask[];
 };
 
+export type AdminScene = {
+  id: string;
+  label: string;
+  type: "routine" | "tribute";
+  status: "active" | "inactive";
+  source: string;
+  schedule: string;
+  imagePath?: string;
+  routine?: Routine;
+};
+
 type RoutinesConfig = {
   routines: Routine[];
 };
@@ -66,6 +77,7 @@ export type DisplayConfig = {
 export type ConfigState = {
   routines: Routine[];
   display: DisplayConfig;
+  scenes: AdminScene[];
 };
 
 export type IdentityConfig = {
@@ -102,7 +114,9 @@ export async function loadConfig(): Promise<ConfigState> {
     readJson<DisplayConfig>("config/display.json"),
   ]);
 
-  return { routines: routineConfig.routines ?? [], display };
+  const routines = routineConfig.routines ?? [];
+
+  return { routines, display, scenes: deriveScenes(routines) };
 }
 
 export async function loadIdentityConfig(): Promise<IdentityConfig> {
@@ -142,4 +156,34 @@ export function formatRoutineWindow(routine: Routine) {
 
 export function routineTheme(routine: Routine) {
   return routine.display?.themeId || routine.themeId || "Default";
+}
+
+export function sceneTypeLabel(scene: AdminScene) {
+  return scene.type === "tribute" ? "Tribute scene" : "Routine scene";
+}
+
+function deriveScenes(routines: Routine[]): AdminScene[] {
+  const routineScenes = routines.map((routine) => ({
+    id: `scene-${routine.id}`,
+    label: routine.label,
+    type: "routine" as const,
+    status: routine.enabled === false ? "inactive" as const : "active" as const,
+    source: routine.display?.scene || routine.type || "routine",
+    schedule: formatRoutineWindow(routine),
+    routine,
+  }));
+
+  const tributeScenes: AdminScene[] = [
+    {
+      id: "scene-arthur-birthday-2026",
+      label: "Happy Birthday Arthur!",
+      type: "tribute",
+      status: "active",
+      source: "Special day",
+      schedule: "May 10-11, 2026",
+      imagePath: "../assets/tributes/arthur-birthday-2026.png",
+    },
+  ];
+
+  return [...tributeScenes, ...routineScenes];
 }

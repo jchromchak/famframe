@@ -346,6 +346,7 @@
 }
 
 .routine-card dl,
+.scene-card dl,
 .system-list {
   display: grid;
   gap: 10px;
@@ -353,10 +354,77 @@
 }
 
 .routine-card dl div,
+.scene-card dl div,
 .system-list div {
   display: flex;
   gap: 12px;
   justify-content: space-between;
+}
+
+.scene-view {
+  display: grid;
+  gap: 16px;
+}
+
+.scene-summary {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 20px 0 0;
+}
+
+.scene-summary div {
+  background: #fff7e6;
+  border: 1px solid #ead7b4;
+  border-radius: var(--ff-radius-control);
+  padding: 14px;
+}
+
+.scene-summary dd {
+  font-size: 1.6rem;
+  text-align: left;
+}
+
+.scene-browser {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.scene-card {
+  background: var(--ff-color-surface-soft);
+  border: 1px solid var(--ff-color-line);
+  border-radius: var(--ff-radius-panel);
+  box-shadow: var(--ff-shadow-panel);
+  display: grid;
+  gap: 16px;
+  min-height: 260px;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.scene-card.tribute-scene {
+  background: #11100d;
+  color: #fff4df;
+}
+
+.scene-card h3 {
+  font-size: 1.5rem;
+  letter-spacing: 0;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.scene-card.tribute-scene dt,
+.scene-card.tribute-scene .eyebrow {
+  color: #d8a33e;
+}
+
+.scene-thumb {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--ff-radius-control);
+  object-fit: cover;
+  width: 100%;
 }
 
 dt {
@@ -391,7 +459,7 @@ dd {
   box-shadow: var(--ff-shadow-nav);
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   left: 50%;
   max-width: min(680px, calc(100vw - 32px));
   padding: 6px;
@@ -432,7 +500,8 @@ dd {
   }
 
   .panel-grid,
-  .routine-row {
+  .routine-row,
+  .scene-summary {
     grid-template-columns: 1fr;
   }
 

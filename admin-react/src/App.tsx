@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  AdminScene,
   ConfigState,
   Routine,
   fallbackIdentity,
@@ -7,6 +8,7 @@ import {
   loadConfig,
   loadIdentityConfig,
   routineTheme,
+  sceneTypeLabel,
 } from "./config";
 import {
   Account,
@@ -25,11 +27,12 @@ import {
   roleForAccount,
 } from "./identity";
 
-type View = "week" | "capture" | "routines" | "system";
+type View = "week" | "capture" | "scenes" | "routines" | "system";
 
 const navItems: Array<{ id: View; label: string }> = [
   { id: "week", label: "This Week" },
   { id: "capture", label: "Capture" },
+  { id: "scenes", label: "Scenes" },
   { id: "routines", label: "Routines" },
   { id: "system", label: "System" },
 ];
@@ -84,6 +87,7 @@ function App() {
   }, []);
 
   const activeRoutines = useMemo(() => config?.routines ?? [], [config]);
+  const activeScenes = useMemo(() => config?.scenes ?? [], [config]);
   const operationalRoutines = useMemo(
     () => activeRoutines.filter((routine) => routine.enabled !== false),
     [activeRoutines],
@@ -219,6 +223,7 @@ function App() {
         {activeView === "capture" ? (
           <CaptureView text={captureText} onTextChange={setCaptureText} appends={visibleAppends} />
         ) : null}
+        {activeView === "scenes" ? <Scenes scenes={activeScenes} /> : null}
         {activeView === "routines" ? <Routines routines={operationalRoutines} /> : null}
         {activeView === "system" ? (
           <System config={config} account={activeAccount} family={activeFamily} device={activeDevice} />
@@ -460,6 +465,70 @@ function Routines({ routines }: { routines: Routine[] }) {
         <RoutineCard key={routine.id} routine={routine} />
       ))}
     </div>
+  );
+}
+
+function Scenes({ scenes }: { scenes: AdminScene[] }) {
+  const tributeCount = scenes.filter((scene) => scene.type === "tribute").length;
+  const routineCount = scenes.filter((scene) => scene.type === "routine").length;
+
+  return (
+    <div className="scene-view">
+      <section className="wide-panel">
+        <p className="eyebrow">Scene System</p>
+        <h2>Scenes are what the frame renders.</h2>
+        <p className="muted">
+          Routines and tributes now sit under the same display concept. This is read-only for the first pass while
+          routine editing remains stable.
+        </p>
+        <dl className="scene-summary">
+          <div>
+            <dt>Tributes</dt>
+            <dd>{tributeCount}</dd>
+          </div>
+          <div>
+            <dt>Routines</dt>
+            <dd>{routineCount}</dd>
+          </div>
+          <div>
+            <dt>Active</dt>
+            <dd>{scenes.filter((scene) => scene.status === "active").length}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <div className="scene-browser">
+        {scenes.map((scene) => (
+          <SceneCard key={scene.id} scene={scene} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneCard({ scene }: { scene: AdminScene }) {
+  return (
+    <article className={`scene-card ${scene.type === "tribute" ? "tribute-scene" : ""}`}>
+      {scene.imagePath ? <img src={scene.imagePath} alt="" className="scene-thumb" /> : null}
+      <div>
+        <p className="eyebrow">{sceneTypeLabel(scene)}</p>
+        <h3>{scene.label}</h3>
+      </div>
+      <dl>
+        <div>
+          <dt>Status</dt>
+          <dd>{scene.status}</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd>{scene.source}</dd>
+        </div>
+        <div>
+          <dt>Schedule</dt>
+          <dd>{scene.schedule}</dd>
+        </div>
+      </dl>
+    </article>
   );
 }
 

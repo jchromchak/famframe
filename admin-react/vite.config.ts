@@ -5,7 +5,7 @@ import { defineConfig, type ViteDevServer } from "vite";
 import react from "@vitejs/plugin-react";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const servedRoots = new Set(["config", "content"]);
+const servedRoots = new Set(["assets", "config", "content"]);
 
 function famFrameContentPlugin() {
   return {
@@ -31,7 +31,14 @@ function famFrameContentPlugin() {
 
         try {
           const body = await fs.readFile(filePath);
-          res.setHeader("Content-Type", filePath.endsWith(".json") ? "application/json" : "text/plain");
+          const contentType = filePath.endsWith(".json")
+            ? "application/json"
+            : filePath.endsWith(".png")
+              ? "image/png"
+              : filePath.endsWith(".jpeg") || filePath.endsWith(".jpg")
+                ? "image/jpeg"
+                : "text/plain";
+          res.setHeader("Content-Type", contentType);
           res.end(body);
         } catch {
           next();
