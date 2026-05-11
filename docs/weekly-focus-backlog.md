@@ -6,9 +6,9 @@ This week is about stabilizing the core parent/operator workflow after the tribu
 
 ## Ranked Work
 
-### 1. Scene System Foundation
+### WF-01. Scene System Foundation
 
-Status: in progress
+Status: mostly closed
 
 Outcome: the admin and dashboard share a clear mental model where a Scene is the thing rendered on the family display.
 
@@ -23,11 +23,11 @@ Scope:
 
 Acceptance:
 
-- React admin has a Scenes area.
-- Routine-backed scenes expose routine label, type, window, and activation state.
-- Tribute scenes expose title, activation dates/window, and image path.
-- Existing Routines area still works.
-- Dashboard behavior does not regress.
+- [x] React admin has a Scenes area.
+- [x] Routine-backed scenes expose routine label, type, window, and activation state.
+- [x] Tribute scenes expose title, activation dates/window, and image path.
+- [x] Existing Routines area still works.
+- [x] Dashboard behavior does not regress.
 
 Non-goals:
 
@@ -36,9 +36,9 @@ Non-goals:
 - General theme engine.
 - Mixed routine + tribute hybrid scenes.
 
-### 2. Routine Management Stabilization
+### WF-02. Routine Management Stabilization
 
-Status: next
+Status: in progress
 
 Outcome: a parent can create, edit, disable, and understand household routines without touching raw JSON.
 
@@ -51,10 +51,11 @@ Scope:
 
 Acceptance:
 
-- Routine list is deterministic after refresh.
-- Routine detail shows the fields that actually drive the dashboard.
-- Enabled/disabled state is clear.
-- One-off and recurring schedule concepts are understandable.
+- [x] Routine list is deterministic after refresh.
+- [x] Routine detail shows the fields that actually drive the dashboard.
+- [x] Enabled/disabled state is clear.
+- [ ] One-off and recurring schedule concepts are understandable.
+- [ ] Create/edit/delete persistence path is clear.
 
 Non-goals:
 
@@ -63,7 +64,7 @@ Non-goals:
 - Push notifications.
 - Advanced permissions.
 
-### 3. Scene Scheduling Contract
+### WF-03. Scene Scheduling Contract
 
 Status: in progress
 
@@ -78,9 +79,9 @@ Scope:
 
 Acceptance:
 
-- Scene scheduling can express Mother's Day and Arthur birthday.
-- Dashboard scene resolution reads data, not one-off constants.
-- Admin can show scheduled scene status.
+- [ ] Scene scheduling can express Mother's Day and Arthur birthday.
+- [x] Dashboard scene resolution reads data, not one-off constants.
+- [x] Admin can show scheduled scene status.
 
 Current slice:
 
@@ -88,7 +89,7 @@ Current slice:
 - The dashboard reads scheduled tribute scenes from config before routine windows.
 - React admin reads the same scene config for the Scenes tab.
 
-### 4. Dynamic Departure And Multi-Stop Routing Spike
+### WF-04. Dynamic Departure And Multi-Stop Routing Spike
 
 Status: later spike
 
@@ -105,7 +106,7 @@ Non-goals:
 - Turn-by-turn navigation.
 - Live rerouting engine.
 
-### 5. Persistence Layer Reassessment
+### WF-05. Persistence Layer Reassessment
 
 Status: later spike
 

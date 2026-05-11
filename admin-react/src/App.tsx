@@ -7,6 +7,7 @@ import {
   formatRoutineWindow,
   loadConfig,
   loadIdentityConfig,
+  routineItemCount,
   routineTheme,
   sceneTypeLabel,
 } from "./config";
@@ -459,11 +460,32 @@ function makeOpaqueSuffix() {
 }
 
 function Routines({ routines }: { routines: Routine[] }) {
+  const [selectedRoutineId, setSelectedRoutineId] = useState(routines[0]?.id ?? "");
+  const selectedRoutine = routines.find((routine) => routine.id === selectedRoutineId) ?? routines[0] ?? null;
+
+  useEffect(() => {
+    if (!routines.some((routine) => routine.id === selectedRoutineId)) {
+      setSelectedRoutineId(routines[0]?.id ?? "");
+    }
+  }, [routines, selectedRoutineId]);
+
   return (
-    <div className="routine-browser">
-      {routines.map((routine) => (
-        <RoutineCard key={routine.id} routine={routine} />
-      ))}
+    <div className="routine-workspace">
+      <section className="routine-rail" aria-label="Routines">
+        {routines.map((routine) => (
+          <button
+            key={routine.id}
+            className={routine.id === selectedRoutine?.id ? "routine-select active" : "routine-select"}
+            type="button"
+            onClick={() => setSelectedRoutineId(routine.id)}
+          >
+            <span>{routine.label}</span>
+            <small>{formatRoutineWindow(routine)}</small>
+          </button>
+        ))}
+      </section>
+
+      {selectedRoutine ? <RoutineDetail routine={selectedRoutine} /> : null}
     </div>
   );
 }
@@ -546,7 +568,7 @@ function RoutineCard({ routine }: { routine: Routine }) {
         </div>
         <div>
           <dt>Tasks</dt>
-          <dd>{routine.tasks?.length ?? 0}</dd>
+          <dd>{routineItemCount(routine)}</dd>
         </div>
         <div>
           <dt>Theme</dt>
@@ -554,6 +576,121 @@ function RoutineCard({ routine }: { routine: Routine }) {
         </div>
       </dl>
     </article>
+  );
+}
+
+function RoutineDetail({ routine }: { routine: Routine }) {
+  const isTimeline = routine.type === "timeline";
+  const items = isTimeline ? routine.timeline ?? [] : routine.tasks ?? [];
+
+  return (
+    <section className="routine-detail">
+      <div className="routine-detail-head">
+        <div>
+          <p className="eyebrow">{routine.enabled === false ? "Inactive routine" : "Active routine"}</p>
+          <h2>{routine.label}</h2>
+        </div>
+        <span className="sync-pill">{isTimeline ? "Timeline" : "Departure"}</span>
+      </div>
+
+      <div className="routine-detail-tabs" aria-label="Routine detail sections">
+        <span>Summary</span>
+        <span>Timing</span>
+        <span>{isTimeline ? "Timeline" : "Checklist"}</span>
+        <span>Route</span>
+        <span>Theme</span>
+      </div>
+
+      <div className="routine-detail-grid">
+        <section className="detail-panel">
+          <p className="eyebrow">Summary</p>
+          <dl className="system-list">
+            <div>
+              <dt>Schedule</dt>
+              <dd>{daysLabel(routine)}</dd>
+            </div>
+            <div>
+              <dt>Window</dt>
+              <dd>{formatRoutineWindow(routine)}</dd>
+            </div>
+            <div>
+              <dt>Layer</dt>
+              <dd>{routine.layer ?? "baseline"}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="detail-panel">
+          <p className="eyebrow">Timing</p>
+          <dl className="system-list">
+            <div>
+              <dt>Leave</dt>
+              <dd>{routine.timing?.leaveAt ?? "n/a"}</dd>
+            </div>
+            <div>
+              <dt>Arrive</dt>
+              <dd>{routine.timing?.arriveBy ?? "n/a"}</dd>
+            </div>
+            <div>
+              <dt>Deadline</dt>
+              <dd>{routine.timing?.deadline ?? routine.deadlineTime ?? "n/a"}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="detail-panel detail-panel-wide">
+          <p className="eyebrow">{isTimeline ? "Timeline" : "Checklist"}</p>
+          {items.length ? (
+            <ul className="plain-list">
+              {items.map((item) => (
+                <li className="append-card" key={item.id}>
+                  <span className="append-label">{item.label}</span>
+                  <span className="append-meta">
+                    {isTimeline
+                      ? `${"start" in item && item.start ? item.start : "Flexible"} / ${"durationMinutes" in item && item.durationMinutes ? item.durationMinutes : 0} min`
+                      : `${"targetOffsetMinutes" in item && item.targetOffsetMinutes != null ? item.targetOffsetMinutes : 0} min from leave`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No display items are attached to this routine yet.</p>
+          )}
+        </section>
+
+        <section className="detail-panel">
+          <p className="eyebrow">Route</p>
+          <dl className="system-list">
+            <div>
+              <dt>Route</dt>
+              <dd>{routine.routeId ?? "none"}</dd>
+            </div>
+            <div>
+              <dt>List</dt>
+              <dd>{routine.listId ?? "none"}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="detail-panel">
+          <p className="eyebrow">Theme</p>
+          <dl className="system-list">
+            <div>
+              <dt>Scene</dt>
+              <dd>{routine.display?.scene ?? routine.type ?? "routine"}</dd>
+            </div>
+            <div>
+              <dt>Priority</dt>
+              <dd>{routine.display?.priority ?? 50}</dd>
+            </div>
+            <div>
+              <dt>Theme</dt>
+              <dd>{routineTheme(routine)}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+    </section>
   );
 }
 

@@ -17,6 +17,15 @@ export type RoutineTask = {
   time?: string;
   icon?: string;
   ownerId?: string;
+  targetOffsetMinutes?: number;
+};
+
+export type TimelineItem = {
+  id: string;
+  label: string;
+  start?: string;
+  durationMinutes?: number;
+  note?: string;
 };
 
 export type Routine = {
@@ -27,6 +36,7 @@ export type Routine = {
   layer?: string;
   appliesTo?: {
     days?: number[];
+    dates?: string[];
   };
   window?: {
     start?: string;
@@ -49,6 +59,7 @@ export type Routine = {
   listIds?: string[];
   themeId?: string;
   tasks?: RoutineTask[];
+  timeline?: TimelineItem[];
 };
 
 export type AdminScene = {
@@ -64,6 +75,13 @@ export type AdminScene = {
 
 type RoutinesConfig = {
   routines: Routine[];
+  lists?: RoutineList[];
+};
+
+type RoutineList = {
+  id: string;
+  label: string;
+  items?: RoutineTask[];
 };
 
 type ScenesConfig = {
@@ -139,7 +157,7 @@ export async function loadConfig(): Promise<ConfigState> {
     readJson<ScenesConfig>("config/scenes.json"),
   ]);
 
-  const routines = routineConfig.routines ?? [];
+  const routines = hydrateRoutineTasks(routineConfig.routines ?? [], routineConfig.lists ?? []);
 
   return { routines, display, scenes: deriveScenes(routines, sceneConfig.scenes ?? []) };
 }
@@ -181,6 +199,10 @@ export function formatRoutineWindow(routine: Routine) {
 
 export function routineTheme(routine: Routine) {
   return routine.display?.themeId || routine.themeId || "Default";
+}
+
+export function routineItemCount(routine: Routine) {
+  return (routine.tasks?.length ?? 0) + (routine.timeline?.length ?? 0);
 }
 
 export function sceneTypeLabel(scene: AdminScene) {
@@ -229,4 +251,30 @@ function sceneScheduleLabel(scene: SceneConfig) {
 function compactDateRange(dates: string[]) {
   if (dates.length === 1) return dates[0];
   return `${dates[0]} to ${dates[dates.length - 1]}`;
+}
+
+function hydrateRoutineTasks(routines: Routine[], lists: RoutineList[]) {
+  const listsById = new Map(lists.map((list) => [list.id, list]));
+
+  return routines.map((routine) => {
+    if (routine.tasks?.length || routine.timeline?.length || !routine.listId) {
+      return routine;
+    }
+
+    const list = listsById.get(routine.listId);
+    if (!list?.items?.length) {
+      return routine;
+    }
+
+    return {
+      ...routine,
+      tasks: list.items.map((item) => ({
+        id: item.id,
+        label: item.label,
+        icon: item.icon,
+        ownerId: item.ownerId,
+        targetOffsetMinutes: item.targetOffsetMinutes,
+      })),
+    };
+  });
 }

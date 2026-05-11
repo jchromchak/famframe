@@ -331,6 +331,104 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+.routine-workspace {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+}
+
+.routine-rail {
+  display: grid;
+  gap: 10px;
+}
+
+.routine-select {
+  background: var(--ff-color-surface-soft);
+  border: 1px solid var(--ff-color-line);
+  border-radius: var(--ff-radius-control);
+  color: var(--ff-color-ink);
+  cursor: pointer;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  text-align: left;
+}
+
+.routine-select.active {
+  background: #fff2ca;
+  border-color: var(--ff-color-gold);
+}
+
+.routine-select span {
+  font-weight: 900;
+}
+
+.routine-select small {
+  color: var(--ff-color-muted);
+  font-weight: 800;
+}
+
+.routine-detail {
+  background: var(--ff-color-surface-soft);
+  border: 1px solid var(--ff-color-line);
+  border-radius: var(--ff-radius-panel);
+  box-shadow: var(--ff-shadow-panel);
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.routine-detail-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.routine-detail-head h2 {
+  font-size: 2rem;
+  letter-spacing: 0;
+  line-height: 1;
+  margin: 0;
+}
+
+.routine-detail-tabs {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.routine-detail-tabs span {
+  background: #fff7e6;
+  border: 1px solid #ead7b4;
+  border-radius: var(--ff-radius-control);
+  color: #6d655a;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 10px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.routine-detail-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-panel {
+  background: #fffaf0;
+  border: 1px solid #ead7b4;
+  border-radius: var(--ff-radius-control);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.detail-panel-wide {
+  grid-column: 1 / -1;
+}
+
 .routine-card {
   display: flex;
   flex-direction: column;
@@ -501,7 +599,10 @@ dd {
 
   .panel-grid,
   .routine-row,
-  .scene-summary {
+  .scene-summary,
+  .routine-workspace,
+  .routine-detail-grid,
+  .routine-detail-tabs {
     grid-template-columns: 1fr;
   }
 
