@@ -56,6 +56,20 @@ function daysLabel(routine: Routine) {
   return dayNumbers.map((day) => dayLabels[day] ?? String(day)).join(", ");
 }
 
+function datesLabel(routine: Routine) {
+  const dates = routine.appliesTo?.dates;
+
+  if (!dates?.length) {
+    return "No one-off dates";
+  }
+
+  if (dates.length === 1) {
+    return dates[0];
+  }
+
+  return `${dates[0]} to ${dates[dates.length - 1]}`;
+}
+
 function App() {
   const [activeAccount, setActiveAccount] = useState<Account | null>(null);
   const [activeFamily, setActiveFamily] = useState<Family | null>(null);
@@ -606,8 +620,12 @@ function RoutineDetail({ routine }: { routine: Routine }) {
           <p className="eyebrow">Summary</p>
           <dl className="system-list">
             <div>
-              <dt>Schedule</dt>
+              <dt>Repeats</dt>
               <dd>{daysLabel(routine)}</dd>
+            </div>
+            <div>
+              <dt>Dates</dt>
+              <dd>{datesLabel(routine)}</dd>
             </div>
             <div>
               <dt>Window</dt>
