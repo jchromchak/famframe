@@ -905,11 +905,12 @@ const JSON_SYNC_FILES = {
   routines: 'config/routines.json',
   routes: 'config/routes.json',
   display: 'config/display.json',
+  scenes: 'config/scenes.json',
   modules: 'config/modules.json',
   messagesMarkdown: 'content/messages.md',
   quotesMarkdown: 'content/quotes.md',
 };
-const REQUIRED_JSON_SYNC_KEYS = ['family', 'routines', 'routes', 'display', 'modules'];
+const REQUIRED_JSON_SYNC_KEYS = ['family', 'routines', 'routes', 'display', 'scenes', 'modules'];
 
 const DEFAULT_CONFIG = {
   time: {
@@ -1129,6 +1130,7 @@ function jsonToDashboardConfig(model) {
     routines: model.routines,
     routes: model.routes,
     display: model.display,
+    scenes: model.scenes,
     modules: model.modules,
     messagesMarkdown: model.messagesMarkdown || '',
     quotesMarkdown: model.quotesMarkdown || '',
@@ -1272,6 +1274,7 @@ function dashboardToJsonModel(source) {
       routes,
       places: (jsonModel && jsonModel.routes && jsonModel.routes.places) || [],
     },
+    scenes: (jsonModel && jsonModel.scenes) || { schemaVersion: 1, scenes: [] },
     messagesMarkdown: messagesMarkdownFromConfig(cfg),
     quotesMarkdown: (jsonModel && jsonModel.quotesMarkdown) || '# Quotes\n',
   };
@@ -1312,6 +1315,7 @@ function jsonModelToFiles(model) {
     { path: JSON_SYNC_FILES.routines, content: JSON.stringify(safeModel.routines || {}, null, 2) + '\n' },
     { path: JSON_SYNC_FILES.routes, content: JSON.stringify(safeModel.routes || {}, null, 2) + '\n' },
     { path: JSON_SYNC_FILES.display, content: JSON.stringify(safeModel.display || {}, null, 2) + '\n' },
+    { path: JSON_SYNC_FILES.scenes, content: JSON.stringify(safeModel.scenes || { schemaVersion: 1, scenes: [] }, null, 2) + '\n' },
     { path: JSON_SYNC_FILES.modules, content: JSON.stringify(safeModel.modules || {}, null, 2) + '\n' },
     { path: JSON_SYNC_FILES.messagesMarkdown, content: safeModel.messagesMarkdown || messagesMarkdownFromConfig(config) },
     { path: JSON_SYNC_FILES.quotesMarkdown, content: safeModel.quotesMarkdown || '# Quotes\n' },

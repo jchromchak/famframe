@@ -45,6 +45,7 @@ The first JSON model files live in:
 - `config/routines.json`
 - `config/routes.json`
 - `config/display.json`
+- `config/scenes.json`
 - `config/modules.json`
 - `content/messages.md`
 - `content/quotes.md`
@@ -78,7 +79,7 @@ npm run verify
 
 See `docs/json-config-model.md` for the model boundary and migration plan.
 
-`config/identity.json` contains public-safe sample accounts, families, memberships, members, and device targets for the React admin prototype. It uses `.test` email addresses and is not authentication.
+`config/identity.json` contains public-safe account, family, membership, member, and device target records for the React admin prototype. It is not authentication.
 
 ## Routine model direction
 

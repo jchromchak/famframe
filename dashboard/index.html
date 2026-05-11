@@ -456,6 +456,7 @@ body.sleep-active #artMode{filter:brightness(.76)}
     var payload = {
       family: await fetchRequiredJson('../config/family.json'),
       routines: await fetchRequiredJson('../config/routines.json'),
+      scenes: await fetchRequiredJson('../config/scenes.json'),
       routes: await fetchRequiredJson('../config/routes.json'),
       display: await fetchRequiredJson('../config/display.json'),
       modules: await fetchRequiredJson('../config/modules.json'),
@@ -540,6 +541,7 @@ body.sleep-active #artMode{filter:brightness(.76)}
   var ConfigService = {
     getFamily: function () { return val(['family'], {}); },
     getScenes: function () { return val(['modes'], {}); },
+    getSceneDefinitions: function () { return arr(['scenes']); },
     getRoutines: function () { return arr(['routines']); },
     getMorningScenario: function (t) { return val(['scenarios', dayKey(t)], null) || val(['scenarios', 'default'], null); },
     getEveningTimeline: function () { return arr(['eveningTimeline']); },
@@ -784,26 +786,46 @@ body.sleep-active #artMode{filter:brightness(.76)}
     if (s <= e) return n >= s && n < e;
     return n >= s || n < e;
   }
-  var SPECIAL_DAY_TRIBUTES = [
-    {
-      id: 'arthur-birthday-2026',
-      dates: ['2026-05-10', '2026-05-11'],
-      image: '../assets/tributes/arthur-birthday-2026.png',
-      title: 'Happy Birthday Arthur!',
-      message: 'We love you. Have the best day.',
-      mark: 'ARTHUR BIRTHDAY 2026',
-      tone: 'dark'
-    }
-  ];
-  function dayKey(t) {
+  function dateKey(t) {
     return t.year + '-' + String(t.monthIndex + 1).padStart(2, '0') + '-' + String(t.day).padStart(2, '0');
   }
+  function timeInSceneWindow(t, schedule) {
+    var start = timeToMin(schedule && schedule.start, null, null);
+    var end = timeToMin(schedule && schedule.end, null, null);
+    if (!start && !end) return true;
+    var n = mins(t.hour, t.minute);
+    if (start <= end) return n >= start && n < end;
+    return n >= start || n < end;
+  }
+  function sceneActive(t, scene) {
+    if (!scene || scene.enabled === false) return false;
+    var schedule = scene.schedule || {};
+    var dates = Object.prototype.toString.call(schedule.dates) === '[object Array]' ? schedule.dates : [];
+    if (dates.length) {
+      var today = dateKey(t);
+      var dateOk = false;
+      for (var d = 0; d < dates.length; d++) if (String(dates[d]) === today) dateOk = true;
+      if (!dateOk) return false;
+    }
+    return timeInSceneWindow(t, schedule);
+  }
   function activeSpecialTribute(t) {
-    var today = dayKey(t);
-    for (var i = 0; i < SPECIAL_DAY_TRIBUTES.length; i++) {
-      var tribute = SPECIAL_DAY_TRIBUTES[i];
-      var dates = Object.prototype.toString.call(tribute.dates) === '[object Array]' ? tribute.dates : [];
-      for (var d = 0; d < dates.length; d++) if (String(dates[d]) === today) return tribute;
+    var scenes = ConfigService.getSceneDefinitions().filter(function (scene) {
+      return scene && scene.type === 'tribute' && sceneActive(t, scene);
+    });
+    scenes.sort(function (a, b) {
+      return Number(b.priority == null ? 50 : b.priority) - Number(a.priority == null ? 50 : a.priority);
+    });
+    if (scenes.length) {
+      var tribute = scenes[0].tribute || {};
+      return {
+        id: scenes[0].id,
+        image: tribute.image,
+        title: tribute.title || scenes[0].label,
+        message: tribute.message || '',
+        mark: tribute.mark || '',
+        tone: tribute.tone || 'dark'
+      };
     }
     return null;
   }

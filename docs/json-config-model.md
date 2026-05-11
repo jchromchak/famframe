@@ -7,10 +7,11 @@ The TV dashboard reads these JSON/content files directly through `/config/dashbo
 ## Files
 
 - `/config/family.json`: family identity, `familyId`, members, home display facts, and time zone.
-- `/config/identity.json`: public-safe sample accounts, families, members, memberships, and device targets for the React admin identity/family flow.
+- `/config/identity.json`: public-safe account, family, member, membership, and device targets for the React admin identity/family flow.
 - `/config/routines.json`: routines, routine layers, timing, display scene hints, and reusable lists.
 - `/config/routes.json`: safe route labels, stop labels, per-stop buffers, fallback drive estimates, and safe derived route data.
 - `/config/display.json`: TV runtime, scene, time, and theme display settings.
+- `/config/scenes.json`: scheduled top-level display scenes such as tributes.
 - `/config/modules.json`: feature/module settings for weather, calendar, quotes, and commute.
 - `/content/messages.md`: human-authored message pools.
 - `/content/quotes.md`: local quote fallbacks.
@@ -31,11 +32,11 @@ Member and private place identifiers should also use stable opaque ids such as `
 
 ## Identity and Family Access
 
-`identity.json` is a public-safe sample model for the React admin flow. It is not authentication.
+`identity.json` is a public-safe model for the React admin flow. It is not authentication.
 
 It contains:
 
-- `accounts`: login-shaped identities using sample `.test` email addresses.
+- `accounts`: login-shaped identities.
 - `families`: family records with readable handles plus opaque suffixes.
 - `familyMembers`: people in a family; members may or may not have an email.
 - `memberships`: links between accounts and family members, with roles of `member`, `maintainer`, `co-owner`, or `owner`.
@@ -80,6 +81,7 @@ GitHub sync now understands the JSON file set:
 - `config/routines.json`
 - `config/routes.json`
 - `config/display.json`
+- `config/scenes.json`
 - `config/modules.json`
 - `content/messages.md`
 - `content/quotes.md`

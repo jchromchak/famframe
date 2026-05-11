@@ -311,6 +311,7 @@
     var display = input.display || {};
     var modules = input.modules || {};
     var routinesConfig = input.routines || {};
+    var scenesConfig = input.scenes || {};
     var routesConfig = input.routes || {};
     var routes = routeById(routesConfig);
     var lists = listById(routinesConfig);
@@ -357,6 +358,7 @@
       },
       schoolDays: primaryDeparture ? clone(primaryDeparture.days) : [1, 2, 3, 4, 5],
       routines: dashboardRoutines,
+      scenes: clone(arr(scenesConfig.scenes)),
       scenarios: {
         default: {
           leave: primaryDeparture ? primaryDeparture.primaryTime : '07:00',

@@ -392,7 +392,7 @@ function CreateFamilyCard({
       <div className="form-grid">
         <label className="field-stack">
           <span>Family name</span>
-          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Smith Family" />
+          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Chromchak Family" />
         </label>
         <label className="field-stack">
           <span>Your family member name</span>

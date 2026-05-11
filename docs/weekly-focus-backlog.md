@@ -19,6 +19,7 @@ Scope:
 - Preserve existing routine rendering and dashboard behavior.
 - Keep tribute activation separate from routine timing.
 - Make the current Arthur birthday tribute visible as a scene rather than a hidden override.
+- Move tribute scheduling into `config/scenes.json`.
 
 Acceptance:
 
@@ -64,7 +65,7 @@ Non-goals:
 
 ### 3. Scene Scheduling Contract
 
-Status: queued
+Status: in progress
 
 Outcome: special scenes can be scheduled without one-off dashboard code.
 
@@ -80,6 +81,12 @@ Acceptance:
 - Scene scheduling can express Mother's Day and Arthur birthday.
 - Dashboard scene resolution reads data, not one-off constants.
 - Admin can show scheduled scene status.
+
+Current slice:
+
+- `config/scenes.json` defines Arthur birthday as a scheduled tribute scene.
+- The dashboard reads scheduled tribute scenes from config before routine windows.
+- React admin reads the same scene config for the Scenes tab.
 
 ### 4. Dynamic Departure And Multi-Stop Routing Spike
 
@@ -114,4 +121,3 @@ Non-goals:
 
 - Migrating this week.
 - Designing full multi-user auth.
-

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "scenes": [
+    {
+      "id": "scene-arthur-birthday-2026",
+      "label": "Happy Birthday Arthur!",
+      "type": "tribute",
+      "enabled": true,
+      "priority": 90,
+      "schedule": {
+        "dates": [
+          "2026-05-10",
+          "2026-05-11"
+        ]
+      },
+      "tribute": {
+        "image": "../assets/tributes/arthur-birthday-2026.png",
+        "title": "Happy Birthday Arthur!",
+        "message": "We love you. Have the best day.",
+        "mark": "ARTHUR BIRTHDAY 2026",
+        "tone": "dark"
+      }
+    }
+  ]
+}

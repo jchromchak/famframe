@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "accounts": [
     {
-      "email": "john@example.test",
+      "email": "jchromchak@gmail.com",
       "displayName": "John",
       "isSuperAdmin": true
     },
@@ -20,8 +20,8 @@
   "families": [
     {
       "id": "fam-smith-a1b2c3d4",
-      "name": "Smith Family",
-      "handle": "smith-family-a1b2c3d4",
+      "name": "Chromchak Family",
+      "handle": "chromchak-family-a1b2c3d4",
       "timezone": "America/New_York"
     },
     {
@@ -36,7 +36,7 @@
       "id": "mem-john",
       "familyId": "fam-smith-a1b2c3d4",
       "name": "John",
-      "email": "john@example.test",
+      "email": "jchromchak@gmail.com",
       "relationship": "Parent"
     },
     {
@@ -62,7 +62,7 @@
       "id": "mem-test-owner",
       "familyId": "fam-test-9f8e7d6c",
       "name": "John",
-      "email": "john@example.test",
+      "email": "jchromchak@gmail.com",
       "relationship": "Tester"
     },
     {
@@ -75,7 +75,7 @@
   ],
   "memberships": [
     {
-      "accountEmail": "john@example.test",
+      "accountEmail": "jchromchak@gmail.com",
       "familyId": "fam-smith-a1b2c3d4",
       "familyMemberId": "mem-john",
       "role": "owner"
@@ -87,7 +87,7 @@
       "role": "co-owner"
     },
     {
-      "accountEmail": "john@example.test",
+      "accountEmail": "jchromchak@gmail.com",
       "familyId": "fam-test-9f8e7d6c",
       "familyMemberId": "mem-test-owner",
       "role": "owner"

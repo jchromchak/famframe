@@ -66,6 +66,30 @@ type RoutinesConfig = {
   routines: Routine[];
 };
 
+type ScenesConfig = {
+  scenes?: SceneConfig[];
+};
+
+type SceneConfig = {
+  id: string;
+  label: string;
+  type: "tribute" | "routine";
+  enabled?: boolean;
+  priority?: number;
+  schedule?: {
+    dates?: string[];
+    start?: string;
+    end?: string;
+  };
+  tribute?: {
+    image?: string;
+    title?: string;
+    message?: string;
+    mark?: string;
+    tone?: string;
+  };
+};
+
 export type DisplayConfig = {
   theme?: string;
   runtime?: {
@@ -109,14 +133,15 @@ async function readJson<T>(path: string): Promise<T> {
 }
 
 export async function loadConfig(): Promise<ConfigState> {
-  const [routineConfig, display] = await Promise.all([
+  const [routineConfig, display, sceneConfig] = await Promise.all([
     readJson<RoutinesConfig>("config/routines.json"),
     readJson<DisplayConfig>("config/display.json"),
+    readJson<ScenesConfig>("config/scenes.json"),
   ]);
 
   const routines = routineConfig.routines ?? [];
 
-  return { routines, display, scenes: deriveScenes(routines) };
+  return { routines, display, scenes: deriveScenes(routines, sceneConfig.scenes ?? []) };
 }
 
 export async function loadIdentityConfig(): Promise<IdentityConfig> {
@@ -162,7 +187,7 @@ export function sceneTypeLabel(scene: AdminScene) {
   return scene.type === "tribute" ? "Tribute scene" : "Routine scene";
 }
 
-function deriveScenes(routines: Routine[]): AdminScene[] {
+function deriveScenes(routines: Routine[], configuredScenes: SceneConfig[]): AdminScene[] {
   const routineScenes = routines.map((routine) => ({
     id: `scene-${routine.id}`,
     label: routine.label,
@@ -173,17 +198,35 @@ function deriveScenes(routines: Routine[]): AdminScene[] {
     routine,
   }));
 
-  const tributeScenes: AdminScene[] = [
-    {
-      id: "scene-arthur-birthday-2026",
-      label: "Happy Birthday Arthur!",
-      type: "tribute",
-      status: "active",
-      source: "Special day",
-      schedule: "May 10-11, 2026",
-      imagePath: "../assets/tributes/arthur-birthday-2026.png",
-    },
-  ];
+  const tributeScenes: AdminScene[] = configuredScenes
+    .filter((scene) => scene.type === "tribute")
+    .map((scene) => ({
+      id: scene.id,
+      label: scene.tribute?.title || scene.label,
+      type: "tribute" as const,
+      status: scene.enabled === false ? "inactive" as const : "active" as const,
+      source: "Scene config",
+      schedule: sceneScheduleLabel(scene),
+      imagePath: scene.tribute?.image,
+    }));
 
   return [...tributeScenes, ...routineScenes];
+}
+
+function sceneScheduleLabel(scene: SceneConfig) {
+  const dates = scene.schedule?.dates ?? [];
+  const dateLabel = dates.length ? compactDateRange(dates) : "Unscheduled";
+  const start = scene.schedule?.start;
+  const end = scene.schedule?.end;
+
+  if (start && end) {
+    return `${dateLabel}, ${start} to ${end}`;
+  }
+
+  return dateLabel;
+}
+
+function compactDateRange(dates: string[]) {
+  if (dates.length === 1) return dates[0];
+  return `${dates[0]} to ${dates[dates.length - 1]}`;
 }

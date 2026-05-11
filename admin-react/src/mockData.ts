@@ -40,7 +40,7 @@ export type DeviceTarget = {
 
 export const accounts: Account[] = [
   {
-    email: "john@example.test",
+    email: "jchromchak@gmail.com",
     displayName: "John",
     isSuperAdmin: true,
   },
@@ -59,8 +59,8 @@ export const accounts: Account[] = [
 export const families: Family[] = [
   {
     id: "fam-smith-a1b2c3d4",
-    name: "Smith Family",
-    handle: "smith-family-a1b2c3d4",
+    name: "Chromchak Family",
+    handle: "chromchak-family-a1b2c3d4",
     timezone: "America/New_York",
   },
   {
@@ -76,7 +76,7 @@ export const familyMembers: FamilyMember[] = [
     id: "mem-john",
     familyId: "fam-smith-a1b2c3d4",
     name: "John",
-    email: "john@example.test",
+    email: "jchromchak@gmail.com",
     relationship: "Parent",
   },
   {
@@ -102,7 +102,7 @@ export const familyMembers: FamilyMember[] = [
     id: "mem-test-owner",
     familyId: "fam-test-9f8e7d6c",
     name: "John",
-    email: "john@example.test",
+    email: "jchromchak@gmail.com",
     relationship: "Tester",
   },
   {
@@ -116,7 +116,7 @@ export const familyMembers: FamilyMember[] = [
 
 export const memberships: Membership[] = [
   {
-    accountEmail: "john@example.test",
+    accountEmail: "jchromchak@gmail.com",
     familyId: "fam-smith-a1b2c3d4",
     familyMemberId: "mem-john",
     role: "owner",
@@ -128,7 +128,7 @@ export const memberships: Membership[] = [
     role: "co-owner",
   },
   {
-    accountEmail: "john@example.test",
+    accountEmail: "jchromchak@gmail.com",
     familyId: "fam-test-9f8e7d6c",
     familyMemberId: "mem-test-owner",
     role: "owner",
