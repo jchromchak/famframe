@@ -151,11 +151,7 @@
       "layer": "baseline",
       "appliesTo": {
         "days": [
-          1,
-          2,
-          3,
-          4,
-          5
+          4
         ]
       },
       "window": {
