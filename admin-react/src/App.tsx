@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AdminScene,
   ConfigState,
+  RouteConfig,
+  RoutesConfig,
   Routine,
   RoutinesConfig,
   fallbackIdentity,
@@ -45,6 +47,10 @@ const githubTokenKey = "fam_frame_github_pat";
 const githubRepoKey = "fam_frame_config_repo";
 const githubBranchKey = "fam_frame_config_branch";
 const routineDraftKey = "fam_frame_react_routine_drafts";
+const googleMapsKey = "fam_frame_gmaps_key";
+const commuteOriginKey = "fam_frame_commute_origin";
+const commuteDestinationKey = "fam_frame_commute_destination";
+let mapsPromise: Promise<any> | null = null;
 const weekdayOptions = [
   { value: 0, label: "Sun" },
   { value: 1, label: "Mon" },
@@ -92,6 +98,7 @@ function App() {
   const [activeView, setActiveView] = useState<View>("week");
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedRoutineId, setSelectedRoutineId] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState("Ready");
   const [accounts, setAccounts] = useState<Account[]>(fallbackIdentity.accounts);
   const [families, setFamilies] = useState<Family[]>(fallbackIdentity.families);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(fallbackIdentity.familyMembers);
@@ -205,6 +212,54 @@ function App() {
     setActiveView("week");
   }
 
+  async function refreshSchoolRoute() {
+    if (!config) {
+      setSyncStatus("Config is still loading.");
+      return;
+    }
+
+    const mapsKey = localStorage.getItem(googleMapsKey) || "";
+    const origin = localStorage.getItem(commuteOriginKey) || "";
+    const destination = localStorage.getItem(commuteDestinationKey) || "";
+    const token = localStorage.getItem(githubTokenKey) || "";
+    const repo = localStorage.getItem(githubRepoKey) || "jchromchak/famframe";
+    const branch = localStorage.getItem(githubBranchKey) || "main";
+
+    if (!mapsKey || !origin || !destination) {
+      setSyncStatus("Route refresh needs the Maps key, origin, and destination saved in the legacy admin first.");
+      return;
+    }
+
+    if (!token) {
+      setSyncStatus("Route refresh needs the GitHub token saved locally before it can push routes.json.");
+      return;
+    }
+
+    setSyncStatus("Refreshing school route...");
+
+    try {
+      const derivedRoute = await deriveSchoolRoute(mapsKey, origin, destination);
+      const nextRoutesConfig = updateRouteDerived(config.routesConfig, "route-school-morning", derivedRoute);
+      const content = `${JSON.stringify(nextRoutesConfig, null, 2)}\n`;
+
+      await putGitHubFile({
+        repo,
+        branch,
+        token,
+        path: "config/routes.json",
+        content,
+        message: "Refresh Fam Frame school route",
+      });
+
+      setConfig({ ...config, routesConfig: nextRoutesConfig });
+      setSyncStatus(
+        `School route refreshed: ${derivedRoute.derived?.durationMinutes ?? "?"} min / ${derivedRoute.derived?.trafficStatus ?? "traffic unknown"}.`,
+      );
+    } catch (error) {
+      setSyncStatus(error instanceof Error ? `Route refresh failed: ${error.message}` : "Route refresh failed.");
+    }
+  }
+
   if (!activeAccount) {
     return <LoginScreen accounts={accounts} onLogin={selectDefaultFamily} />;
   }
@@ -240,7 +295,7 @@ function App() {
         <div className="status-stack">
           <span className="sync-pill">{familyRole ?? "super admin"}</span>
           <span className="sync-pill">{activeDevice?.label ?? "No device"}</span>
-          <span className="sync-pill">Local JSON</span>
+          <span className="sync-pill">{syncPillLabel(syncStatus)}</span>
           <button className="text-button" type="button" onClick={() => setActiveFamily(null)}>
             Switch family
           </button>
@@ -262,7 +317,8 @@ function App() {
             selectedDate={selectedDate}
             onDeviceChange={setActiveDevice}
             onDateChange={setSelectedDate}
-            onRouteRefresh={() => undefined}
+            routeRefreshStatus={syncStatus}
+            onRouteRefresh={refreshSchoolRoute}
             onRoutineSelect={(routine) => {
               setSelectedRoutineId(routine.id);
               setActiveView("routines");
@@ -940,6 +996,22 @@ function scopeLabel(scope: EditScope) {
   return scope === "instance" ? "This day only" : "Going forward";
 }
 
+function syncPillLabel(status: string) {
+  if (/failed|needs|missing|add /i.test(status)) {
+    return "Needs setup";
+  }
+
+  if (/refreshing|saving/i.test(status)) {
+    return "Syncing";
+  }
+
+  if (/refreshed|saved/i.test(status)) {
+    return "Synced";
+  }
+
+  return status;
+}
+
 function RoutinePersistencePanel({ draftConfig, editScope }: { draftConfig: RoutinesConfig; editScope: EditScope | null }) {
   const [repo, setRepo] = useState(() => localStorage.getItem(githubRepoKey) || "jchromchak/famframe");
   const [branch, setBranch] = useState(() => localStorage.getItem(githubBranchKey) || "main");
@@ -1123,6 +1195,112 @@ async function githubError(response: Response, fallback: string) {
   } catch {
     return `${fallback} GitHub returned ${response.status}.`;
   }
+}
+
+async function deriveSchoolRoute(key: string, origin: string, destination: string): Promise<RouteConfig> {
+  const maps = await loadGoogleMaps(key);
+  const routes = maps.importLibrary ? await maps.importLibrary("routes") : maps;
+  const DistanceMatrixService = routes.DistanceMatrixService || maps.DistanceMatrixService;
+  const service = new DistanceMatrixService();
+  const request = {
+    origins: [origin],
+    destinations: [destination],
+    travelMode: maps.TravelMode.DRIVING,
+    unitSystem: maps.UnitSystem.IMPERIAL,
+    drivingOptions: {
+      departureTime: new Date(Date.now() + 60_000),
+      trafficModel: "bestguess",
+    },
+  };
+  const response = service.getDistanceMatrix.length < 2
+    ? await service.getDistanceMatrix(request)
+    : await new Promise<any>((resolve, reject) => {
+        service.getDistanceMatrix(request, (result: any, status: string) =>
+          status === "OK" ? resolve(result) : reject(new Error(status)),
+        );
+      });
+  const leg = response?.rows?.[0]?.elements?.[0];
+
+  if (!leg || leg.status !== "OK") {
+    throw new Error(leg?.status ?? "No school route returned.");
+  }
+
+  const trafficSeconds = Number((leg.duration_in_traffic || leg.duration || {}).value || 0);
+  const normalSeconds = Number((leg.duration || {}).value || 0);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 15 * 60 * 1000);
+
+  return {
+    id: "route-school-morning",
+    label: "US-17 N to School",
+    derived: {
+      provider: "google-maps",
+      durationMinutes: Math.max(1, Math.round(trafficSeconds / 60)),
+      trafficStatus: trafficStatus(trafficSeconds, normalSeconds),
+      updatedAt: now.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+    },
+  };
+}
+
+function updateRouteDerived(routesConfig: RoutesConfig, routeId: string, nextRoute: RouteConfig): RoutesConfig {
+  return {
+    ...routesConfig,
+    routes: (routesConfig.routes ?? []).map((route) =>
+      route.id === routeId
+        ? {
+            ...route,
+            derived: nextRoute.derived,
+          }
+        : route,
+    ),
+  };
+}
+
+function loadGoogleMaps(key: string): Promise<any> {
+  const existingGoogle = (window as any).google;
+
+  if (existingGoogle?.maps) {
+    return Promise.resolve(existingGoogle.maps);
+  }
+
+  if (mapsPromise) {
+    return mapsPromise;
+  }
+
+  mapsPromise = new Promise((resolve, reject) => {
+    const callbackName = "__famFrameReactMapsReady";
+    const script = document.createElement("script");
+
+    (window as any)[callbackName] = () => {
+      resolve((window as any).google.maps);
+      delete (window as any)[callbackName];
+    };
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&v=weekly&callback=${callbackName}`;
+    script.async = true;
+    script.onerror = () => reject(new Error("Google Maps failed to load."));
+    document.head.appendChild(script);
+  });
+
+  return mapsPromise;
+}
+
+function trafficStatus(trafficSeconds: number, normalSeconds: number) {
+  if (!trafficSeconds || !normalSeconds) {
+    return "unknown";
+  }
+
+  const ratio = trafficSeconds / normalSeconds;
+
+  if (ratio >= 1.35) {
+    return "heavy";
+  }
+
+  if (ratio >= 1.12) {
+    return "moderate";
+  }
+
+  return "light";
 }
 
 function System({

@@ -27,6 +27,7 @@ Acceptance:
 - [x] Selected-day routines are filtered from real routine applicability.
 - [x] Routine cards open the routine editor.
 - [x] Edit scope friction exists for this instance vs future recurrence.
+- [x] Route refresh button has real behavior or honest setup feedback.
 - [ ] Add-event flow exists with recurrence and type selection.
 - [ ] Scaffolding nav is reduced to the useful daily workflow.
 

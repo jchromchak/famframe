@@ -11,6 +11,7 @@ type ThisWeekViewProps = {
   device: DeviceTarget | null;
   devices: DeviceTarget[];
   selectedDate: Date;
+  routeRefreshStatus: string;
   onDeviceChange: (device: DeviceTarget) => void;
   onDateChange: (date: Date) => void;
   onRoutineSelect: (routine: Routine) => void;
@@ -25,6 +26,7 @@ export function ThisWeekView({
   device,
   devices,
   selectedDate,
+  routeRefreshStatus,
   onDeviceChange,
   onDateChange,
   onRoutineSelect,
@@ -57,6 +59,7 @@ export function ThisWeekView({
         <button className="route-refresh-button" type="button" onClick={onRouteRefresh}>
           Refresh routes
         </button>
+        <p className="route-refresh-status">{routeRefreshStatus}</p>
       </section>
 
       <div className="panel-grid">

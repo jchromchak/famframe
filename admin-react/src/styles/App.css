@@ -158,6 +158,14 @@
   padding: 10px 14px;
 }
 
+.route-refresh-status {
+  color: var(--ff-color-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .wide-panel,
 .side-panel,
 .routine-card,

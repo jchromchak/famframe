@@ -73,6 +73,29 @@ export type AdminScene = {
   routine?: Routine;
 };
 
+export type RoutesConfig = {
+  schemaVersion?: number;
+  routes?: RouteConfig[];
+  places?: unknown[];
+};
+
+export type RouteConfig = {
+  id: string;
+  label: string;
+  origin?: unknown;
+  destination?: unknown;
+  stops?: unknown[];
+  bufferMinutes?: number;
+  fallbackDriveMinutes?: number;
+  derived?: {
+    provider?: string;
+    durationMinutes?: number | null;
+    trafficStatus?: string;
+    updatedAt?: string;
+    expiresAt?: string;
+  };
+};
+
 export type RoutinesConfig = {
   schemaVersion?: number;
   routines: Routine[];
@@ -120,6 +143,7 @@ export type DisplayConfig = {
 export type ConfigState = {
   routines: Routine[];
   routinesConfig: RoutinesConfig;
+  routesConfig: RoutesConfig;
   display: DisplayConfig;
   scenes: AdminScene[];
 };
@@ -153,15 +177,22 @@ async function readJson<T>(path: string): Promise<T> {
 }
 
 export async function loadConfig(): Promise<ConfigState> {
-  const [routineConfig, display, sceneConfig] = await Promise.all([
+  const [routineConfig, display, sceneConfig, routesConfig] = await Promise.all([
     readJson<RoutinesConfig>("config/routines.json"),
     readJson<DisplayConfig>("config/display.json"),
     readJson<ScenesConfig>("config/scenes.json"),
+    readJson<RoutesConfig>("config/routes.json"),
   ]);
 
   const routines = hydrateRoutineTasks(routineConfig.routines ?? [], routineConfig.lists ?? []);
 
-  return { routines, routinesConfig: routineConfig, display, scenes: deriveScenes(routines, sceneConfig.scenes ?? []) };
+  return {
+    routines,
+    routinesConfig: routineConfig,
+    routesConfig,
+    display,
+    scenes: deriveScenes(routines, sceneConfig.scenes ?? []),
+  };
 }
 
 export async function loadIdentityConfig(): Promise<IdentityConfig> {
