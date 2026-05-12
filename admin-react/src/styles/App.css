@@ -115,6 +115,49 @@
   grid-template-columns: minmax(0, 1fr) 340px;
 }
 
+.day-view {
+  display: grid;
+  gap: 16px;
+}
+
+.day-header {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 54px minmax(0, 1fr) 54px auto;
+  min-height: 0;
+  text-align: center;
+}
+
+.day-header h2 {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  letter-spacing: 0;
+  line-height: 1;
+  margin: 0;
+}
+
+.date-step,
+.route-refresh-button {
+  border: 1px solid #d7c8ad;
+  border-radius: var(--ff-radius-control);
+  color: var(--ff-color-ink);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.date-step {
+  aspect-ratio: 1;
+  background: var(--ff-color-gold);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.route-refresh-button {
+  background: var(--ff-color-surface);
+  min-height: 48px;
+  padding: 10px 14px;
+}
+
 .wide-panel,
 .side-panel,
 .routine-card,
@@ -329,6 +372,20 @@
 
 .routine-row {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.day-routine-list {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.routine-card-button {
+  color: var(--ff-color-ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.routine-card-button:hover {
+  border-color: var(--ff-color-gold);
 }
 
 .routine-browser {
@@ -729,6 +786,14 @@ dd {
     min-height: 0;
   }
 
+  .day-header {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+  }
+
+  .route-refresh-button {
+    grid-column: 1 / -1;
+  }
+
   .routine-rail {
     display: flex;
     margin: 0 -18px;
@@ -773,6 +838,14 @@ dd {
 
   .topbar h1 {
     font-size: 2.2rem;
+  }
+
+  .day-header {
+    padding: 14px;
+  }
+
+  .day-header h2 {
+    font-size: 1.65rem;
   }
 
   .wide-panel,

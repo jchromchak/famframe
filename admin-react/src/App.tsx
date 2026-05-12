@@ -89,6 +89,8 @@ function App() {
   const [activeFamily, setActiveFamily] = useState<Family | null>(null);
   const [activeDevice, setActiveDevice] = useState<DeviceTarget | null>(null);
   const [activeView, setActiveView] = useState<View>("week");
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [selectedRoutineId, setSelectedRoutineId] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Account[]>(fallbackIdentity.accounts);
   const [families, setFamilies] = useState<Family[]>(fallbackIdentity.families);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(fallbackIdentity.familyMembers);
@@ -96,7 +98,7 @@ function App() {
   const [deviceTargets, setDeviceTargets] = useState<DeviceTarget[]>(fallbackIdentity.deviceTargets);
   const [config, setConfig] = useState<ConfigState | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [captureText, setCaptureText] = useState("Late start tomorrow. Need library books. Pack soccer gear.");
+  const [captureText, setCaptureText] = useState("");
 
   useEffect(() => {
     loadConfig()
@@ -146,6 +148,17 @@ function App() {
     return roleForAccount(account, familyId, memberships);
   }
 
+  function selectDefaultFamily(account: Account, familyList = families, deviceList = deviceTargets, membershipList = memberships) {
+    const accountFamilies = familiesForAccount(account, familyList, membershipList);
+    const preferredFamily =
+      accountFamilies.find((family) => family.handle === "chromchak-family-a1b2c3d4") ?? accountFamilies[0] ?? null;
+
+    setActiveAccount(account);
+    setActiveFamily(preferredFamily);
+    setActiveDevice(preferredFamily ? devicesForFamily(preferredFamily.id, deviceList)[0] ?? null : null);
+    setActiveView("week");
+  }
+
   function createFamily(input: CreateFamilyInput) {
     if (!activeAccount) {
       return;
@@ -192,7 +205,7 @@ function App() {
   }
 
   if (!activeAccount) {
-    return <LoginScreen accounts={accounts} onLogin={setActiveAccount} />;
+    return <LoginScreen accounts={accounts} onLogin={selectDefaultFamily} />;
   }
 
   if (!activeFamily) {
@@ -221,7 +234,7 @@ function App() {
       <header className="topbar">
         <div>
           <p className="eyebrow">{activeFamily.name}</p>
-          <h1>{navItems.find((item) => item.id === activeView)?.label}</h1>
+          <h1>{activeView === "week" ? "Today" : navItems.find((item) => item.id === activeView)?.label}</h1>
         </div>
         <div className="status-stack">
           <span className="sync-pill">{familyRole ?? "super admin"}</span>
@@ -245,8 +258,14 @@ function App() {
             family={activeFamily}
             device={activeDevice}
             devices={familyDevices}
+            selectedDate={selectedDate}
             onDeviceChange={setActiveDevice}
-            renderRoutine={(routine) => <RoutineCard key={routine.id} routine={routine} />}
+            onDateChange={setSelectedDate}
+            onRouteRefresh={() => undefined}
+            onRoutineSelect={(routine) => {
+              setSelectedRoutineId(routine.id);
+              setActiveView("routines");
+            }}
           />
         ) : null}
         {activeView === "capture" ? (
@@ -254,7 +273,11 @@ function App() {
         ) : null}
         {activeView === "scenes" ? <Scenes scenes={activeScenes} /> : null}
         {activeView === "routines" && config ? (
-          <Routines routines={activeRoutines} sourceConfig={config.routinesConfig} />
+          <Routines
+            routines={activeRoutines}
+            sourceConfig={config.routinesConfig}
+            initialSelectedRoutineId={selectedRoutineId}
+          />
         ) : null}
         {activeView === "system" ? (
           <System config={config} account={activeAccount} family={activeFamily} device={activeDevice} />
@@ -489,14 +512,28 @@ function makeOpaqueSuffix() {
   return Math.random().toString(16).slice(2, 10).padEnd(8, "0");
 }
 
-function Routines({ routines, sourceConfig }: { routines: Routine[]; sourceConfig: RoutinesConfig }) {
+function Routines({
+  routines,
+  sourceConfig,
+  initialSelectedRoutineId,
+}: {
+  routines: Routine[];
+  sourceConfig: RoutinesConfig;
+  initialSelectedRoutineId: string | null;
+}) {
   const [draftRoutines, setDraftRoutines] = useState(routines);
-  const [selectedRoutineId, setSelectedRoutineId] = useState(routines[0]?.id ?? "");
+  const [selectedRoutineId, setSelectedRoutineId] = useState(initialSelectedRoutineId ?? routines[0]?.id ?? "");
   const selectedRoutine = draftRoutines.find((routine) => routine.id === selectedRoutineId) ?? draftRoutines[0] ?? null;
 
   useEffect(() => {
     setDraftRoutines(routines);
   }, [routines]);
+
+  useEffect(() => {
+    if (initialSelectedRoutineId) {
+      setSelectedRoutineId(initialSelectedRoutineId);
+    }
+  }, [initialSelectedRoutineId]);
 
   useEffect(() => {
     if (!draftRoutines.some((routine) => routine.id === selectedRoutineId)) {

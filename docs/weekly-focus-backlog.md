@@ -6,6 +6,30 @@ This week is about stabilizing the core parent/operator workflow after the tribu
 
 ## Ranked Work
 
+### CUT-01. Day-First React Admin
+
+Status: in progress
+
+Outcome: the React admin feels like a small family control panel rather than a speculative admin platform.
+
+Scope:
+
+- Skip family selection for `jchromchak@gmail.com` and land directly in Chromchak Family.
+- Replace the fake weekly overview with a selected-day view.
+- Show routines assigned to the selected date.
+- Let routine cards open the routine editor.
+- Remove fake temporary appends from the default state.
+
+Acceptance:
+
+- [x] John login lands directly in the family/day view.
+- [x] Other fake owner login is separated from John's identity.
+- [x] Selected-day routines are filtered from real routine applicability.
+- [x] Routine cards open the routine editor.
+- [ ] Edit scope friction exists for this instance vs future recurrence.
+- [ ] Add-event flow exists with recurrence and type selection.
+- [ ] Scaffolding nav is reduced to the useful daily workflow.
+
 ### WF-01. Scene System Foundation
 
 Status: mostly closed

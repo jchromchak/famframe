@@ -45,8 +45,8 @@ export const accounts: Account[] = [
     isSuperAdmin: true,
   },
   {
-    email: "partner@example.test",
-    displayName: "Partner",
+    email: "owner@example.xyz",
+    displayName: "Example Owner",
     isSuperAdmin: false,
   },
   {
@@ -80,10 +80,10 @@ export const familyMembers: FamilyMember[] = [
     relationship: "Parent",
   },
   {
-    id: "mem-partner",
+    id: "mem-example-owner",
     familyId: "fam-smith-a1b2c3d4",
-    name: "Partner",
-    email: "partner@example.test",
+    name: "Example Owner",
+    email: "owner@example.xyz",
     relationship: "Parent",
   },
   {
@@ -101,8 +101,8 @@ export const familyMembers: FamilyMember[] = [
   {
     id: "mem-test-owner",
     familyId: "fam-test-9f8e7d6c",
-    name: "John",
-    email: "jchromchak@gmail.com",
+    name: "Example Owner",
+    email: "owner@example.xyz",
     relationship: "Tester",
   },
   {
@@ -122,13 +122,13 @@ export const memberships: Membership[] = [
     role: "owner",
   },
   {
-    accountEmail: "partner@example.test",
+    accountEmail: "owner@example.xyz",
     familyId: "fam-smith-a1b2c3d4",
-    familyMemberId: "mem-partner",
+    familyMemberId: "mem-example-owner",
     role: "co-owner",
   },
   {
-    accountEmail: "jchromchak@gmail.com",
+    accountEmail: "owner@example.xyz",
     familyId: "fam-test-9f8e7d6c",
     familyMemberId: "mem-test-owner",
     role: "owner",

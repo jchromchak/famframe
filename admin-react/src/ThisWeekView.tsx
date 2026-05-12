@@ -1,4 +1,5 @@
 import type { CaptureAppend } from "./capture";
+import { formatRoutineWindow } from "./config";
 import type { Routine } from "./config";
 import type { Account, DeviceTarget, Family } from "./mockData";
 
@@ -9,8 +10,11 @@ type ThisWeekViewProps = {
   family: Family;
   device: DeviceTarget | null;
   devices: DeviceTarget[];
+  selectedDate: Date;
   onDeviceChange: (device: DeviceTarget) => void;
-  renderRoutine: (routine: Routine) => React.ReactNode;
+  onDateChange: (date: Date) => void;
+  onRoutineSelect: (routine: Routine) => void;
+  onRouteRefresh: () => void;
 };
 
 export function ThisWeekView({
@@ -20,78 +24,152 @@ export function ThisWeekView({
   family,
   device,
   devices,
+  selectedDate,
   onDeviceChange,
-  renderRoutine,
+  onDateChange,
+  onRoutineSelect,
+  onRouteRefresh,
 }: ThisWeekViewProps) {
+  const selectedDateKey = dateKey(selectedDate);
+  const routinesForDate = routines.filter((routine) => routineAppliesToDate(routine, selectedDate));
+
+  function moveDate(offset: number) {
+    const nextDate = new Date(selectedDate);
+
+    nextDate.setDate(selectedDate.getDate() + offset);
+    onDateChange(nextDate);
+  }
+
   return (
-    <div className="panel-grid">
-      <section className="wide-panel">
-        <div className="section-heading">
-          <p className="eyebrow">Operational View</p>
-          <h2>This week starts with inherited routines.</h2>
+    <div className="day-view">
+      <section className="day-header wide-panel">
+        <button className="date-step" type="button" aria-label="Previous day" onClick={() => moveDate(-1)}>
+          ‹
+        </button>
+        <div>
+          <p className="eyebrow">Selected day</p>
+          <h2>{formatDateLabel(selectedDate)}</h2>
+          <p className="muted">{selectedDateKey}</p>
         </div>
-        <div className="week-strip">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-            <article key={day} className="day-card">
-              <span>{day}</span>
-              <div className="routine-dots">
-                <i />
-                <i />
-                {day === "Thu" || day === "Sun" ? <b /> : null}
-              </div>
-            </article>
-          ))}
-        </div>
+        <button className="date-step" type="button" aria-label="Next day" onClick={() => moveDate(1)}>
+          ›
+        </button>
+        <button className="route-refresh-button" type="button" onClick={onRouteRefresh}>
+          Refresh routes
+        </button>
       </section>
 
-      <section className="side-panel">
-        <p className="eyebrow">Active Target</p>
-        <h3 className="compact-title">{device?.label ?? "No device selected"}</h3>
-        <p className="muted">{family.handle}</p>
-        <div className="target-stack">
-          {devices.map((target) => (
-            <button
-              key={target.id}
-              className={target.id === device?.id ? "target-button active" : "target-button"}
-              type="button"
-              onClick={() => onDeviceChange(target)}
-            >
-              {target.label}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {account.isSuperAdmin ? (
-        <section className="side-panel super-panel">
-          <p className="eyebrow">Testing View</p>
-          <p className="muted">Super-admin controls will set which family and device a TV route renders.</p>
-          <code>/dashboard/?family={family.handle}&device={device?.handle ?? "none"}</code>
+      <div className="panel-grid">
+        <section className="wide-panel">
+          <div className="section-heading">
+            <p className="eyebrow">Assigned routines</p>
+            <h2>Routines for this day</h2>
+          </div>
+          {routinesForDate.length ? (
+            <div className="routine-row day-routine-list">
+              {routinesForDate.map((routine) => (
+                <button className="routine-card routine-card-button" key={routine.id} type="button" onClick={() => onRoutineSelect(routine)}>
+                  <div>
+                    <p className="eyebrow">{routine.type ?? "routine"}</p>
+                    <h3>{routine.label}</h3>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>Window</dt>
+                      <dd>{formatRoutineWindow(routine)}</dd>
+                    </div>
+                    <div>
+                      <dt>Status</dt>
+                      <dd>{routine.appliesTo?.dates?.includes(selectedDateKey) ? "Modified" : "Baseline"}</dd>
+                    </div>
+                  </dl>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="muted">No routines are assigned to this day yet.</p>
+          )}
         </section>
-      ) : null}
 
-      <section className="side-panel">
-        <p className="eyebrow">Temporary Appends</p>
-        {appends.length ? (
-          <ul className="plain-list">
-            {appends.map((append) => (
-              <li className="append-card" key={append.id}>
-                <span className="append-label">{append.label}</span>
-                <span className="append-meta">
-                  {append.timing} / {append.routineLabel}
-                </span>
-              </li>
+        <section className="side-panel">
+          <p className="eyebrow">Active display</p>
+          <h3 className="compact-title">{device?.label ?? "No device selected"}</h3>
+          <p className="muted">{family.handle}</p>
+          <div className="target-stack">
+            {devices.map((target) => (
+              <button
+                key={target.id}
+                className={target.id === device?.id ? "target-button active" : "target-button"}
+                type="button"
+                onClick={() => onDeviceChange(target)}
+              >
+                {target.label}
+              </button>
             ))}
-          </ul>
-        ) : (
-          <p className="muted">No temporary context captured yet.</p>
-        )}
-      </section>
+          </div>
+        </section>
 
-      <section className="wide-panel">
-        <p className="eyebrow">Routines In Play</p>
-        <div className="routine-row">{routines.slice(0, 4).map(renderRoutine)}</div>
-      </section>
+        {account.isSuperAdmin ? (
+          <section className="side-panel super-panel">
+            <p className="eyebrow">Route</p>
+            <p className="muted">Preview the active display route for this family/device.</p>
+            <code>/dashboard/?family={family.handle}&device={device?.handle ?? "none"}</code>
+          </section>
+        ) : null}
+
+        <section className="side-panel">
+          <p className="eyebrow">Temporary appends</p>
+          {appends.length ? (
+            <ul className="plain-list">
+              {appends.map((append) => (
+                <li className="append-card" key={append.id}>
+                  <span className="append-label">{append.label}</span>
+                  <span className="append-meta">
+                    {append.timing} / {append.routineLabel}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No temporary context captured yet.</p>
+          )}
+        </section>
+
+        <section className="wide-panel add-event-panel">
+          <p className="eyebrow">Add</p>
+          <h2>Add an event</h2>
+          <button className="primary-action" type="button">
+            Add event
+          </button>
+        </section>
+      </div>
     </div>
   );
+}
+
+function routineAppliesToDate(routine: Routine, date: Date) {
+  const key = dateKey(date);
+  const dates = routine.appliesTo?.dates ?? [];
+
+  if (dates.includes(key)) {
+    return true;
+  }
+
+  return routine.appliesTo?.days?.includes(date.getDay()) ?? false;
+}
+
+function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateLabel(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(date);
 }
