@@ -179,7 +179,7 @@
       "id": "routine-school-pickup-1778166294260",
       "label": "Mothers Day Tea",
       "type": "departure",
-      "enabled": true,
+      "enabled": false,
       "layer": "baseline",
       "appliesTo": {
         "days": [
@@ -327,19 +327,5 @@
         }
       ]
     }
-  ],
-  "layers": {
-    "baseline": {
-      "description": "Usually true recurring routines."
-    },
-    "pattern": {
-      "description": "Reusable variants such as sports days, pickup days, or late starts."
-    },
-    "override": {
-      "description": "Temporary week or day context."
-    },
-    "addon": {
-      "description": "Small temporary inserts such as library books or errands."
-    }
-  }
+  ]
 }
