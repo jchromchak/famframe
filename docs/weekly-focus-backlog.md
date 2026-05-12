@@ -26,7 +26,7 @@ Acceptance:
 - [x] Other fake owner login is separated from John's identity.
 - [x] Selected-day routines are filtered from real routine applicability.
 - [x] Routine cards open the routine editor.
-- [ ] Edit scope friction exists for this instance vs future recurrence.
+- [x] Edit scope friction exists for this instance vs future recurrence.
 - [ ] Add-event flow exists with recurrence and type selection.
 - [ ] Scaffolding nav is reduced to the useful daily workflow.
 

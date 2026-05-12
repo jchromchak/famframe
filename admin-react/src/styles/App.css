@@ -521,6 +521,13 @@
   margin: 4px 0 0;
 }
 
+.detail-panel h3 {
+  font-size: 1.2rem;
+  letter-spacing: 0;
+  line-height: 1.1;
+  margin: 4px 0 0;
+}
+
 .persistence-panel .field-stack span,
 .persistence-panel .muted {
   color: #d5c7af;
@@ -542,6 +549,47 @@
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.scope-choice-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.scope-choice {
+  background: var(--ff-color-surface);
+  border: 1px solid #d8c6a5;
+  border-radius: var(--ff-radius-control);
+  color: var(--ff-color-ink);
+  cursor: pointer;
+  display: grid;
+  gap: 6px;
+  min-height: 96px;
+  padding: 14px;
+  text-align: left;
+}
+
+.scope-choice.active {
+  background: var(--ff-color-gold);
+  border-color: #c79313;
+}
+
+.scope-choice span {
+  font-weight: 900;
+}
+
+.scope-choice small {
+  color: var(--ff-color-muted);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.field-stack input:disabled,
+.day-toggle:disabled,
+.toggle-row input:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .toggle-row {
@@ -823,6 +871,10 @@ dd {
 
   .routine-editor-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scope-choice-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -30,6 +30,7 @@ import {
 } from "./identity";
 
 type View = "week" | "capture" | "scenes" | "routines" | "system";
+type EditScope = "instance" | "future";
 
 const navItems: Array<{ id: View; label: string }> = [
   { id: "week", label: "This Week" },
@@ -677,6 +678,8 @@ function RoutineDetail({
   const items = isTimeline ? routine.timeline ?? [] : routine.tasks ?? [];
   const activeDays = routine.appliesTo?.days ?? [];
   const activeDates = routine.appliesTo?.dates ?? [];
+  const [editScope, setEditScope] = useState<EditScope | null>(null);
+  const isEditing = editScope !== null;
 
   function updateRoutine(patch: Partial<Routine>) {
     onUpdate({ ...routine, ...patch });
@@ -746,18 +749,45 @@ function RoutineDetail({
       </div>
 
       <div className="routine-detail-grid">
-        <RoutinePersistencePanel draftConfig={draftConfig} />
+        <RoutinePersistencePanel draftConfig={draftConfig} editScope={editScope} />
 
         <section className="detail-panel detail-panel-wide routine-editor">
           <div className="detail-panel-head">
-            <p className="eyebrow">Draft editor</p>
-            <span className="sync-pill">Local only</span>
+            <div>
+              <p className="eyebrow">Draft editor</p>
+              <h3>Edit scope</h3>
+            </div>
+            <span className="sync-pill">{editScope ? scopeLabel(editScope) : "Choose scope"}</span>
           </div>
+
+          <div className="scope-choice-grid">
+            <button
+              className={editScope === "instance" ? "scope-choice active" : "scope-choice"}
+              type="button"
+              onClick={() => setEditScope("instance")}
+            >
+              <span>This day only</span>
+              <small>Use for a one-off change to the selected occurrence.</small>
+            </button>
+            <button
+              className={editScope === "future" ? "scope-choice active" : "scope-choice"}
+              type="button"
+              onClick={() => setEditScope("future")}
+            >
+              <span>This type going forward</span>
+              <small>Use for baseline changes to this routine pattern.</small>
+            </button>
+          </div>
+
+          {!isEditing ? (
+            <p className="muted">Choose how far this edit should apply before changing routine fields.</p>
+          ) : null}
 
           <label className="toggle-row">
             <input
               type="checkbox"
               checked={routine.enabled !== false}
+              disabled={!isEditing}
               onChange={(event) => updateRoutine({ enabled: event.target.checked })}
             />
             <span>Enabled</span>
@@ -766,31 +796,31 @@ function RoutineDetail({
           <div className="routine-editor-grid">
             <label className="field-stack">
               <span>Name</span>
-              <input value={routine.label} onChange={(event) => updateRoutine({ label: event.target.value })} />
+              <input disabled={!isEditing} value={routine.label} onChange={(event) => updateRoutine({ label: event.target.value })} />
             </label>
             <label className="field-stack">
               <span>One-off dates</span>
-              <input value={activeDates.join(", ")} onChange={(event) => updateDates(event.target.value)} />
+              <input disabled={!isEditing} value={activeDates.join(", ")} onChange={(event) => updateDates(event.target.value)} />
             </label>
             <label className="field-stack">
               <span>Window start</span>
-              <input type="time" value={routine.window?.start ?? ""} onChange={(event) => updateWindow("start", event.target.value)} />
+              <input disabled={!isEditing} type="time" value={routine.window?.start ?? ""} onChange={(event) => updateWindow("start", event.target.value)} />
             </label>
             <label className="field-stack">
               <span>Window end</span>
-              <input type="time" value={routine.window?.end ?? ""} onChange={(event) => updateWindow("end", event.target.value)} />
+              <input disabled={!isEditing} type="time" value={routine.window?.end ?? ""} onChange={(event) => updateWindow("end", event.target.value)} />
             </label>
             <label className="field-stack">
               <span>Leave</span>
-              <input type="time" value={routine.timing?.leaveAt ?? ""} onChange={(event) => updateTiming("leaveAt", event.target.value)} />
+              <input disabled={!isEditing} type="time" value={routine.timing?.leaveAt ?? ""} onChange={(event) => updateTiming("leaveAt", event.target.value)} />
             </label>
             <label className="field-stack">
               <span>Arrive</span>
-              <input type="time" value={routine.timing?.arriveBy ?? ""} onChange={(event) => updateTiming("arriveBy", event.target.value)} />
+              <input disabled={!isEditing} type="time" value={routine.timing?.arriveBy ?? ""} onChange={(event) => updateTiming("arriveBy", event.target.value)} />
             </label>
             <label className="field-stack">
               <span>Deadline</span>
-              <input type="time" value={routine.timing?.deadline ?? routine.deadlineTime ?? ""} onChange={(event) => updateTiming("deadline", event.target.value)} />
+              <input disabled={!isEditing} type="time" value={routine.timing?.deadline ?? routine.deadlineTime ?? ""} onChange={(event) => updateTiming("deadline", event.target.value)} />
             </label>
           </div>
 
@@ -800,6 +830,7 @@ function RoutineDetail({
                 key={day.value}
                 aria-pressed={activeDays.includes(day.value)}
                 className={activeDays.includes(day.value) ? "day-toggle active" : "day-toggle"}
+                disabled={!isEditing}
                 type="button"
                 onClick={() => toggleDay(day.value)}
               >
@@ -905,16 +936,20 @@ function RoutineDetail({
   );
 }
 
-function RoutinePersistencePanel({ draftConfig }: { draftConfig: RoutinesConfig }) {
+function scopeLabel(scope: EditScope) {
+  return scope === "instance" ? "This day only" : "Going forward";
+}
+
+function RoutinePersistencePanel({ draftConfig, editScope }: { draftConfig: RoutinesConfig; editScope: EditScope | null }) {
   const [repo, setRepo] = useState(() => localStorage.getItem(githubRepoKey) || "jchromchak/famframe");
   const [branch, setBranch] = useState(() => localStorage.getItem(githubBranchKey) || "main");
   const [token, setToken] = useState(() => localStorage.getItem(githubTokenKey) || "");
-  const [status, setStatus] = useState("Draft changes are local until saved.");
+  const [status, setStatus] = useState("Choose an edit scope before saving routine changes.");
   const routinesJson = useMemo(() => `${JSON.stringify(draftConfig, null, 2)}\n`, [draftConfig]);
 
   function saveBrowserDraft() {
     localStorage.setItem(routineDraftKey, routinesJson);
-    setStatus("Saved a browser draft of config/routines.json.");
+    setStatus(`Saved a browser draft for ${editScope ? scopeLabel(editScope).toLowerCase() : "unscoped"} changes.`);
   }
 
   function downloadDraft() {
@@ -926,7 +961,7 @@ function RoutinePersistencePanel({ draftConfig }: { draftConfig: RoutinesConfig 
     link.download = "routines.json";
     link.click();
     URL.revokeObjectURL(url);
-    setStatus("Downloaded routines.json draft.");
+    setStatus(`Downloaded routines.json draft for ${editScope ? scopeLabel(editScope).toLowerCase() : "unscoped"} changes.`);
   }
 
   async function pushToGitHub() {
@@ -936,6 +971,11 @@ function RoutinePersistencePanel({ draftConfig }: { draftConfig: RoutinesConfig 
 
     if (!cleanRepo || !cleanToken) {
       setStatus("Add a GitHub repo and token before pushing.");
+      return;
+    }
+
+    if (!editScope) {
+      setStatus("Choose an edit scope before pushing baseline routines.");
       return;
     }
 
@@ -953,7 +993,7 @@ function RoutinePersistencePanel({ draftConfig }: { draftConfig: RoutinesConfig 
         content: routinesJson,
         message: "Update baseline routines",
       });
-      setStatus("Saved config/routines.json to GitHub. Refresh the dashboard after Pages updates.");
+      setStatus(`Saved ${scopeLabel(editScope).toLowerCase()} changes to GitHub. Refresh the dashboard after Pages updates.`);
     } catch (error) {
       setStatus(error instanceof Error ? `GitHub save failed: ${error.message}` : "GitHub save failed.");
     }
