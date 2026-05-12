@@ -73,12 +73,13 @@ export type AdminScene = {
   routine?: Routine;
 };
 
-type RoutinesConfig = {
+export type RoutinesConfig = {
+  schemaVersion?: number;
   routines: Routine[];
   lists?: RoutineList[];
 };
 
-type RoutineList = {
+export type RoutineList = {
   id: string;
   label: string;
   items?: RoutineTask[];
@@ -118,6 +119,7 @@ export type DisplayConfig = {
 
 export type ConfigState = {
   routines: Routine[];
+  routinesConfig: RoutinesConfig;
   display: DisplayConfig;
   scenes: AdminScene[];
 };
@@ -159,7 +161,7 @@ export async function loadConfig(): Promise<ConfigState> {
 
   const routines = hydrateRoutineTasks(routineConfig.routines ?? [], routineConfig.lists ?? []);
 
-  return { routines, display, scenes: deriveScenes(routines, sceneConfig.scenes ?? []) };
+  return { routines, routinesConfig: routineConfig, display, scenes: deriveScenes(routines, sceneConfig.scenes ?? []) };
 }
 
 export async function loadIdentityConfig(): Promise<IdentityConfig> {

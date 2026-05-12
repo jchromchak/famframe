@@ -55,13 +55,15 @@ Acceptance:
 - [x] Routine detail shows the fields that actually drive the dashboard.
 - [x] Enabled/disabled state is clear.
 - [x] One-off and recurring schedule concepts are understandable.
-- [ ] Create/edit/delete persistence path is clear.
+- [x] Baseline routine persistence path is clear.
+- [ ] Create/delete routine affordances exist.
 
 Current slice:
 
 - React admin has a local-only draft editor for routine name, enabled state, recurring weekdays, one-off dates, display window, and timing fields.
-- Draft edits update the visible routine detail and routine rail immediately, but do not persist beyond the current admin session.
-- Persistence remains deliberately open pending `WF-05`, because writing JSON safely from the browser is the next architectural decision.
+- Draft edits update the visible routine detail and routine rail immediately.
+- The Routines detail includes a persistence panel that can save a browser draft, download clean `config/routines.json`, or push baseline routines to GitHub using a Contents read/write token.
+- The export path preserves reusable `lists` from `config/routines.json` and strips hydrated checklist tasks back out of list-backed routines before saving.
 
 Non-goals:
 

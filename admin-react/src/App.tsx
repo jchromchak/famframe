@@ -3,6 +3,7 @@ import {
   AdminScene,
   ConfigState,
   Routine,
+  RoutinesConfig,
   fallbackIdentity,
   formatRoutineWindow,
   loadConfig,
@@ -39,6 +40,10 @@ const navItems: Array<{ id: View; label: string }> = [
 ];
 
 const timezoneOptions = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"];
+const githubTokenKey = "fam_frame_github_pat";
+const githubRepoKey = "fam_frame_config_repo";
+const githubBranchKey = "fam_frame_config_branch";
+const routineDraftKey = "fam_frame_react_routine_drafts";
 const weekdayOptions = [
   { value: 0, label: "Sun" },
   { value: 1, label: "Mon" },
@@ -248,7 +253,9 @@ function App() {
           <CaptureView text={captureText} onTextChange={setCaptureText} appends={visibleAppends} />
         ) : null}
         {activeView === "scenes" ? <Scenes scenes={activeScenes} /> : null}
-        {activeView === "routines" ? <Routines routines={operationalRoutines} /> : null}
+        {activeView === "routines" && config ? (
+          <Routines routines={activeRoutines} sourceConfig={config.routinesConfig} />
+        ) : null}
         {activeView === "system" ? (
           <System config={config} account={activeAccount} family={activeFamily} device={activeDevice} />
         ) : null}
@@ -482,7 +489,7 @@ function makeOpaqueSuffix() {
   return Math.random().toString(16).slice(2, 10).padEnd(8, "0");
 }
 
-function Routines({ routines }: { routines: Routine[] }) {
+function Routines({ routines, sourceConfig }: { routines: Routine[]; sourceConfig: RoutinesConfig }) {
   const [draftRoutines, setDraftRoutines] = useState(routines);
   const [selectedRoutineId, setSelectedRoutineId] = useState(routines[0]?.id ?? "");
   const selectedRoutine = draftRoutines.find((routine) => routine.id === selectedRoutineId) ?? draftRoutines[0] ?? null;
@@ -503,6 +510,11 @@ function Routines({ routines }: { routines: Routine[] }) {
     );
   }
 
+  const draftConfig = useMemo(
+    () => toRoutinesConfig(sourceConfig, draftRoutines),
+    [sourceConfig, draftRoutines],
+  );
+
   return (
     <div className="routine-workspace">
       <section className="routine-rail" aria-label="Routines">
@@ -519,7 +531,9 @@ function Routines({ routines }: { routines: Routine[] }) {
         ))}
       </section>
 
-      {selectedRoutine ? <RoutineDetail routine={selectedRoutine} onUpdate={updateRoutine} /> : null}
+      {selectedRoutine ? (
+        <RoutineDetail routine={selectedRoutine} onUpdate={updateRoutine} draftConfig={draftConfig} />
+      ) : null}
     </div>
   );
 }
@@ -613,7 +627,15 @@ function RoutineCard({ routine }: { routine: Routine }) {
   );
 }
 
-function RoutineDetail({ routine, onUpdate }: { routine: Routine; onUpdate: (routine: Routine) => void }) {
+function RoutineDetail({
+  routine,
+  onUpdate,
+  draftConfig,
+}: {
+  routine: Routine;
+  onUpdate: (routine: Routine) => void;
+  draftConfig: RoutinesConfig;
+}) {
   const isTimeline = routine.type === "timeline";
   const items = isTimeline ? routine.timeline ?? [] : routine.tasks ?? [];
   const activeDays = routine.appliesTo?.days ?? [];
@@ -687,6 +709,8 @@ function RoutineDetail({ routine, onUpdate }: { routine: Routine; onUpdate: (rou
       </div>
 
       <div className="routine-detail-grid">
+        <RoutinePersistencePanel draftConfig={draftConfig} />
+
         <section className="detail-panel detail-panel-wide routine-editor">
           <div className="detail-panel-head">
             <p className="eyebrow">Draft editor</p>
@@ -844,6 +868,186 @@ function RoutineDetail({ routine, onUpdate }: { routine: Routine; onUpdate: (rou
   );
 }
 
+function RoutinePersistencePanel({ draftConfig }: { draftConfig: RoutinesConfig }) {
+  const [repo, setRepo] = useState(() => localStorage.getItem(githubRepoKey) || "jchromchak/famframe");
+  const [branch, setBranch] = useState(() => localStorage.getItem(githubBranchKey) || "main");
+  const [token, setToken] = useState(() => localStorage.getItem(githubTokenKey) || "");
+  const [status, setStatus] = useState("Draft changes are local until saved.");
+  const routinesJson = useMemo(() => `${JSON.stringify(draftConfig, null, 2)}\n`, [draftConfig]);
+
+  function saveBrowserDraft() {
+    localStorage.setItem(routineDraftKey, routinesJson);
+    setStatus("Saved a browser draft of config/routines.json.");
+  }
+
+  function downloadDraft() {
+    const blob = new Blob([routinesJson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "routines.json";
+    link.click();
+    URL.revokeObjectURL(url);
+    setStatus("Downloaded routines.json draft.");
+  }
+
+  async function pushToGitHub() {
+    const cleanRepo = repo.trim();
+    const cleanBranch = branch.trim() || "main";
+    const cleanToken = token.trim();
+
+    if (!cleanRepo || !cleanToken) {
+      setStatus("Add a GitHub repo and token before pushing.");
+      return;
+    }
+
+    localStorage.setItem(githubRepoKey, cleanRepo);
+    localStorage.setItem(githubBranchKey, cleanBranch);
+    localStorage.setItem(githubTokenKey, cleanToken);
+    setStatus("Saving config/routines.json to GitHub...");
+
+    try {
+      await putGitHubFile({
+        repo: cleanRepo,
+        branch: cleanBranch,
+        token: cleanToken,
+        path: "config/routines.json",
+        content: routinesJson,
+        message: "Update baseline routines",
+      });
+      setStatus("Saved config/routines.json to GitHub. Refresh the dashboard after Pages updates.");
+    } catch (error) {
+      setStatus(error instanceof Error ? `GitHub save failed: ${error.message}` : "GitHub save failed.");
+    }
+  }
+
+  return (
+    <section className="detail-panel detail-panel-wide persistence-panel">
+      <div className="detail-panel-head">
+        <div>
+          <p className="eyebrow">Persistence</p>
+          <h3>Baseline routine save path</h3>
+        </div>
+        <span className="sync-pill">config/routines.json</span>
+      </div>
+
+      <div className="routine-editor-grid">
+        <label className="field-stack">
+          <span>GitHub repo</span>
+          <input value={repo} onChange={(event) => setRepo(event.target.value)} />
+        </label>
+        <label className="field-stack">
+          <span>Branch</span>
+          <input value={branch} onChange={(event) => setBranch(event.target.value)} />
+        </label>
+        <label className="field-stack">
+          <span>Token</span>
+          <input
+            type="password"
+            value={token}
+            onChange={(event) => setToken(event.target.value)}
+            placeholder="Contents read/write token"
+          />
+        </label>
+      </div>
+
+      <div className="action-row">
+        <button className="primary-action" type="button" onClick={saveBrowserDraft}>
+          Save browser draft
+        </button>
+        <button className="text-button bordered-action" type="button" onClick={downloadDraft}>
+          Download JSON
+        </button>
+        <button className="primary-action" type="button" onClick={pushToGitHub}>
+          Push baseline
+        </button>
+      </div>
+
+      <p className="muted">{status}</p>
+    </section>
+  );
+}
+
+function toRoutinesConfig(sourceConfig: RoutinesConfig, routines: Routine[]): RoutinesConfig {
+  return {
+    schemaVersion: sourceConfig.schemaVersion ?? 1,
+    routines: routines.map(stripHydratedRoutine),
+    lists: sourceConfig.lists ?? [],
+  };
+}
+
+function stripHydratedRoutine(routine: Routine): Routine {
+  const { tasks, ...sourceRoutine } = routine;
+
+  if (!routine.listId) {
+    return routine;
+  }
+
+  return sourceRoutine;
+}
+
+async function putGitHubFile({
+  repo,
+  branch,
+  token,
+  path,
+  content,
+  message,
+}: {
+  repo: string;
+  branch: string;
+  token: string;
+  path: string;
+  content: string;
+  message: string;
+}) {
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+  const readUrl = `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`;
+  const readResponse = await fetch(readUrl, { headers });
+
+  if (!readResponse.ok) {
+    throw new Error(await githubError(readResponse, `Could not read ${path} before saving.`));
+  }
+
+  const currentFile = await readResponse.json() as { sha?: string };
+  const saveResponse = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+    method: "PUT",
+    headers: {
+      ...headers,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      branch,
+      content: encodeContent(content),
+      message,
+      sha: currentFile.sha,
+    }),
+  });
+
+  if (!saveResponse.ok) {
+    throw new Error(await githubError(saveResponse, `Could not save ${path}.`));
+  }
+}
+
+function encodeContent(content: string) {
+  return btoa(unescape(encodeURIComponent(content)));
+}
+
+async function githubError(response: Response, fallback: string) {
+  try {
+    const body = await response.json() as { message?: string };
+
+    return `${fallback} GitHub returned ${response.status}${body.message ? `: ${body.message}` : ""}`;
+  } catch {
+    return `${fallback} GitHub returned ${response.status}.`;
+  }
+}
+
 function System({
   config,
   account,
@@ -861,7 +1065,8 @@ function System({
         <p className="eyebrow">Source of Truth</p>
         <h2>React is reading the same JSON as the TV.</h2>
         <p className="muted">
-          Editing and GitHub sync stay in the legacy admin until the new flow has the right shape.
+          Routine edits can now export or push the baseline routines JSON. Broader config sync still belongs to the
+          legacy admin until this flow is proven.
         </p>
       </section>
       <section className="side-panel">

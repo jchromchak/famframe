@@ -451,6 +451,36 @@
   background: #fff7e6;
 }
 
+.persistence-panel {
+  background: #11100f;
+  border-color: #2f2a23;
+  color: #f9f1e2;
+}
+
+.persistence-panel h3 {
+  font-size: 1.2rem;
+  letter-spacing: 0;
+  line-height: 1.1;
+  margin: 4px 0 0;
+}
+
+.persistence-panel .field-stack span,
+.persistence-panel .muted {
+  color: #d5c7af;
+}
+
+.persistence-panel .field-stack input {
+  background: #1c1915;
+  border-color: #4b4235;
+  color: #f9f1e2;
+}
+
+.persistence-panel .sync-pill {
+  background: #1c1915;
+  border-color: #d7c8ad;
+  color: #f9f1e2;
+}
+
 .routine-editor-grid {
   display: grid;
   gap: 12px;
@@ -490,6 +520,28 @@
   background: var(--ff-color-gold);
   border-color: #c79313;
   color: var(--ff-color-ink);
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.action-row > * {
+  flex: 1 1 160px;
+}
+
+.bordered-action {
+  align-items: center;
+  background: transparent;
+  border: 1px solid #d7c8ad;
+  border-radius: var(--ff-radius-control);
+  display: inline-flex;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 16px;
+  text-decoration: none;
 }
 
 .routine-card {
