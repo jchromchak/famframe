@@ -17,11 +17,11 @@
       "bufferMinutes": 5,
       "fallbackDriveMinutes": 28,
       "derived": {
-        "provider": "google-maps",
-        "durationMinutes": 28,
-        "trafficStatus": "light",
-        "updatedAt": "2026-05-09T13:28:59.866Z",
-        "expiresAt": "2026-05-09T13:43:59.866Z"
+        "provider": "",
+        "durationMinutes": null,
+        "trafficStatus": "",
+        "updatedAt": "",
+        "expiresAt": ""
       }
     },
     {
@@ -40,11 +40,11 @@
       "bufferMinutes": 5,
       "fallbackDriveMinutes": 18,
       "derived": {
-        "provider": "google-maps",
-        "durationMinutes": 22,
-        "trafficStatus": "light",
-        "updatedAt": "2026-05-09T13:29:00.173Z",
-        "expiresAt": "2026-05-09T13:44:00.173Z"
+        "provider": "",
+        "durationMinutes": null,
+        "trafficStatus": "",
+        "updatedAt": "",
+        "expiresAt": ""
       }
     },
     {
