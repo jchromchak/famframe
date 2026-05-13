@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { CaptureAppend } from "./capture";
 import { formatRoutineWindow } from "./config";
 import type { Routine } from "./config";
@@ -14,8 +15,20 @@ type ThisWeekViewProps = {
   routeRefreshStatus: string;
   onDeviceChange: (device: DeviceTarget) => void;
   onDateChange: (date: Date) => void;
+  onEventAdd: (event: AddEventInput) => void;
   onRoutineSelect: (routine: Routine) => void;
   onRouteRefresh: () => void;
+};
+
+export type AddEventInput = {
+  label: string;
+  type: "departure" | "timeline";
+  recurrence: "date" | "weekly";
+  windowStart: string;
+  windowEnd: string;
+  leaveAt: string;
+  arriveBy: string;
+  deadline: string;
 };
 
 export function ThisWeekView({
@@ -29,6 +42,7 @@ export function ThisWeekView({
   routeRefreshStatus,
   onDeviceChange,
   onDateChange,
+  onEventAdd,
   onRoutineSelect,
   onRouteRefresh,
 }: ThisWeekViewProps) {
@@ -139,13 +153,123 @@ export function ThisWeekView({
         </section>
 
         <section className="wide-panel add-event-panel">
-          <p className="eyebrow">Add</p>
-          <h2>Add an event</h2>
-          <button className="primary-action" type="button">
-            Add event
-          </button>
+          <AddEventForm selectedDate={selectedDate} onEventAdd={onEventAdd} />
         </section>
       </div>
+    </div>
+  );
+}
+
+function AddEventForm({
+  selectedDate,
+  onEventAdd,
+}: {
+  selectedDate: Date;
+  onEventAdd: (event: AddEventInput) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [label, setLabel] = useState("");
+  const [type, setType] = useState<AddEventInput["type"]>("departure");
+  const [recurrence, setRecurrence] = useState<AddEventInput["recurrence"]>("date");
+  const [windowStart, setWindowStart] = useState("15:00");
+  const [windowEnd, setWindowEnd] = useState("17:00");
+  const [leaveAt, setLeaveAt] = useState("15:30");
+  const [arriveBy, setArriveBy] = useState("");
+  const [deadline, setDeadline] = useState("");
+  const canSubmit = label.trim().length >= 2 && windowStart && windowEnd;
+
+  function submit() {
+    if (!canSubmit) {
+      return;
+    }
+
+    onEventAdd({
+      label,
+      type,
+      recurrence,
+      windowStart,
+      windowEnd,
+      leaveAt,
+      arriveBy,
+      deadline,
+    });
+    setLabel("");
+    setIsOpen(false);
+  }
+
+  return (
+    <div className="add-event-flow">
+      <div className="detail-panel-head">
+        <div>
+          <p className="eyebrow">Add</p>
+          <h2>Add an event</h2>
+          <p className="muted">
+            {recurrence === "date"
+              ? `Adds context for ${dateKey(selectedDate)}.`
+              : `Adds a weekly event on ${formatWeekday(selectedDate)}.`}
+          </p>
+        </div>
+        <button className="primary-action compact-action" type="button" onClick={() => setIsOpen((current) => !current)}>
+          {isOpen ? "Close" : "Add event"}
+        </button>
+      </div>
+
+      {isOpen ? (
+        <div className="add-event-form">
+          <div className="segmented-control" aria-label="Event type">
+            <button className={type === "departure" ? "active" : ""} type="button" onClick={() => setType("departure")}>
+              Departure
+            </button>
+            <button className={type === "timeline" ? "active" : ""} type="button" onClick={() => setType("timeline")}>
+              Timeline
+            </button>
+          </div>
+
+          <div className="segmented-control" aria-label="Event recurrence">
+            <button className={recurrence === "date" ? "active" : ""} type="button" onClick={() => setRecurrence("date")}>
+              This day
+            </button>
+            <button className={recurrence === "weekly" ? "active" : ""} type="button" onClick={() => setRecurrence("weekly")}>
+              Weekly
+            </button>
+          </div>
+
+          <div className="routine-editor-grid">
+            <label className="field-stack">
+              <span>Name</span>
+              <input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Practice pickup" />
+            </label>
+            <label className="field-stack">
+              <span>Window start</span>
+              <input type="time" value={windowStart} onChange={(event) => setWindowStart(event.target.value)} />
+            </label>
+            <label className="field-stack">
+              <span>Window end</span>
+              <input type="time" value={windowEnd} onChange={(event) => setWindowEnd(event.target.value)} />
+            </label>
+            {type === "departure" ? (
+              <>
+                <label className="field-stack">
+                  <span>Leave</span>
+                  <input type="time" value={leaveAt} onChange={(event) => setLeaveAt(event.target.value)} />
+                </label>
+                <label className="field-stack">
+                  <span>Arrive</span>
+                  <input type="time" value={arriveBy} onChange={(event) => setArriveBy(event.target.value)} />
+                </label>
+                <label className="field-stack">
+                  <span>Deadline</span>
+                  <input type="time" value={deadline} onChange={(event) => setDeadline(event.target.value)} />
+                </label>
+              </>
+            ) : null}
+          </div>
+
+          <button className="primary-action" type="button" disabled={!canSubmit} onClick={submit}>
+            Add to routines
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -175,4 +299,8 @@ function formatDateLabel(date: Date) {
     month: "long",
     day: "numeric",
   }).format(date);
+}
+
+function formatWeekday(date: Date) {
+  return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
 }

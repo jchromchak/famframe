@@ -5,12 +5,13 @@ import {
   RouteConfig,
   RoutesConfig,
   Routine,
+  RoutineTask,
   RoutinesConfig,
+  TimelineItem,
   fallbackIdentity,
   formatRoutineWindow,
   loadConfig,
   loadIdentityConfig,
-  routineItemCount,
   routineTheme,
   sceneTypeLabel,
 } from "./config";
@@ -24,22 +25,23 @@ import {
 import { parseCaptureAppends } from "./capture";
 import { CaptureView } from "./CaptureView";
 import { ThisWeekView } from "./ThisWeekView";
+import type { AddEventInput } from "./ThisWeekView";
 import {
   devicesForFamily,
   familiesForAccount,
   membersForFamily,
   roleForAccount,
 } from "./identity";
+import { suggestionsForRoutine } from "./routineSuggestions";
+import type { RoutineSuggestion } from "./routineSuggestions";
 
 type View = "week" | "capture" | "scenes" | "routines" | "system";
 type EditScope = "instance" | "future";
 
 const navItems: Array<{ id: View; label: string }> = [
   { id: "week", label: "This Week" },
-  { id: "capture", label: "Capture" },
-  { id: "scenes", label: "Scenes" },
   { id: "routines", label: "Routines" },
-  { id: "system", label: "System" },
+  { id: "capture", label: "Capture" },
 ];
 
 const timezoneOptions = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"];
@@ -260,6 +262,64 @@ function App() {
     }
   }
 
+  function addEvent(input: AddEventInput) {
+    const createdAt = Date.now();
+    const selectedKey = dateKey(selectedDate);
+    const nextRoutine: Routine = {
+      id: `routine-${slugify(input.label)}-${createdAt}`,
+      label: input.label.trim(),
+      type: input.type,
+      enabled: true,
+      layer: input.recurrence === "date" ? "addon" : "baseline",
+      appliesTo: input.recurrence === "date"
+        ? { dates: [selectedKey] }
+        : { days: [selectedDate.getDay()] },
+      window: {
+        start: input.windowStart,
+        end: input.windowEnd,
+      },
+      display: {
+        scene: input.type === "departure" ? "departure" : "evening",
+        priority: input.recurrence === "date" ? 70 : 50,
+        themeId: "",
+      },
+      ...(input.type === "departure"
+        ? {
+            timing: {
+              leaveAt: input.leaveAt || undefined,
+              arriveBy: input.arriveBy || undefined,
+              deadline: input.deadline || undefined,
+            },
+          }
+        : {
+            timeline: [
+              {
+                id: `item-${createdAt}`,
+                label: input.label.trim(),
+                start: input.windowStart,
+                durationMinutes: durationMinutes(input.windowStart, input.windowEnd),
+              },
+            ],
+          }),
+    };
+
+    setConfig((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const nextRoutines = [...current.routines, nextRoutine];
+
+      return {
+        ...current,
+        routines: nextRoutines,
+      };
+    });
+    setSelectedRoutineId(nextRoutine.id);
+    setActiveView("routines");
+    setSyncStatus(`${input.recurrence === "date" ? "One-off" : "Weekly"} event added as a local routine draft.`);
+  }
+
   if (!activeAccount) {
     return <LoginScreen accounts={accounts} onLogin={selectDefaultFamily} />;
   }
@@ -284,6 +344,7 @@ function App() {
 
   const familyRole = getRoleForAccount(activeAccount, activeFamily.id);
   const familyDevices = getDevicesForFamily(activeFamily.id);
+  const activeFamilyMembers = getMembersForFamily(activeFamily.id);
 
   return (
     <main className="admin-shell">
@@ -317,6 +378,7 @@ function App() {
             selectedDate={selectedDate}
             onDeviceChange={setActiveDevice}
             onDateChange={setSelectedDate}
+            onEventAdd={addEvent}
             routeRefreshStatus={syncStatus}
             onRouteRefresh={refreshSchoolRoute}
             onRoutineSelect={(routine) => {
@@ -333,6 +395,7 @@ function App() {
           <Routines
             routines={activeRoutines}
             sourceConfig={config.routinesConfig}
+            familyMembers={activeFamilyMembers}
             initialSelectedRoutineId={selectedRoutineId}
           />
         ) : null}
@@ -558,6 +621,23 @@ function slugify(value: string) {
   );
 }
 
+function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function durationMinutes(start: string, end: string) {
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+  const startTotal = startHour * 60 + startMinute;
+  const endTotal = endHour * 60 + endMinute;
+
+  return Math.max(0, endTotal - startTotal);
+}
+
 function makeOpaqueSuffix() {
   const values = new Uint8Array(4);
 
@@ -572,10 +652,12 @@ function makeOpaqueSuffix() {
 function Routines({
   routines,
   sourceConfig,
+  familyMembers,
   initialSelectedRoutineId,
 }: {
   routines: Routine[];
   sourceConfig: RoutinesConfig;
+  familyMembers: FamilyMember[];
   initialSelectedRoutineId: string | null;
 }) {
   const [draftRoutines, setDraftRoutines] = useState(routines);
@@ -604,9 +686,39 @@ function Routines({
     );
   }
 
+  function disableRoutine(routineId: string) {
+    setDraftRoutines((current) =>
+      current.map((routine) =>
+        routine.id === routineId
+          ? {
+              ...routine,
+              enabled: false,
+            }
+          : routine,
+      ),
+    );
+  }
+
+  function deleteRoutine(routineId: string) {
+    setDraftRoutines((current) => {
+      const nextRoutines = current.filter((routine) => routine.id !== routineId);
+
+      if (selectedRoutineId === routineId) {
+        setSelectedRoutineId(nextRoutines[0]?.id ?? "");
+      }
+
+      return nextRoutines;
+    });
+  }
+
   const draftConfig = useMemo(
     () => toRoutinesConfig(sourceConfig, draftRoutines),
     [sourceConfig, draftRoutines],
+  );
+  const hasPendingChanges = stableConfigJson(draftConfig) !== stableConfigJson(sourceConfig);
+  const draftSummary = useMemo(
+    () => routineDraftSummary(sourceConfig, draftConfig),
+    [sourceConfig, draftConfig],
   );
 
   return (
@@ -626,8 +738,23 @@ function Routines({
       </section>
 
       {selectedRoutine ? (
-        <RoutineDetail routine={selectedRoutine} onUpdate={updateRoutine} draftConfig={draftConfig} />
-      ) : null}
+        <RoutineDetail
+          routine={selectedRoutine}
+          onDelete={deleteRoutine}
+          onDisable={disableRoutine}
+          onUpdate={updateRoutine}
+          draftConfig={draftConfig}
+          draftSummary={draftSummary}
+          familyMembers={familyMembers}
+          hasPendingChanges={hasPendingChanges}
+        />
+      ) : (
+        <section className="routine-detail empty-detail">
+          <p className="eyebrow">Routines</p>
+          <h2>No routines yet</h2>
+          <p className="muted">Add an event from This Week to start a local routine draft.</p>
+        </section>
+      )}
     </div>
   );
 }
@@ -635,6 +762,9 @@ function Routines({
 function Scenes({ scenes }: { scenes: AdminScene[] }) {
   const tributeCount = scenes.filter((scene) => scene.type === "tribute").length;
   const routineCount = scenes.filter((scene) => scene.type === "routine").length;
+  const scheduledTributes = scenes.filter((scene) => scene.type === "tribute" && scene.status === "active");
+  const conflictGroups = sceneConflictGroups(scheduledTributes);
+  const conflictDateCount = conflictGroups.length;
 
   return (
     <div className="scene-view">
@@ -658,11 +788,45 @@ function Scenes({ scenes }: { scenes: AdminScene[] }) {
             <dt>Active</dt>
             <dd>{scenes.filter((scene) => scene.status === "active").length}</dd>
           </div>
+          <div>
+            <dt>Conflicts</dt>
+            <dd>{conflictDateCount}</dd>
+          </div>
         </dl>
       </section>
 
+      {conflictGroups.length ? (
+        <section className="wide-panel scene-conflict-panel">
+          <div className="detail-panel-head">
+            <div>
+              <p className="eyebrow">Schedule conflicts</p>
+              <h2>Priority decides overlapping tribute days.</h2>
+            </div>
+          </div>
+          <div className="conflict-list">
+            {conflictGroups.map((group) => (
+              <article className="conflict-card" key={group.date}>
+                <div>
+                  <p className="eyebrow">{group.date}</p>
+                  <h3>{group.winner.label}</h3>
+                  <p className="muted">Wins with priority {scenePriority(group.winner)}.</p>
+                </div>
+                <ul className="plain-list">
+                  {group.scenes.map((scene) => (
+                    <li key={scene.id}>
+                      <span className="append-label">{scene.label}</span>
+                      <span className="append-meta">Priority {scenePriority(scene)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <div className="scene-browser">
-        {scenes.map((scene) => (
+        {sortScenesForAdmin(scenes).map((scene) => (
           <SceneCard key={scene.id} scene={scene} />
         ))}
       </div>
@@ -684,6 +848,10 @@ function SceneCard({ scene }: { scene: AdminScene }) {
           <dd>{scene.status}</dd>
         </div>
         <div>
+          <dt>Priority</dt>
+          <dd>{scenePriority(scene)}</dd>
+        </div>
+        <div>
           <dt>Source</dt>
           <dd>{scene.source}</dd>
         </div>
@@ -696,46 +864,80 @@ function SceneCard({ scene }: { scene: AdminScene }) {
   );
 }
 
-function RoutineCard({ routine }: { routine: Routine }) {
-  return (
-    <article className="routine-card">
-      <div>
-        <p className="eyebrow">{daysLabel(routine)}</p>
-        <h3>{routine.label}</h3>
-      </div>
-      <dl>
-        <div>
-          <dt>Window</dt>
-          <dd>{formatRoutineWindow(routine)}</dd>
-        </div>
-        <div>
-          <dt>Tasks</dt>
-          <dd>{routineItemCount(routine)}</dd>
-        </div>
-        <div>
-          <dt>Theme</dt>
-          <dd>{routineTheme(routine)}</dd>
-        </div>
-      </dl>
-    </article>
-  );
+function scenePriority(scene: AdminScene) {
+  return scene.priority ?? 50;
+}
+
+function sortScenesForAdmin(scenes: AdminScene[]) {
+  return [...scenes].sort((left, right) => {
+    if (left.type !== right.type) return left.type === "tribute" ? -1 : 1;
+    return scenePriority(right) - scenePriority(left);
+  });
+}
+
+function sceneConflictGroups(scenes: AdminScene[]) {
+  const byDate = new Map<string, AdminScene[]>();
+
+  scenes.forEach((scene) => {
+    (scene.scheduleDates ?? []).forEach((date) => {
+      const current = byDate.get(date) ?? [];
+      byDate.set(date, [...current, scene]);
+    });
+  });
+
+  return Array.from(byDate.entries())
+    .filter(([, dateScenes]) => dateScenes.length > 1)
+    .map(([date, dateScenes]) => {
+      const sortedScenes = sortScenesForAdmin(dateScenes);
+
+      return {
+        date,
+        scenes: sortedScenes,
+        winner: sortedScenes[0],
+      };
+    })
+    .sort((left, right) => left.date.localeCompare(right.date));
 }
 
 function RoutineDetail({
   routine,
+  onDelete,
+  onDisable,
   onUpdate,
   draftConfig,
+  draftSummary,
+  familyMembers,
+  hasPendingChanges,
 }: {
   routine: Routine;
+  onDelete: (routineId: string) => void;
+  onDisable: (routineId: string) => void;
   onUpdate: (routine: Routine) => void;
   draftConfig: RoutinesConfig;
+  draftSummary: RoutineDraftSummary;
+  familyMembers: FamilyMember[];
+  hasPendingChanges: boolean;
 }) {
   const isTimeline = routine.type === "timeline";
   const items = isTimeline ? routine.timeline ?? [] : routine.tasks ?? [];
   const activeDays = routine.appliesTo?.days ?? [];
   const activeDates = routine.appliesTo?.dates ?? [];
   const [editScope, setEditScope] = useState<EditScope | null>(null);
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const [showMoreSuggestions, setShowMoreSuggestions] = useState(false);
   const isEditing = editScope !== null;
+  const canDelete = routine.layer === "addon" || routine.layer === "override";
+  const suggestions = suggestionsForRoutine(
+    routine,
+    isTimeline
+      ? (routine.timeline ?? []).map((item) => item.label)
+      : (routine.tasks ?? []).map((item) => item.label),
+  );
+  const visibleSuggestions = suggestions.filter((suggestion) => showMoreSuggestions || suggestion.tier === "primary");
+
+  useEffect(() => {
+    setShowMoreSuggestions(false);
+  }, [routine.id]);
 
   function updateRoutine(patch: Partial<Routine>) {
     onUpdate({ ...routine, ...patch });
@@ -786,6 +988,102 @@ function RoutineDetail({
     });
   }
 
+  function updateTimelineItem(itemId: string, patch: Partial<TimelineItem>) {
+    updateRoutine({
+      timeline: (routine.timeline ?? []).map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              ...patch,
+            }
+          : item,
+      ),
+    });
+  }
+
+  function addTimelineItem(suggestion?: RoutineSuggestion) {
+    const currentTimeline = routine.timeline ?? [];
+    const lastItem = currentTimeline[currentTimeline.length - 1];
+    const fallbackStart = lastItem?.start ?? routine.window?.start ?? "17:00";
+    const nextItem: TimelineItem = {
+      id: `timeline-${suggestion?.id ?? "item"}-${Date.now()}`,
+      label: suggestion?.label ?? "New item",
+      start: nextTimelineStart(lastItem, fallbackStart),
+      durationMinutes: suggestion?.durationMinutes ?? 15,
+      note: suggestion?.note ?? "",
+    };
+
+    updateRoutine({
+      timeline: [...currentTimeline, nextItem],
+    });
+  }
+
+  function deleteTimelineItem(itemId: string) {
+    updateRoutine({
+      timeline: (routine.timeline ?? []).filter((item) => item.id !== itemId),
+    });
+  }
+
+  function moveTimelineItem(itemId: string, offset: number) {
+    updateRoutine({
+      timeline: moveItem((routine.timeline ?? []), itemId, offset),
+    });
+  }
+
+  function updateTaskItem(itemId: string, patch: Partial<RoutineTask>) {
+    updateRoutine({
+      tasks: (routine.tasks ?? []).map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              ...patch,
+            }
+          : item,
+      ),
+    });
+  }
+
+  function addTaskItem(suggestion?: RoutineSuggestion) {
+    const nextItem: RoutineTask = {
+      id: `task-${suggestion?.id ?? "item"}-${Date.now()}`,
+      label: suggestion?.label ?? "New item",
+      targetOffsetMinutes: suggestion?.targetOffsetMinutes ?? 0,
+      assignee: "",
+    };
+
+    updateRoutine({
+      tasks: [...(routine.tasks ?? []), nextItem],
+    });
+  }
+
+  function deleteTaskItem(itemId: string) {
+    updateRoutine({
+      tasks: (routine.tasks ?? []).filter((item) => item.id !== itemId),
+    });
+  }
+
+  function moveTaskItem(itemId: string, offset: number) {
+    updateRoutine({
+      tasks: moveItem((routine.tasks ?? []), itemId, offset),
+    });
+  }
+
+  function removeRoutine() {
+    if (canDelete && deleteArmed) {
+      onDelete(routine.id);
+      return;
+    }
+
+    if (canDelete) {
+      setDeleteArmed(true);
+      return;
+    }
+
+    if (!canDelete) {
+      onDisable(routine.id);
+    }
+  }
+
   return (
     <section className="routine-detail">
       <div className="routine-detail-head">
@@ -796,22 +1094,19 @@ function RoutineDetail({
         <span className="sync-pill">{isTimeline ? "Timeline" : "Departure"}</span>
       </div>
 
-      <div className="routine-detail-tabs" aria-label="Routine detail sections">
-        <span>Summary</span>
-        <span>Timing</span>
-        <span>{isTimeline ? "Timeline" : "Checklist"}</span>
-        <span>Route</span>
-        <span>Theme</span>
-      </div>
-
       <div className="routine-detail-grid">
-        <RoutinePersistencePanel draftConfig={draftConfig} editScope={editScope} />
+        <RoutinePersistencePanel
+          draftConfig={draftConfig}
+          editScope={editScope}
+          draftSummary={draftSummary}
+          hasPendingChanges={hasPendingChanges}
+        />
 
-        <section className="detail-panel detail-panel-wide routine-editor">
+        <section className="detail-panel detail-panel-wide routine-editor workbench-basics-panel">
           <div className="detail-panel-head">
             <div>
-              <p className="eyebrow">Draft editor</p>
-              <h3>Edit scope</h3>
+              <p className="eyebrow">Basics</p>
+              <h3>What changes?</h3>
             </div>
             <span className="sync-pill">{editScope ? scopeLabel(editScope) : "Choose scope"}</span>
           </div>
@@ -896,68 +1191,202 @@ function RoutineDetail({
           </div>
         </section>
 
-        <section className="detail-panel">
-          <p className="eyebrow">Summary</p>
-          <dl className="system-list">
+        <section className="detail-panel detail-panel-wide workbench-primary-panel" id={`${routine.id}-items`}>
+          <div className="detail-panel-head">
             <div>
-              <dt>Repeats</dt>
-              <dd>{daysLabel(routine)}</dd>
+              <p className="eyebrow">{isTimeline ? "Timeline" : "Checklist"}</p>
+              <h3>{isTimeline ? "Arrange the evening flow" : "Checklist items"}</h3>
             </div>
-            <div>
-              <dt>Dates</dt>
-              <dd>{datesLabel(routine)}</dd>
+            {isTimeline ? (
+              <button className="text-button bordered-action compact-action" type="button" disabled={!isEditing} onClick={() => addTimelineItem()}>
+                Add item
+              </button>
+            ) : (
+              <button className="text-button bordered-action compact-action" type="button" disabled={!isEditing} onClick={() => addTaskItem()}>
+                Add item
+              </button>
+            )}
+          </div>
+          {suggestions.length ? (
+            <div className="suggestion-panel">
+              {visibleSuggestions.length ? (
+                <div className="suggestion-chip-row">
+                  {visibleSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      className={suggestion.tier === "more" ? "suggestion-chip secondary" : "suggestion-chip"}
+                      type="button"
+                      disabled={!isEditing}
+                      onClick={() => (isTimeline ? addTimelineItem(suggestion) : addTaskItem(suggestion))}
+                    >
+                      {suggestion.label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">The usual items are already here.</p>
+              )}
+              {suggestions.some((suggestion) => suggestion.tier === "more") ? (
+                <button className="text-button suggestion-more-button" type="button" onClick={() => setShowMoreSuggestions((current) => !current)}>
+                  {showMoreSuggestions ? "Show less" : "See more"}
+                </button>
+              ) : null}
             </div>
-            <div>
-              <dt>Window</dt>
-              <dd>{formatRoutineWindow(routine)}</dd>
-            </div>
-            <div>
-              <dt>Layer</dt>
-              <dd>{routine.layer ?? "baseline"}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="detail-panel">
-          <p className="eyebrow">Timing</p>
-          <dl className="system-list">
-            <div>
-              <dt>Leave</dt>
-              <dd>{routine.timing?.leaveAt ?? "n/a"}</dd>
-            </div>
-            <div>
-              <dt>Arrive</dt>
-              <dd>{routine.timing?.arriveBy ?? "n/a"}</dd>
-            </div>
-            <div>
-              <dt>Deadline</dt>
-              <dd>{routine.timing?.deadline ?? routine.deadlineTime ?? "n/a"}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="detail-panel detail-panel-wide">
-          <p className="eyebrow">{isTimeline ? "Timeline" : "Checklist"}</p>
-          {items.length ? (
-            <ul className="plain-list">
-              {items.map((item) => (
-                <li className="append-card" key={item.id}>
-                  <span className="append-label">{item.label}</span>
-                  <span className="append-meta">
-                    {isTimeline
-                      ? `${"start" in item && item.start ? item.start : "Flexible"} / ${"durationMinutes" in item && item.durationMinutes ? item.durationMinutes : 0} min`
-                      : `${"targetOffsetMinutes" in item && item.targetOffsetMinutes != null ? item.targetOffsetMinutes : 0} min from leave`}
-                  </span>
-                </li>
+          ) : null}
+          {isTimeline && (routine.timeline ?? []).length ? (
+            <div className="timeline-editor-list">
+              {(routine.timeline ?? []).map((item, index) => (
+                <article className="timeline-editor-row" key={item.id}>
+                  <label className="field-stack">
+                    <span>Item</span>
+                    <input
+                      disabled={!isEditing}
+                      value={item.label}
+                      onChange={(event) => updateTimelineItem(item.id, { label: event.target.value })}
+                    />
+                  </label>
+                  <label className="field-stack">
+                    <span>Start</span>
+                    <input
+                      disabled={!isEditing}
+                      type="time"
+                      value={item.start ?? ""}
+                      onChange={(event) => updateTimelineItem(item.id, { start: event.target.value || undefined })}
+                    />
+                  </label>
+                  <label className="field-stack">
+                    <span>Minutes</span>
+                    <input
+                      disabled={!isEditing}
+                      min="0"
+                      type="number"
+                      value={item.durationMinutes ?? 0}
+                      onChange={(event) => updateTimelineItem(item.id, { durationMinutes: Number(event.target.value) || 0 })}
+                    />
+                  </label>
+                  <label className="field-stack timeline-note-field">
+                    <span>Note</span>
+                    <input
+                      disabled={!isEditing}
+                      value={item.note ?? ""}
+                      onChange={(event) => updateTimelineItem(item.id, { note: event.target.value })}
+                    />
+                  </label>
+                  <div className="item-order-actions" aria-label={`Move ${item.label}`}>
+                    <button
+                      type="button"
+                      disabled={!isEditing || index === 0}
+                      onClick={() => moveTimelineItem(item.id, -1)}
+                    >
+                      Up
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!isEditing || index === (routine.timeline?.length ?? 0) - 1}
+                      onClick={() => moveTimelineItem(item.id, 1)}
+                    >
+                      Down
+                    </button>
+                  </div>
+                  <button
+                    className="icon-danger-action"
+                    type="button"
+                    disabled={!isEditing}
+                    title={`Delete ${item.label}`}
+                    aria-label={`Delete ${item.label}`}
+                    onClick={() => deleteTimelineItem(item.id)}
+                  >
+                    ×
+                  </button>
+                </article>
               ))}
-            </ul>
+            </div>
+          ) : isTimeline ? (
+            <div className="empty-workbench-items">
+              <p className="muted">No timeline items yet.</p>
+              <button className="primary-action" type="button" disabled={!isEditing} onClick={() => addTimelineItem()}>
+                Add item
+              </button>
+            </div>
+          ) : items.length ? (
+            <div className="checklist-editor-list">
+              {(routine.tasks ?? []).map((item, index) => (
+                <article className="checklist-editor-row" key={item.id}>
+                  <label className="field-stack">
+                    <span>Item</span>
+                    <input
+                      disabled={!isEditing}
+                      value={item.label}
+                      onChange={(event) => updateTaskItem(item.id, { label: event.target.value })}
+                    />
+                  </label>
+                  <label className="field-stack">
+                    <span>Offset</span>
+                    <input
+                      disabled={!isEditing}
+                      type="number"
+                      value={item.targetOffsetMinutes ?? 0}
+                      onChange={(event) => updateTaskItem(item.id, { targetOffsetMinutes: Number(event.target.value) || 0 })}
+                    />
+                  </label>
+                  <label className="field-stack">
+                    <span>Assignee</span>
+                    <select
+                      disabled={!isEditing}
+                      value={item.assignee ?? item.ownerId ?? ""}
+                      onChange={(event) => updateTaskItem(item.id, { assignee: event.target.value })}
+                    >
+                      <option value="">Unassigned</option>
+                      {familyMembers.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="item-order-actions" aria-label={`Move ${item.label}`}>
+                    <button
+                      type="button"
+                      disabled={!isEditing || index === 0}
+                      onClick={() => moveTaskItem(item.id, -1)}
+                    >
+                      Up
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!isEditing || index === (routine.tasks?.length ?? 0) - 1}
+                      onClick={() => moveTaskItem(item.id, 1)}
+                    >
+                      Down
+                    </button>
+                  </div>
+                  <button
+                    className="icon-danger-action"
+                    type="button"
+                    disabled={!isEditing}
+                    title={`Delete ${item.label}`}
+                    aria-label={`Delete ${item.label}`}
+                    onClick={() => deleteTaskItem(item.id)}
+                  >
+                    ×
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : !isTimeline ? (
+            <div className="empty-workbench-items">
+              <p className="muted">No checklist items yet.</p>
+              <button className="primary-action" type="button" disabled={!isEditing} onClick={() => addTaskItem()}>
+                Add item
+              </button>
+            </div>
           ) : (
             <p className="muted">No display items are attached to this routine yet.</p>
           )}
         </section>
 
-        <section className="detail-panel">
-          <p className="eyebrow">Route</p>
+        <details className="detail-panel detail-panel-wide workbench-secondary-panel">
+          <summary>Route</summary>
           <dl className="system-list">
             <div>
               <dt>Route</dt>
@@ -968,10 +1397,10 @@ function RoutineDetail({
               <dd>{routine.listId ?? "none"}</dd>
             </div>
           </dl>
-        </section>
+        </details>
 
-        <section className="detail-panel">
-          <p className="eyebrow">Theme</p>
+        <details className="detail-panel detail-panel-wide workbench-secondary-panel">
+          <summary>Display theme</summary>
           <dl className="system-list">
             <div>
               <dt>Scene</dt>
@@ -986,7 +1415,37 @@ function RoutineDetail({
               <dd>{routineTheme(routine)}</dd>
             </div>
           </dl>
-        </section>
+        </details>
+
+        <details className="detail-panel detail-panel-wide workbench-secondary-panel routine-lifecycle-panel">
+          <summary>Lifecycle</summary>
+          <div className="detail-panel-head">
+            <div>
+              <p className="eyebrow">{canDelete ? "Remove draft" : "Disable routine"}</p>
+              <h3>{routine.layer ?? "baseline"}</h3>
+            </div>
+          </div>
+          <p className="muted">
+            {canDelete
+              ? "This looks like temporary routine context, so it can be removed from the draft config."
+              : "Recurring baseline routines are disabled instead of deleted so their structure is not lost."}
+          </p>
+          <button
+            className={canDelete ? "danger-action" : "text-button bordered-action"}
+            type="button"
+            disabled={!canDelete && routine.enabled === false}
+            onClick={removeRoutine}
+          >
+            {canDelete
+              ? deleteArmed
+                ? "Confirm delete"
+                : "Delete draft routine"
+              : routine.enabled === false
+                ? "Routine disabled"
+                : "Disable routine"}
+          </button>
+          {deleteArmed ? <p className="muted">Tap confirm delete to remove this draft from the routine list.</p> : null}
+        </details>
       </div>
     </section>
   );
@@ -994,6 +1453,56 @@ function RoutineDetail({
 
 function scopeLabel(scope: EditScope) {
   return scope === "instance" ? "This day only" : "Going forward";
+}
+
+type RoutineDraftSummary = {
+  added: number;
+  changed: number;
+  disabled: number;
+  removed: number;
+};
+
+function DraftStatePanel({
+  draftSummary,
+  hasPendingChanges,
+}: {
+  draftSummary: RoutineDraftSummary;
+  hasPendingChanges: boolean;
+}) {
+  return (
+    <section className={hasPendingChanges ? "detail-panel detail-panel-wide draft-state-panel dirty" : "detail-panel detail-panel-wide draft-state-panel"}>
+      <div className="detail-panel-head">
+        <div>
+          <p className="eyebrow">Draft state</p>
+          <h3>{hasPendingChanges ? "Local changes pending" : "Loaded config is unchanged"}</h3>
+        </div>
+        <span className="sync-pill">{hasPendingChanges ? "Draft" : "Clean"}</span>
+      </div>
+      <dl className="scene-summary draft-summary">
+        <div>
+          <dt>Added</dt>
+          <dd>{draftSummary.added}</dd>
+        </div>
+        <div>
+          <dt>Changed</dt>
+          <dd>{draftSummary.changed}</dd>
+        </div>
+        <div>
+          <dt>Disabled</dt>
+          <dd>{draftSummary.disabled}</dd>
+        </div>
+        <div>
+          <dt>Removed</dt>
+          <dd>{draftSummary.removed}</dd>
+        </div>
+      </dl>
+      <p className="muted">
+        {hasPendingChanges
+          ? "These changes exist only in this browser session until you save a browser draft, download JSON, or push baseline routines."
+          : "No routine edits have diverged from the loaded config/routines.json file."}
+      </p>
+    </section>
+  );
 }
 
 function syncPillLabel(status: string) {
@@ -1012,11 +1521,21 @@ function syncPillLabel(status: string) {
   return status;
 }
 
-function RoutinePersistencePanel({ draftConfig, editScope }: { draftConfig: RoutinesConfig; editScope: EditScope | null }) {
+function RoutinePersistencePanel({
+  draftConfig,
+  editScope,
+  draftSummary,
+  hasPendingChanges,
+}: {
+  draftConfig: RoutinesConfig;
+  editScope: EditScope | null;
+  draftSummary: RoutineDraftSummary;
+  hasPendingChanges: boolean;
+}) {
   const [repo, setRepo] = useState(() => localStorage.getItem(githubRepoKey) || "jchromchak/famframe");
   const [branch, setBranch] = useState(() => localStorage.getItem(githubBranchKey) || "main");
   const [token, setToken] = useState(() => localStorage.getItem(githubTokenKey) || "");
-  const [status, setStatus] = useState("Choose an edit scope before saving routine changes.");
+  const [status, setStatus] = useState("Local routine edits are not published until you choose a save path.");
   const routinesJson = useMemo(() => `${JSON.stringify(draftConfig, null, 2)}\n`, [draftConfig]);
 
   function saveBrowserDraft() {
@@ -1036,18 +1555,13 @@ function RoutinePersistencePanel({ draftConfig, editScope }: { draftConfig: Rout
     setStatus(`Downloaded routines.json draft for ${editScope ? scopeLabel(editScope).toLowerCase() : "unscoped"} changes.`);
   }
 
-  async function pushToGitHub() {
+  async function saveToGitHub() {
     const cleanRepo = repo.trim();
     const cleanBranch = branch.trim() || "main";
     const cleanToken = token.trim();
 
     if (!cleanRepo || !cleanToken) {
-      setStatus("Add a GitHub repo and token before pushing.");
-      return;
-    }
-
-    if (!editScope) {
-      setStatus("Choose an edit scope before pushing baseline routines.");
+      setStatus("Open Advanced and add a GitHub repo and token before saving.");
       return;
     }
 
@@ -1065,7 +1579,7 @@ function RoutinePersistencePanel({ draftConfig, editScope }: { draftConfig: Rout
         content: routinesJson,
         message: "Update baseline routines",
       });
-      setStatus(`Saved ${scopeLabel(editScope).toLowerCase()} changes to GitHub. Refresh the dashboard after Pages updates.`);
+      setStatus(`Saved ${editScope ? scopeLabel(editScope).toLowerCase() : "routine"} changes to GitHub. Refresh the dashboard after Pages updates.`);
     } catch (error) {
       setStatus(error instanceof Error ? `GitHub save failed: ${error.message}` : "GitHub save failed.");
     }
@@ -1075,55 +1589,191 @@ function RoutinePersistencePanel({ draftConfig, editScope }: { draftConfig: Rout
     <section className="detail-panel detail-panel-wide persistence-panel">
       <div className="detail-panel-head">
         <div>
-          <p className="eyebrow">Persistence</p>
-          <h3>Baseline routine save path</h3>
+          <p className="eyebrow">Save</p>
+          <h3>{hasPendingChanges ? "Local changes pending" : "No unsaved routine changes"}</h3>
         </div>
-        <span className="sync-pill">config/routines.json</span>
+        <span className="sync-pill">{hasPendingChanges ? "Pending" : "No changes"}</span>
       </div>
 
-      <div className="routine-editor-grid">
-        <label className="field-stack">
-          <span>GitHub repo</span>
-          <input value={repo} onChange={(event) => setRepo(event.target.value)} />
-        </label>
-        <label className="field-stack">
-          <span>Branch</span>
-          <input value={branch} onChange={(event) => setBranch(event.target.value)} />
-        </label>
-        <label className="field-stack">
-          <span>Token</span>
-          <input
-            type="password"
-            value={token}
-            onChange={(event) => setToken(event.target.value)}
-            placeholder="Contents read/write token"
-          />
-        </label>
-      </div>
-
-      <div className="action-row">
-        <button className="primary-action" type="button" onClick={saveBrowserDraft}>
-          Save browser draft
+      <div className="action-row save-action-row">
+        <button className="primary-action" type="button" disabled={!hasPendingChanges} onClick={saveBrowserDraft}>
+          Save draft
         </button>
-        <button className="text-button bordered-action" type="button" onClick={downloadDraft}>
-          Download JSON
-        </button>
-        <button className="primary-action" type="button" onClick={pushToGitHub}>
-          Push baseline
+        <button className="primary-action" type="button" disabled={!hasPendingChanges} onClick={saveToGitHub}>
+          Save
         </button>
       </div>
 
       <p className="muted">{status}</p>
+
+      <details className="advanced-save-panel">
+        <summary>Advanced</summary>
+        <dl className="scene-summary draft-summary">
+          <div>
+            <dt>Added</dt>
+            <dd>{draftSummary.added}</dd>
+          </div>
+          <div>
+            <dt>Changed</dt>
+            <dd>{draftSummary.changed}</dd>
+          </div>
+          <div>
+            <dt>Disabled</dt>
+            <dd>{draftSummary.disabled}</dd>
+          </div>
+          <div>
+            <dt>Removed</dt>
+            <dd>{draftSummary.removed}</dd>
+          </div>
+        </dl>
+        <div className="routine-editor-grid">
+          <label className="field-stack">
+            <span>GitHub repo</span>
+            <input value={repo} onChange={(event) => setRepo(event.target.value)} />
+          </label>
+          <label className="field-stack">
+            <span>Branch</span>
+            <input value={branch} onChange={(event) => setBranch(event.target.value)} />
+          </label>
+          <label className="field-stack">
+            <span>Token</span>
+            <input
+              type="password"
+              value={token}
+              onChange={(event) => setToken(event.target.value)}
+              placeholder="Contents read/write token"
+            />
+          </label>
+        </div>
+        <button className="text-button bordered-action" type="button" disabled={!hasPendingChanges} onClick={downloadDraft}>
+          Download JSON
+        </button>
+      </details>
     </section>
   );
 }
 
 function toRoutinesConfig(sourceConfig: RoutinesConfig, routines: Routine[]): RoutinesConfig {
+  const routinesWithTasks = routines.filter((routine) => routine.listId && routine.tasks);
+
   return {
+    ...sourceConfig,
     schemaVersion: sourceConfig.schemaVersion ?? 1,
     routines: routines.map(stripHydratedRoutine),
-    lists: sourceConfig.lists ?? [],
+    lists: (sourceConfig.lists ?? []).map((list) => {
+      const owningRoutine = routinesWithTasks.find((routine) => routine.listId === list.id);
+
+      if (!owningRoutine?.tasks) {
+        return list;
+      }
+
+      return {
+        ...list,
+        items: owningRoutine.tasks.map((task) => {
+          const sourceItem: Partial<RoutineTask> = list.items?.find((item) => item.id === task.id) ?? {};
+
+          return {
+            ...sourceItem,
+            id: task.id,
+            label: task.label,
+            icon: task.icon ?? sourceItem.icon,
+            ownerId: task.ownerId,
+            assignee: task.assignee,
+            targetOffsetMinutes: task.targetOffsetMinutes,
+          };
+        }),
+      };
+    }),
   };
+}
+
+function stableConfigJson(config: RoutinesConfig) {
+  return JSON.stringify(config);
+}
+
+function routineDraftSummary(sourceConfig: RoutinesConfig, draftConfig: RoutinesConfig): RoutineDraftSummary {
+  const sourceRoutines = sourceConfig.routines ?? [];
+  const draftRoutines = draftConfig.routines ?? [];
+  const sourceById = new Map(sourceRoutines.map((routine) => [routine.id, routine]));
+  const draftById = new Map(draftRoutines.map((routine) => [routine.id, routine]));
+  const sourceLists = sourceConfig.lists ?? [];
+  const draftLists = draftConfig.lists ?? [];
+  const sourceListById = new Map(sourceLists.map((list) => [list.id, list]));
+  let changed = 0;
+  let disabled = 0;
+
+  draftRoutines.forEach((routine) => {
+    const sourceRoutine = sourceById.get(routine.id);
+
+    if (!sourceRoutine) {
+      return;
+    }
+
+    if (stableRoutineJson(sourceRoutine) !== stableRoutineJson(routine)) {
+      changed += 1;
+    }
+
+    if (sourceRoutine.enabled !== false && routine.enabled === false) {
+      disabled += 1;
+    }
+  });
+
+  draftLists.forEach((list) => {
+    const sourceList = sourceListById.get(list.id);
+
+    if (sourceList && JSON.stringify(sourceList) !== JSON.stringify(list)) {
+      changed += 1;
+    }
+  });
+
+  return {
+    added: draftRoutines.filter((routine) => !sourceById.has(routine.id)).length,
+    changed,
+    disabled,
+    removed: sourceRoutines.filter((routine) => !draftById.has(routine.id)).length,
+  };
+}
+
+function stableRoutineJson(routine: Routine) {
+  return JSON.stringify(stripHydratedRoutine(routine));
+}
+
+function moveItem<T extends { id: string }>(items: T[], itemId: string, offset: number) {
+  const currentIndex = items.findIndex((item) => item.id === itemId);
+  const nextIndex = currentIndex + offset;
+
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= items.length) {
+    return items;
+  }
+
+  const nextItems = [...items];
+  const [item] = nextItems.splice(currentIndex, 1);
+
+  nextItems.splice(nextIndex, 0, item);
+  return nextItems;
+}
+
+function nextTimelineStart(lastItem: TimelineItem | undefined, fallbackStart: string) {
+  if (!lastItem?.start) {
+    return fallbackStart;
+  }
+
+  return addMinutesToTime(lastItem.start, lastItem.durationMinutes ?? 15);
+}
+
+function addMinutesToTime(value: string, minutesToAdd: number) {
+  const [hour, minute] = value.split(":").map(Number);
+
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return value;
+  }
+
+  const total = (hour * 60 + minute + minutesToAdd) % (24 * 60);
+  const safeTotal = total < 0 ? total + 24 * 60 : total;
+  const nextHour = Math.floor(safeTotal / 60);
+  const nextMinute = safeTotal % 60;
+
+  return `${String(nextHour).padStart(2, "0")}:${String(nextMinute).padStart(2, "0")}`;
 }
 
 function stripHydratedRoutine(routine: Routine): Routine {

@@ -8,7 +8,7 @@ This week is about stabilizing the core parent/operator workflow after the tribu
 
 ### CUT-01. Day-First React Admin
 
-Status: in progress
+Status: closed
 
 Outcome: the React admin feels like a small family control panel rather than a speculative admin platform.
 
@@ -28,12 +28,12 @@ Acceptance:
 - [x] Routine cards open the routine editor.
 - [x] Edit scope friction exists for this instance vs future recurrence.
 - [x] Route refresh button has real behavior or honest setup feedback.
-- [ ] Add-event flow exists with recurrence and type selection.
-- [ ] Scaffolding nav is reduced to the useful daily workflow.
+- [x] Add-event flow exists with recurrence and type selection.
+- [x] Scaffolding nav is reduced to the useful daily workflow.
 
 ### WF-01. Scene System Foundation
 
-Status: mostly closed
+Status: closed
 
 Outcome: the admin and dashboard share a clear mental model where a Scene is the thing rendered on the family display.
 
@@ -48,7 +48,7 @@ Scope:
 
 Acceptance:
 
-- [x] React admin has a Scenes area.
+- [x] React admin can read and render scene objects.
 - [x] Routine-backed scenes expose routine label, type, window, and activation state.
 - [x] Tribute scenes expose title, activation dates/window, and image path.
 - [x] Existing Routines area still works.
@@ -63,7 +63,7 @@ Non-goals:
 
 ### WF-02. Routine Management Stabilization
 
-Status: in progress
+Status: mostly closed
 
 Outcome: a parent can create, edit, disable, and understand household routines without touching raw JSON.
 
@@ -81,14 +81,16 @@ Acceptance:
 - [x] Enabled/disabled state is clear.
 - [x] One-off and recurring schedule concepts are understandable.
 - [x] Baseline routine persistence path is clear.
-- [ ] Create/delete routine affordances exist.
+- [x] Create/delete routine affordances exist.
 
 Current slice:
 
-- React admin has a local-only draft editor for routine name, enabled state, recurring weekdays, one-off dates, display window, and timing fields.
-- Draft edits update the visible routine detail and routine rail immediately.
-- The Routines detail includes a persistence panel that can save a browser draft, download clean `config/routines.json`, or push baseline routines to GitHub using a Contents read/write token.
-- The export path preserves reusable `lists` from `config/routines.json` and strips hydrated checklist tasks back out of list-backed routines before saving.
+- React admin now centers routine work on a single dark workbench rather than several competing screens.
+- Primary actions are `Save draft` and `Save`; GitHub/download diagnostics are tucked into an Advanced panel.
+- Routine basics, timing, timeline items, and checklist items can be edited in place.
+- Timeline/checklist rows support add, delete, and reorder operations.
+- Checklist assignees use the active family member list, and list-backed checklist edits are written back through `lists` during export/push.
+- Contextual local suggestions provide quick-add routine items with a `See more` expansion for lower-confidence ideas.
 
 Non-goals:
 
@@ -99,7 +101,7 @@ Non-goals:
 
 ### WF-03. Scene Scheduling Contract
 
-Status: in progress
+Status: closed
 
 Outcome: special scenes can be scheduled without one-off dashboard code.
 
@@ -112,15 +114,15 @@ Scope:
 
 Acceptance:
 
-- [ ] Scene scheduling can express Mother's Day and Arthur birthday.
+- [x] Scene scheduling can express Mother's Day and Arthur birthday.
 - [x] Dashboard scene resolution reads data, not one-off constants.
 - [x] Admin can show scheduled scene status.
 
 Current slice:
 
-- `config/scenes.json` defines Arthur birthday as a scheduled tribute scene.
+- `config/scenes.json` defines Mother's Day and Arthur birthday as scheduled tribute scenes.
 - The dashboard reads scheduled tribute scenes from config before routine windows.
-- React admin reads the same scene config for the Scenes tab.
+- React admin preserves scene priority/schedule metadata, while the Scenes surface is demoted out of primary navigation during routine workflow stabilization.
 
 ### WF-04. Dynamic Departure And Multi-Stop Routing Spike
 

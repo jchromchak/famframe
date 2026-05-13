@@ -1,4 +1,48 @@
 {
   "schemaVersion": 1,
-  "scenes": []
+  "scenes": [
+    {
+      "id": "scene-tribute-mothers-day-2026",
+      "label": "Mother's Day 2026",
+      "type": "tribute",
+      "enabled": true,
+      "priority": 100,
+      "schedule": {
+        "dates": [
+          "2026-05-10"
+        ],
+        "start": "00:00",
+        "end": "23:59"
+      },
+      "tribute": {
+        "image": "../assets/tributes/mothers-day-2026.png",
+        "title": "Happy Mother's Day",
+        "message": "To the best mom in the world. We love you.",
+        "mark": "MOTHER'S DAY 2026",
+        "tone": "dark"
+      }
+    },
+    {
+      "id": "scene-tribute-arthur-birthday-2026",
+      "label": "Arthur birthday 2026",
+      "type": "tribute",
+      "enabled": true,
+      "priority": 95,
+      "schedule": {
+        "dates": [
+          "2026-05-10",
+          "2026-05-11"
+        ],
+        "start": "00:00",
+        "end": "23:59"
+      },
+      "tribute": {
+        "image": "../assets/tributes/arthur-birthday-2026.png",
+        "title": "Happy Birthday Arthur",
+        "message": "Celebrating Arthur today. We love you.",
+        "mark": "ARTHUR'S BIRTHDAY 2026",
+        "tone": "auto"
+      }
+    }
+  ]
 }

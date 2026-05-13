@@ -17,6 +17,7 @@ export type RoutineTask = {
   time?: string;
   icon?: string;
   ownerId?: string;
+  assignee?: string;
   targetOffsetMinutes?: number;
 };
 
@@ -67,8 +68,14 @@ export type AdminScene = {
   label: string;
   type: "routine" | "tribute";
   status: "active" | "inactive";
+  priority?: number;
   source: string;
   schedule: string;
+  scheduleDates?: string[];
+  scheduleWindow?: {
+    start?: string;
+    end?: string;
+  };
   imagePath?: string;
   routine?: Routine;
 };
@@ -248,8 +255,11 @@ function deriveScenes(routines: Routine[], configuredScenes: SceneConfig[]): Adm
     label: routine.label,
     type: "routine" as const,
     status: routine.enabled === false ? "inactive" as const : "active" as const,
+    priority: routine.display?.priority,
     source: routine.display?.scene || routine.type || "routine",
     schedule: formatRoutineWindow(routine),
+    scheduleDates: routine.appliesTo?.dates,
+    scheduleWindow: routine.window,
     routine,
   }));
 
@@ -260,8 +270,14 @@ function deriveScenes(routines: Routine[], configuredScenes: SceneConfig[]): Adm
       label: scene.tribute?.title || scene.label,
       type: "tribute" as const,
       status: scene.enabled === false ? "inactive" as const : "active" as const,
+      priority: scene.priority,
       source: "Scene config",
       schedule: sceneScheduleLabel(scene),
+      scheduleDates: scene.schedule?.dates,
+      scheduleWindow: {
+        start: scene.schedule?.start,
+        end: scene.schedule?.end,
+      },
       imagePath: scene.tribute?.image,
     }));
 
@@ -306,6 +322,7 @@ function hydrateRoutineTasks(routines: Routine[], lists: RoutineList[]) {
         label: item.label,
         icon: item.icon,
         ownerId: item.ownerId,
+        assignee: item.assignee,
         targetOffsetMinutes: item.targetOffsetMinutes,
       })),
     };
