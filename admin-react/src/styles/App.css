@@ -569,10 +569,7 @@
   background: #11100f;
   border-color: #2f2a23;
   color: #f9f1e2;
-  position: sticky;
-  top: 12px;
   order: 1;
-  z-index: 4;
 }
 
 .persistence-panel h3 {
@@ -817,7 +814,7 @@
   border-radius: var(--ff-radius-control);
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(180px, 1.5fr) 120px 110px minmax(180px, 1fr) 78px 42px;
+  grid-template-columns: minmax(180px, 1.5fr) 120px 110px minmax(180px, 1fr) 78px minmax(82px, auto);
   padding: 12px;
 }
 
@@ -827,7 +824,7 @@
   border-radius: var(--ff-radius-control);
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(180px, 1fr) 120px minmax(140px, 0.6fr) 78px 42px;
+  grid-template-columns: minmax(180px, 1fr) 120px minmax(140px, 0.6fr) 78px minmax(82px, auto);
   padding: 12px;
 }
 
@@ -860,16 +857,23 @@
 
 .icon-danger-action {
   align-self: end;
-  aspect-ratio: 1;
-  background: rgba(58, 23, 18, 0.72);
-  border: 1px solid #6d2b22;
+  background: transparent;
+  border: 1px solid rgba(255, 244, 228, 0.18);
   border-radius: var(--ff-radius-control);
-  color: #fff4e4;
+  color: #d5c7af;
   cursor: pointer;
-  font-size: 1.3rem;
+  font-size: 0.72rem;
   font-weight: 900;
-  line-height: 1;
+  letter-spacing: 0.08em;
   min-height: 42px;
+  padding: 0 10px;
+  text-transform: uppercase;
+}
+
+.icon-danger-action:hover:not(:disabled) {
+  background: rgba(58, 23, 18, 0.54);
+  border-color: #6d2b22;
+  color: #fff4e4;
 }
 
 .icon-danger-action:disabled {

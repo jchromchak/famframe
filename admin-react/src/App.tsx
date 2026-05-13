@@ -1095,12 +1095,14 @@ function RoutineDetail({
       </div>
 
       <div className="routine-detail-grid">
-        <RoutinePersistencePanel
-          draftConfig={draftConfig}
-          editScope={editScope}
-          draftSummary={draftSummary}
-          hasPendingChanges={hasPendingChanges}
-        />
+        {hasPendingChanges ? (
+          <RoutinePersistencePanel
+            draftConfig={draftConfig}
+            editScope={editScope}
+            draftSummary={draftSummary}
+            hasPendingChanges={hasPendingChanges}
+          />
+        ) : null}
 
         <section className="detail-panel detail-panel-wide routine-editor workbench-basics-panel">
           <div className="detail-panel-head">
@@ -1295,9 +1297,9 @@ function RoutineDetail({
                     title={`Delete ${item.label}`}
                     aria-label={`Delete ${item.label}`}
                     onClick={() => deleteTimelineItem(item.id)}
-                  >
-                    ×
-                  </button>
+	                  >
+	                    Remove
+	                  </button>
                 </article>
               ))}
             </div>
@@ -1367,9 +1369,9 @@ function RoutineDetail({
                     title={`Delete ${item.label}`}
                     aria-label={`Delete ${item.label}`}
                     onClick={() => deleteTaskItem(item.id)}
-                  >
-                    ×
-                  </button>
+	                  >
+	                    Remove
+	                  </button>
                 </article>
               ))}
             </div>
