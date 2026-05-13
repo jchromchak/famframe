@@ -925,6 +925,8 @@ function RoutineDetail({
   const [editScope, setEditScope] = useState<EditScope | null>(null);
   const [deleteArmed, setDeleteArmed] = useState(false);
   const [showMoreSuggestions, setShowMoreSuggestions] = useState(false);
+  const [isTimeEditorOpen, setIsTimeEditorOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const isEditing = editScope !== null;
   const canDelete = routine.layer === "addon" || routine.layer === "override";
   const suggestions = suggestionsForRoutine(
@@ -937,9 +939,18 @@ function RoutineDetail({
 
   useEffect(() => {
     setShowMoreSuggestions(false);
+    setIsTimeEditorOpen(false);
+    setEditingItemId(null);
   }, [routine.id]);
 
+  function ensureEditScope() {
+    if (!editScope) {
+      setEditScope("future");
+    }
+  }
+
   function updateRoutine(patch: Partial<Routine>) {
+    ensureEditScope();
     onUpdate({ ...routine, ...patch });
   }
 
@@ -1002,6 +1013,7 @@ function RoutineDetail({
   }
 
   function addTimelineItem(suggestion?: RoutineSuggestion) {
+    ensureEditScope();
     const currentTimeline = routine.timeline ?? [];
     const lastItem = currentTimeline[currentTimeline.length - 1];
     const fallbackStart = lastItem?.start ?? routine.window?.start ?? "17:00";
@@ -1019,12 +1031,15 @@ function RoutineDetail({
   }
 
   function deleteTimelineItem(itemId: string) {
+    ensureEditScope();
     updateRoutine({
       timeline: (routine.timeline ?? []).filter((item) => item.id !== itemId),
     });
+    setEditingItemId(null);
   }
 
   function moveTimelineItem(itemId: string, offset: number) {
+    ensureEditScope();
     updateRoutine({
       timeline: moveItem((routine.timeline ?? []), itemId, offset),
     });
@@ -1044,6 +1059,7 @@ function RoutineDetail({
   }
 
   function addTaskItem(suggestion?: RoutineSuggestion) {
+    ensureEditScope();
     const nextItem: RoutineTask = {
       id: `task-${suggestion?.id ?? "item"}-${Date.now()}`,
       label: suggestion?.label ?? "New item",
@@ -1057,12 +1073,15 @@ function RoutineDetail({
   }
 
   function deleteTaskItem(itemId: string) {
+    ensureEditScope();
     updateRoutine({
       tasks: (routine.tasks ?? []).filter((item) => item.id !== itemId),
     });
+    setEditingItemId(null);
   }
 
   function moveTaskItem(itemId: string, offset: number) {
+    ensureEditScope();
     updateRoutine({
       tasks: moveItem((routine.tasks ?? []), itemId, offset),
     });
@@ -1107,90 +1126,104 @@ function RoutineDetail({
         <section className="detail-panel detail-panel-wide routine-editor workbench-basics-panel">
           <div className="detail-panel-head">
             <div>
-              <p className="eyebrow">Basics</p>
-              <h3>What changes?</h3>
+              <p className="eyebrow">Time frames</p>
+              <h3>When this routine runs</h3>
             </div>
-            <span className="sync-pill">{editScope ? scopeLabel(editScope) : "Choose scope"}</span>
-          </div>
-
-          <div className="scope-choice-grid">
-            <button
-              className={editScope === "instance" ? "scope-choice active" : "scope-choice"}
-              type="button"
-              onClick={() => setEditScope("instance")}
-            >
-              <span>This day only</span>
-              <small>Use for a one-off change to the selected occurrence.</small>
-            </button>
-            <button
-              className={editScope === "future" ? "scope-choice active" : "scope-choice"}
-              type="button"
-              onClick={() => setEditScope("future")}
-            >
-              <span>This type going forward</span>
-              <small>Use for baseline changes to this routine pattern.</small>
+            <button className="text-button bordered-action compact-action" type="button" onClick={() => setIsTimeEditorOpen((current) => !current)}>
+              {isTimeEditorOpen ? "Collapse" : "Expand to edit"}
             </button>
           </div>
 
-          {!isEditing ? (
-            <p className="muted">Choose how far this edit should apply before changing routine fields.</p>
+          <ul className="summary-bullet-list">
+            <li><span>Status</span><strong>{routine.enabled === false ? "Disabled" : "Enabled"}</strong></li>
+            <li><span>Repeats</span><strong>{daysLabel(routine)}</strong></li>
+            <li><span>One-off dates</span><strong>{activeDates.length ? activeDates.join(", ") : "None"}</strong></li>
+            <li><span>Display window</span><strong>{formatRoutineWindow(routine)}</strong></li>
+            <li><span>Leave</span><strong>{routine.timing?.leaveAt ?? "Not set"}</strong></li>
+            <li><span>Arrive</span><strong>{routine.timing?.arriveBy ?? "Not set"}</strong></li>
+            <li><span>Deadline</span><strong>{routine.timing?.deadline ?? routine.deadlineTime ?? "Not set"}</strong></li>
+          </ul>
+
+          {isTimeEditorOpen ? (
+            <div className="expanded-editor">
+              <div className="scope-choice-grid">
+                <button
+                  className={editScope === "instance" ? "scope-choice active" : "scope-choice"}
+                  type="button"
+                  onClick={() => setEditScope("instance")}
+                >
+                  <span>This day only</span>
+                  <small>Use for a one-off change to the selected occurrence.</small>
+                </button>
+                <button
+                  className={editScope === "future" ? "scope-choice active" : "scope-choice"}
+                  type="button"
+                  onClick={() => setEditScope("future")}
+                >
+                  <span>This type going forward</span>
+                  <small>Use for baseline changes to this routine pattern.</small>
+                </button>
+              </div>
+
+              {!isEditing ? <p className="muted">Choose how far this edit should apply before changing routine fields.</p> : null}
+
+              <label className="toggle-row">
+                <input
+                  type="checkbox"
+                  checked={routine.enabled !== false}
+                  disabled={!isEditing}
+                  onChange={(event) => updateRoutine({ enabled: event.target.checked })}
+                />
+                <span>Enabled</span>
+              </label>
+
+              <div className="routine-editor-grid">
+                <label className="field-stack">
+                  <span>Name</span>
+                  <input disabled={!isEditing} value={routine.label} onChange={(event) => updateRoutine({ label: event.target.value })} />
+                </label>
+                <label className="field-stack">
+                  <span>One-off dates</span>
+                  <input disabled={!isEditing} value={activeDates.join(", ")} onChange={(event) => updateDates(event.target.value)} />
+                </label>
+                <label className="field-stack">
+                  <span>Window start</span>
+                  <input disabled={!isEditing} type="time" value={routine.window?.start ?? ""} onChange={(event) => updateWindow("start", event.target.value)} />
+                </label>
+                <label className="field-stack">
+                  <span>Window end</span>
+                  <input disabled={!isEditing} type="time" value={routine.window?.end ?? ""} onChange={(event) => updateWindow("end", event.target.value)} />
+                </label>
+                <label className="field-stack">
+                  <span>Leave</span>
+                  <input disabled={!isEditing} type="time" value={routine.timing?.leaveAt ?? ""} onChange={(event) => updateTiming("leaveAt", event.target.value)} />
+                </label>
+                <label className="field-stack">
+                  <span>Arrive</span>
+                  <input disabled={!isEditing} type="time" value={routine.timing?.arriveBy ?? ""} onChange={(event) => updateTiming("arriveBy", event.target.value)} />
+                </label>
+                <label className="field-stack">
+                  <span>Deadline</span>
+                  <input disabled={!isEditing} type="time" value={routine.timing?.deadline ?? routine.deadlineTime ?? ""} onChange={(event) => updateTiming("deadline", event.target.value)} />
+                </label>
+              </div>
+
+              <div className="day-toggle-group" aria-label="Recurring days">
+                {weekdayOptions.map((day) => (
+                  <button
+                    key={day.value}
+                    aria-pressed={activeDays.includes(day.value)}
+                    className={activeDays.includes(day.value) ? "day-toggle active" : "day-toggle"}
+                    disabled={!isEditing}
+                    type="button"
+                    onClick={() => toggleDay(day.value)}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : null}
-
-          <label className="toggle-row">
-            <input
-              type="checkbox"
-              checked={routine.enabled !== false}
-              disabled={!isEditing}
-              onChange={(event) => updateRoutine({ enabled: event.target.checked })}
-            />
-            <span>Enabled</span>
-          </label>
-
-          <div className="routine-editor-grid">
-            <label className="field-stack">
-              <span>Name</span>
-              <input disabled={!isEditing} value={routine.label} onChange={(event) => updateRoutine({ label: event.target.value })} />
-            </label>
-            <label className="field-stack">
-              <span>One-off dates</span>
-              <input disabled={!isEditing} value={activeDates.join(", ")} onChange={(event) => updateDates(event.target.value)} />
-            </label>
-            <label className="field-stack">
-              <span>Window start</span>
-              <input disabled={!isEditing} type="time" value={routine.window?.start ?? ""} onChange={(event) => updateWindow("start", event.target.value)} />
-            </label>
-            <label className="field-stack">
-              <span>Window end</span>
-              <input disabled={!isEditing} type="time" value={routine.window?.end ?? ""} onChange={(event) => updateWindow("end", event.target.value)} />
-            </label>
-            <label className="field-stack">
-              <span>Leave</span>
-              <input disabled={!isEditing} type="time" value={routine.timing?.leaveAt ?? ""} onChange={(event) => updateTiming("leaveAt", event.target.value)} />
-            </label>
-            <label className="field-stack">
-              <span>Arrive</span>
-              <input disabled={!isEditing} type="time" value={routine.timing?.arriveBy ?? ""} onChange={(event) => updateTiming("arriveBy", event.target.value)} />
-            </label>
-            <label className="field-stack">
-              <span>Deadline</span>
-              <input disabled={!isEditing} type="time" value={routine.timing?.deadline ?? routine.deadlineTime ?? ""} onChange={(event) => updateTiming("deadline", event.target.value)} />
-            </label>
-          </div>
-
-          <div className="day-toggle-group" aria-label="Recurring days">
-            {weekdayOptions.map((day) => (
-              <button
-                key={day.value}
-                aria-pressed={activeDays.includes(day.value)}
-                className={activeDays.includes(day.value) ? "day-toggle active" : "day-toggle"}
-                disabled={!isEditing}
-                type="button"
-                onClick={() => toggleDay(day.value)}
-              >
-                {day.label}
-              </button>
-            ))}
-          </div>
         </section>
 
         <section className="detail-panel detail-panel-wide workbench-primary-panel" id={`${routine.id}-items`}>
@@ -1201,16 +1234,17 @@ function RoutineDetail({
             </div>
             {isTimeline ? (
               <button className="text-button bordered-action compact-action" type="button" disabled={!isEditing} onClick={() => addTimelineItem()}>
-                Add item
+                  Add
               </button>
             ) : (
               <button className="text-button bordered-action compact-action" type="button" disabled={!isEditing} onClick={() => addTaskItem()}>
-                Add item
+                  Add
               </button>
             )}
           </div>
           {suggestions.length ? (
-            <div className="suggestion-panel">
+            <details className="suggestion-panel">
+              <summary>Suggested adds</summary>
               {visibleSuggestions.length ? (
                 <div className="suggestion-chip-row">
                   {visibleSuggestions.map((suggestion) => (
@@ -1233,73 +1267,41 @@ function RoutineDetail({
                   {showMoreSuggestions ? "Show less" : "See more"}
                 </button>
               ) : null}
-            </div>
+            </details>
           ) : null}
           {isTimeline && (routine.timeline ?? []).length ? (
-            <div className="timeline-editor-list">
+            <div className="routine-item-list">
               {(routine.timeline ?? []).map((item, index) => (
-                <article className="timeline-editor-row" key={item.id}>
-                  <label className="field-stack">
-                    <span>Item</span>
-                    <input
-                      disabled={!isEditing}
-                      value={item.label}
-                      onChange={(event) => updateTimelineItem(item.id, { label: event.target.value })}
-                    />
-                  </label>
-                  <label className="field-stack">
-                    <span>Start</span>
-                    <input
-                      disabled={!isEditing}
-                      type="time"
-                      value={item.start ?? ""}
-                      onChange={(event) => updateTimelineItem(item.id, { start: event.target.value || undefined })}
-                    />
-                  </label>
-                  <label className="field-stack">
-                    <span>Minutes</span>
-                    <input
-                      disabled={!isEditing}
-                      min="0"
-                      type="number"
-                      value={item.durationMinutes ?? 0}
-                      onChange={(event) => updateTimelineItem(item.id, { durationMinutes: Number(event.target.value) || 0 })}
-                    />
-                  </label>
-                  <label className="field-stack timeline-note-field">
-                    <span>Note</span>
-                    <input
-                      disabled={!isEditing}
-                      value={item.note ?? ""}
-                      onChange={(event) => updateTimelineItem(item.id, { note: event.target.value })}
-                    />
-                  </label>
+                <article className={editingItemId === item.id ? "routine-item-row open" : "routine-item-row"} key={item.id}>
+                  <button className="routine-item-summary" type="button" onClick={() => setEditingItemId((current) => (current === item.id ? null : item.id))}>
+                    <span>{item.label}</span>
+                    <small>{[item.start, item.durationMinutes ? `${item.durationMinutes} min` : null, item.note].filter(Boolean).join(" · ") || "No details"}</small>
+                  </button>
                   <div className="item-order-actions" aria-label={`Move ${item.label}`}>
-                    <button
-                      type="button"
-                      disabled={!isEditing || index === 0}
-                      onClick={() => moveTimelineItem(item.id, -1)}
-                    >
-                      Up
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!isEditing || index === (routine.timeline?.length ?? 0) - 1}
-                      onClick={() => moveTimelineItem(item.id, 1)}
-                    >
-                      Down
-                    </button>
+                    <button type="button" disabled={index === 0} onClick={() => moveTimelineItem(item.id, -1)}>Up</button>
+                    <button type="button" disabled={index === (routine.timeline?.length ?? 0) - 1} onClick={() => moveTimelineItem(item.id, 1)}>Down</button>
                   </div>
-                  <button
-                    className="icon-danger-action"
-                    type="button"
-                    disabled={!isEditing}
-                    title={`Delete ${item.label}`}
-                    aria-label={`Delete ${item.label}`}
-                    onClick={() => deleteTimelineItem(item.id)}
-	                  >
-	                    Remove
-	                  </button>
+                  {editingItemId === item.id ? (
+                    <div className="item-detail-editor timeline-editor-row">
+                      <label className="field-stack">
+                        <span>Item</span>
+                        <input value={item.label} onChange={(event) => updateTimelineItem(item.id, { label: event.target.value })} />
+                      </label>
+                      <label className="field-stack">
+                        <span>Start</span>
+                        <input type="time" value={item.start ?? ""} onChange={(event) => updateTimelineItem(item.id, { start: event.target.value || undefined })} />
+                      </label>
+                      <label className="field-stack">
+                        <span>Minutes</span>
+                        <input min="0" type="number" value={item.durationMinutes ?? 0} onChange={(event) => updateTimelineItem(item.id, { durationMinutes: Number(event.target.value) || 0 })} />
+                      </label>
+                      <label className="field-stack timeline-note-field">
+                        <span>Note</span>
+                        <input value={item.note ?? ""} onChange={(event) => updateTimelineItem(item.id, { note: event.target.value })} />
+                      </label>
+                      <button className="icon-danger-action" type="button" onClick={() => deleteTimelineItem(item.id)}>Remove</button>
+                    </div>
+                  ) : null}
                 </article>
               ))}
             </div>
@@ -1311,67 +1313,39 @@ function RoutineDetail({
               </button>
             </div>
           ) : items.length ? (
-            <div className="checklist-editor-list">
+            <div className="routine-item-list">
               {(routine.tasks ?? []).map((item, index) => (
-                <article className="checklist-editor-row" key={item.id}>
-                  <label className="field-stack">
-                    <span>Item</span>
-                    <input
-                      disabled={!isEditing}
-                      value={item.label}
-                      onChange={(event) => updateTaskItem(item.id, { label: event.target.value })}
-                    />
-                  </label>
-                  <label className="field-stack">
-                    <span>Offset</span>
-                    <input
-                      disabled={!isEditing}
-                      type="number"
-                      value={item.targetOffsetMinutes ?? 0}
-                      onChange={(event) => updateTaskItem(item.id, { targetOffsetMinutes: Number(event.target.value) || 0 })}
-                    />
-                  </label>
-                  <label className="field-stack">
-                    <span>Assignee</span>
-                    <select
-                      disabled={!isEditing}
-                      value={item.assignee ?? item.ownerId ?? ""}
-                      onChange={(event) => updateTaskItem(item.id, { assignee: event.target.value })}
-                    >
-                      <option value="">Unassigned</option>
-                      {familyMembers.map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {member.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                <article className={editingItemId === item.id ? "routine-item-row open" : "routine-item-row"} key={item.id}>
+                  <button className="routine-item-summary" type="button" onClick={() => setEditingItemId((current) => (current === item.id ? null : item.id))}>
+                    <span>{item.label}</span>
+                    <small>{[item.targetOffsetMinutes ? `${item.targetOffsetMinutes} min` : null, memberName(familyMembers, item.assignee ?? item.ownerId)].filter(Boolean).join(" · ") || "No details"}</small>
+                  </button>
                   <div className="item-order-actions" aria-label={`Move ${item.label}`}>
-                    <button
-                      type="button"
-                      disabled={!isEditing || index === 0}
-                      onClick={() => moveTaskItem(item.id, -1)}
-                    >
-                      Up
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!isEditing || index === (routine.tasks?.length ?? 0) - 1}
-                      onClick={() => moveTaskItem(item.id, 1)}
-                    >
-                      Down
-                    </button>
+                    <button type="button" disabled={index === 0} onClick={() => moveTaskItem(item.id, -1)}>Up</button>
+                    <button type="button" disabled={index === (routine.tasks?.length ?? 0) - 1} onClick={() => moveTaskItem(item.id, 1)}>Down</button>
                   </div>
-                  <button
-                    className="icon-danger-action"
-                    type="button"
-                    disabled={!isEditing}
-                    title={`Delete ${item.label}`}
-                    aria-label={`Delete ${item.label}`}
-                    onClick={() => deleteTaskItem(item.id)}
-	                  >
-	                    Remove
-	                  </button>
+                  {editingItemId === item.id ? (
+                    <div className="item-detail-editor checklist-editor-row">
+                      <label className="field-stack">
+                        <span>Item</span>
+                        <input value={item.label} onChange={(event) => updateTaskItem(item.id, { label: event.target.value })} />
+                      </label>
+                      <label className="field-stack">
+                        <span>Offset</span>
+                        <input type="number" value={item.targetOffsetMinutes ?? 0} onChange={(event) => updateTaskItem(item.id, { targetOffsetMinutes: Number(event.target.value) || 0 })} />
+                      </label>
+                      <label className="field-stack">
+                        <span>Assignee</span>
+                        <select value={item.assignee ?? item.ownerId ?? ""} onChange={(event) => updateTaskItem(item.id, { assignee: event.target.value })}>
+                          <option value="">Unassigned</option>
+                          {familyMembers.map((member) => (
+                            <option key={member.id} value={member.id}>{member.name}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <button className="icon-danger-action" type="button" onClick={() => deleteTaskItem(item.id)}>Remove</button>
+                    </div>
+                  ) : null}
                 </article>
               ))}
             </div>
@@ -1455,6 +1429,11 @@ function RoutineDetail({
 
 function scopeLabel(scope: EditScope) {
   return scope === "instance" ? "This day only" : "Going forward";
+}
+
+function memberName(members: FamilyMember[], memberId?: string) {
+  if (!memberId) return "";
+  return members.find((member) => member.id === memberId)?.name ?? memberId;
 }
 
 type RoutineDraftSummary = {

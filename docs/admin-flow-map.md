@@ -119,6 +119,20 @@ flowchart LR
 
 The goal is not a flashy carousel. The goal is that the phone always feels like it is showing **one thing**: one routine, one aspect, one save path.
 
+## Routine Detail Read-First Rule
+
+Routine detail should not open as a wall of form fields. The default state is an inspection surface:
+
+- **Time frames card**: simple label/value bullets for active days, one-off dates, display window, leave/arrive/deadline, route, and enabled state.
+- **Tasks card**: simple ordered list of timeline/checklist items.
+- **Add is always available** from the tasks card, because adding is a common first action.
+- **Reorder is available in the collapsed list** with small Up/Down controls, because moving items is lightweight and accessibility-friendly.
+- **Editing is progressive**: expand the time frames card to edit timing/routine basics, or expand a single task row to edit its details.
+- **Delete stays inside expanded edit state**, so destructive actions do not dominate the read view.
+- **Save only appears after a change**, and advanced persistence details stay out of the main flow.
+
+This makes the routine screen behave like a household checklist first and an admin form second.
+
 ## Layered Routine Storyboard
 
 The routine IA should eventually reconcile two viewing modes:
@@ -185,6 +199,6 @@ Rules:
 
 1. Replace top-level `Daily Routines`, `Segments`, and `Lists` with one top-level `Routines` area.
 2. Make each routine a card in a swipeable stack.
-3. Inside each routine card, expose framed tabs: Summary, Timing, Route, List/Timeline, Theme.
+3. Inside each routine card, default to read-first summary cards, with edit controls revealed only after expansion.
 4. Move global display windows and dashboard default theme to `System`.
 5. Keep `Today` focused on operational actions: refresh routes, pull/save, preview current scene.
